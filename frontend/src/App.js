@@ -1,53 +1,136 @@
-import { useEffect } from "react";
-import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { Toaster } from 'sonner';
+import './i18n';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// Pages
+import Landing from './pages/Landing';
+import Auth from './pages/Auth';
+import InstitutionDashboard from './pages/InstitutionDashboard';
+import StudentDashboard from './pages/StudentDashboard';
+import AITutor from './pages/AITutor';
+import ExamSimulator from './pages/ExamSimulator';
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
+// Protected Route Component
+const ProtectedRoute = ({ children, allowedTypes = [] }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (allowedTypes.length > 0 && !allowedTypes.includes(user.user_type)) {
+    // Redirect based on user type
+    switch (user.user_type) {
+      case 'institution':
+        return <Navigate to="/institution/dashboard" replace />;
+      case 'admin':
+        return <Navigate to="/admin" replace />;
+      default:
+        return <Navigate to="/student/dashboard" replace />;
     }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
+  }
+  
+  return children;
 };
+
+// Public Route (redirects authenticated users)
+const PublicRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+  
+  if (user) {
+    switch (user.user_type) {
+      case 'institution':
+        return <Navigate to="/institution/dashboard" replace />;
+      case 'admin':
+        return <Navigate to="/admin" replace />;
+      default:
+        return <Navigate to="/student/dashboard" replace />;
+    }
+  }
+  
+  return children;
+};
+
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<PublicRoute><Auth /></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><Auth /></PublicRoute>} />
+      
+      {/* Institution Routes */}
+      <Route 
+        path="/institution/dashboard" 
+        element={
+          <ProtectedRoute allowedTypes={['institution', 'admin']}>
+            <InstitutionDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Student/Individual Routes */}
+      <Route 
+        path="/student/dashboard" 
+        element={
+          <ProtectedRoute allowedTypes={['student', 'individual', 'admin']}>
+            <StudentDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* AI Tutor */}
+      <Route 
+        path="/tutor/:examType" 
+        element={
+          <ProtectedRoute>
+            <AITutor />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Exam Simulator */}
+      <Route 
+        path="/exam/:examType/:section" 
+        element={
+          <ProtectedRoute>
+            <ExamSimulator />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Catch all - redirect to landing */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
 
 function App() {
   return (
-    <div className="App">
+    <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
+        <Toaster position="top-right" richColors />
+        <AppRoutes />
       </BrowserRouter>
-    </div>
+    </AuthProvider>
   );
 }
 
