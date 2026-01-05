@@ -65,7 +65,7 @@ export default function InstitutionDashboard() {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/', { replace: true });
   };
 
   const getRiskColor = (risk) => {

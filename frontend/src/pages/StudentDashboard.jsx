@@ -42,7 +42,7 @@ export default function StudentDashboard() {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/', { replace: true });
   };
 
   const examTypes = [
