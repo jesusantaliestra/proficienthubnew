@@ -1,0 +1,171 @@
+{
+  "typography": {
+    "headings": {
+      "font_family": "Outfit, sans-serif",
+      "weights": ["400", "600", "700"],
+      "letter_spacing": "tracking-tight",
+      "usage": "All section titles, hero headers, and modal titles. DO NOT use Inter for headings."
+    },
+    "body": {
+      "font_family": "Inter, sans-serif",
+      "weights": ["400", "500"],
+      "usage": "Paragraphs, inputs, data tables, and small labels."
+    },
+    "mono": {
+      "font_family": "JetBrains Mono, monospace",
+      "usage": "Code snippets, API keys, and technical metrics."
+    }
+  },
+  "colors": {
+    "theme": "dark",
+    "palette": {
+      "background": {
+        "default": "#020617",
+        "paper": "#0f172a",
+        "subtle": "#1e293b"
+      },
+      "primary": {
+        "main": "#3b82f6",
+        "hover": "#2563eb",
+        "foreground": "#ffffff",
+        "glow": "0 0 20px rgba(59, 130, 246, 0.5)"
+      },
+      "accent": {
+        "main": "#f59e0b",
+        "hover": "#d97706",
+        "foreground": "#ffffff"
+      },
+      "success": {
+        "main": "#10b981",
+        "glow": "0 0 15px rgba(16, 185, 129, 0.4)"
+      },
+      "text": {
+        "primary": "#f8fafc",
+        "secondary": "#94a3b8",
+        "muted": "#64748b"
+      },
+      "border": {
+        "default": "#1e293b",
+        "active": "#334155"
+      }
+    },
+    "gradients": {
+      "hero": "linear-gradient(to right, #020617, #0f172a)",
+      "card_hover": "linear-gradient(145deg, rgba(59, 130, 246, 0.1), rgba(2, 6, 23, 0))",
+      "text_glow": "drop-shadow(0 0 10px rgba(59, 130, 246, 0.3))"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": {
+      "default": "bg-slate-950/70 backdrop-blur-xl border border-white/10",
+      "heavy": "bg-slate-900/80 backdrop-blur-2xl border border-white/5 shadow-2xl"
+    },
+    "borders": {
+      "subtle": "border border-slate-800",
+      "glow": "border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+    },
+    "shadows": {
+      "card": "0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3)",
+      "neon": "0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3)"
+    }
+  },
+  "component_name": {
+    "button": "Shadcn Button (customized)",
+    "card": "Shadcn Card (customized)",
+    "input": "Shadcn Input",
+    "dialog": "Shadcn Dialog",
+    "toast": "Sonner",
+    "chart": "Recharts / Shadcn Charts"
+  },
+  "grids": {
+    "marketing": "grid grid-cols-1 md:grid-cols-8 lg:grid-cols-12 gap-8",
+    "dashboard": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+    "bento": "grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[minmax(180px,auto)]"
+  },
+  "layouts": {
+    "marketing_hero": "Min-h-[80vh] flex flex-col justify-center relative overflow-hidden",
+    "dashboard_shell": "flex h-screen overflow-hidden bg-background",
+    "auth_split": "grid lg:grid-cols-2 h-screen w-full"
+  },
+  "motion": {
+    "hover": "transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg",
+    "fade_in": "animate-in fade-in duration-500",
+    "slide_up": "animate-in slide-in-from-bottom-4 duration-500",
+    "accordion": "transition-all duration-200 ease-in-out"
+  },
+  "accessibility": {
+    "contrast_check": "Ensure text is Slate-50 or Slate-200 on dark backgrounds. Avoid Slate-500 for body text.",
+    "focus_states": "focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950",
+    "reduced_motion": "motion-reduce:transition-none motion-reduce:animate-none"
+  },
+  "media": {
+    "icons": "Lucide React (default)",
+    "illustrations": "Abstract 3D shapes or geometric patterns. No cartoons."
+  },
+  "3d_libraries": {
+    "primary": "Spline (via @splinetool/react-spline) for Hero elements if needed",
+    "charts": "Recharts for data visualization",
+    "backgrounds": "CSS Gradients + Noise Texture (no heavy WebGL unless necessary)"
+  },
+  "image_urls": {
+    "hero_background": {
+      "url": "https://images.unsplash.com/photo-1758413351776-cea82eed2176",
+      "description": "Modern illuminated university campus at night, conveying institutional authority and premium education.",
+      "category": "background"
+    },
+    "students_group": {
+      "url": "https://images.unsplash.com/photo-1653669487404-09c3617c2b6c",
+      "description": "Diverse group of students collaborating around a table, representing the community aspect.",
+      "category": "content"
+    },
+    "student_focus": {
+      "url": "https://images.unsplash.com/photo-1741699427768-fbb97fc21425",
+      "description": "Individual student focused in a library, representing the exam preparation mode.",
+      "category": "content"
+    },
+    "ai_tutor_concept": {
+      "url": "https://images.unsplash.com/photo-1764336312138-14a5368a6cd3",
+      "description": "Abstract neon line head representing the AI Tutor intelligence.",
+      "category": "feature"
+    },
+    "b2b_meeting": {
+      "url": "https://images.unsplash.com/photo-1759884247142-028abd1e8ac2",
+      "description": "Professional business meeting through glass, for the B2B/Institutional partnership section.",
+      "category": "content"
+    }
+  },
+  "component_path": {
+    "ui": "/app/frontend/src/components/ui",
+    "pages": "/app/frontend/src/pages",
+    "layouts": "/app/frontend/src/layouts"
+  },
+  "instructions_to_main_agent": [
+    "Use .js or .jsx extensions for all new files. The project is NOT TypeScript.",
+    "Implement the 'Sophisticated Gamification' theme: Dark backgrounds (#020617) with Neon Blue (#3b82f6) and Amber (#f59e0b) accents.",
+    "For the Landing Page, use the 'Tetris' grid layout. Do not stack everything in a single column.",
+    "For the Dashboard, use the 'Control Room' density. Avoid excessive whitespace between data points.",
+    "Use the provided image URLs for their respective sections. Do not use placeholders.",
+    "Ensure all interactive elements have data-testid attributes.",
+    "Use 'Outfit' font for headings and 'Inter' for body. Add these to index.css or tailwind.config.js if missing.",
+    "Do not use generic gradients. Use the specified 'hero' and 'card_hover' gradients.",
+    "For the ROI Calculator, use a clean, card-based layout with slider inputs and real-time updating charts."
+  ],
+  "UNIVERSAL_GUIDELINES": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur).",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms.",
+    "You MUST NOT center align the app container.",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations.",
+    "NEVER use AI assistant Emoji characters for icons.",
+    "Every interaction needs micro-animations - hover states, transitions.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Main agent relies on these image URLs. Missing categories = main agent will use placeholder text which is FORBIDDEN.",
+    "Prioritize using pre-existing components from src/components/ui when applicable.",
+    "Components MUST use named exports.",
+    "Pages MUST use default exports.",
+    "Use sonner for toasts."
+  ]
+}
