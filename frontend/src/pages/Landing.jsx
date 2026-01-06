@@ -77,7 +77,7 @@ export default function Landing() {
     if (selectedPackage && numStudents > 0) {
       calculatePackageROI();
     }
-  }, [selectedPackage, numStudents, pricePerStudent, calculatePackageROI]);
+  }, [selectedPackage, numStudents, pricePerStudent, aiTutorMinutes, calculatePackageROI]);
 
   const calculateMonetization = async () => {
     try {
