@@ -271,7 +271,88 @@ class ProficientHubAPITester:
         else:
             self.log_test("AI Tutor Response", False, "No response from AI tutor")
 
-    def test_unauthorized_access(self):
+    def test_library_features(self):
+        """Test library functionality"""
+        if not self.token:
+            self.log_test("Library Features", False, "No authentication token available")
+            return
+        
+        print("\n📚 Testing Library Features...")
+        
+        # Test getting library items (should be empty initially)
+        response = self.run_test("Get Library Items", "GET", "library/items", 200)
+        if response is not None:
+            self.log_test("Library Items Access", True, f"Retrieved {len(response)} items")
+        
+        # Test creating a library item
+        library_item_data = {
+            "title": f"Test Material {datetime.now().strftime('%H%M%S')}",
+            "item_type": "material",
+            "content": "This is test content for the library item",
+            "description": "A test library item for automated testing",
+            "exam_type": "ielts",
+            "tags": ["test", "reading"]
+        }
+        
+        response = self.run_test("Create Library Item", "POST", "library/items", 200, library_item_data)
+        if response and 'id' in response:
+            item_id = response['id']
+            self.log_test("Library Item Creation", True, f"Item created with ID: {item_id}")
+            
+            # Test getting updated library items list
+            response = self.run_test("Updated Library Items", "GET", "library/items", 200)
+            if response and len(response) > 0:
+                self.log_test("Library Items Updated", True, f"Now showing {len(response)} items")
+            else:
+                self.log_test("Library Items Updated", False, "Library items not updated after creation")
+            
+            # Test deleting the library item
+            self.run_test("Delete Library Item", "DELETE", f"library/items/{item_id}", 200)
+        else:
+            self.log_test("Library Item Creation", False, "Failed to create library item")
+        
+        # Test creating flashcards
+        flashcard_data = {
+            "title": f"Test Flashcards {datetime.now().strftime('%H%M%S')}",
+            "cards": [
+                {"front": "What is IELTS?", "back": "International English Language Testing System"},
+                {"front": "TOEFL stands for?", "back": "Test of English as a Foreign Language"}
+            ],
+            "exam_type": "ielts",
+            "tags": ["vocabulary", "test"]
+        }
+        
+        response = self.run_test("Create Flashcard Set", "POST", "library/flashcards", 200, flashcard_data)
+        if response and 'id' in response:
+            self.log_test("Flashcard Creation", True, f"Flashcard set created with ID: {response['id']}")
+        else:
+            self.log_test("Flashcard Creation", False, "Failed to create flashcard set")
+
+    def test_language_support(self):
+        """Test language support endpoints"""
+        print("\n🌍 Testing Language Support...")
+        
+        # Test getting supported languages
+        response = self.run_test("Supported Languages", "GET", "languages", 200)
+        if response and 'languages' in response:
+            languages = response['languages']
+            expected_languages = ['en', 'es', 'pt', 'de', 'it', 'fr']
+            missing_languages = [lang for lang in expected_languages if lang not in languages]
+            if not missing_languages:
+                self.log_test("Language Support Complete", True, f"All {len(expected_languages)} languages supported")
+            else:
+                self.log_test("Language Support Complete", False, f"Missing languages: {missing_languages}")
+        else:
+            self.log_test("Language Support Complete", False, "No languages data in response")
+        
+        # Test updating user language settings (requires authentication)
+        if self.token:
+            settings_data = {"language": "es"}
+            response = self.run_test("Update Language Settings", "PUT", "auth/settings", 200, settings_data)
+            if response:
+                self.log_test("Language Settings Update", True, "Language updated successfully")
+            else:
+                self.log_test("Language Settings Update", False, "Failed to update language")
         """Test that protected endpoints properly reject unauthorized access"""
         print("\n🚫 Testing Unauthorized Access...")
         
