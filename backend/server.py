@@ -459,6 +459,8 @@ async def delete_library_item(item_id: str, current_user: dict = Depends(get_cur
 
 # ==================== EXAM ENDPOINTS ====================
 
+from exam_questions import get_exam_questions, get_mock_test_config, READING_PASSAGES, WRITING_TASKS, SPEAKING_PROMPTS, MOCK_TESTS
+
 EXAM_TYPES = ["toefl", "ielts", "cambridge", "pte", "oet"]
 EXAM_SECTIONS = {
     "toefl": ["reading", "listening", "speaking", "writing"],
@@ -479,7 +481,45 @@ async def get_exam_types():
             "cambridge": "Cambridge English Qualifications - Comprehensive assessment",
             "pte": "Pearson Test of English - Computer-based testing",
             "oet": "Occupational English Test - Healthcare professionals"
-        }
+        },
+        "mock_tests": {exam: get_mock_test_config(exam) for exam in EXAM_TYPES}
+    }
+
+@api_router.get("/exams/{exam_type}/mock-test")
+async def get_full_mock_test(exam_type: str, current_user: dict = Depends(get_current_user)):
+    """Get a complete mock test with all sections"""
+    if exam_type not in EXAM_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid exam type")
+    
+    config = get_mock_test_config(exam_type)
+    sections_data = {}
+    
+    for section_info in config["sections"]:
+        section_name = section_info["name"].lower().replace(" ", "_").replace("&", "and")
+        simple_section = section_name.split("_")[0] if "_" in section_name else section_name
+        
+        if simple_section in ["reading", "listening", "writing", "speaking"]:
+            sections_data[section_name] = {
+                "info": section_info,
+                "questions": get_exam_questions(exam_type, simple_section, 5)
+            }
+    
+    # Create mock test session
+    session_id = str(uuid.uuid4())
+    await db.mock_test_sessions.insert_one({
+        "id": session_id,
+        "user_id": current_user["id"],
+        "exam_type": exam_type,
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "status": "in_progress",
+        "sections_completed": []
+    })
+    
+    return {
+        "session_id": session_id,
+        "exam_type": exam_type,
+        "config": config,
+        "sections": sections_data
     }
 
 @api_router.get("/exams/{exam_type}/practice")
@@ -487,7 +527,11 @@ async def get_practice_questions(exam_type: str, section: str = "reading", curre
     if exam_type not in EXAM_TYPES:
         raise HTTPException(status_code=400, detail="Invalid exam type")
     
-    questions = generate_sample_questions(exam_type, section)
+    questions = get_exam_questions(exam_type, section, 5)
+    
+    if not questions:
+        # Fallback to generated questions
+        questions = generate_sample_questions(exam_type, section)
     
     return {
         "exam_type": exam_type,
@@ -495,6 +539,32 @@ async def get_practice_questions(exam_type: str, section: str = "reading", curre
         "questions": questions,
         "time_limit": get_section_time_limit(exam_type, section),
         "instructions": get_section_instructions(exam_type, section)
+    }
+
+@api_router.get("/exams/{exam_type}/speaking-prompts")
+async def get_speaking_prompts(exam_type: str, current_user: dict = Depends(get_current_user)):
+    """Get speaking test prompts for practice"""
+    if exam_type not in EXAM_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid exam type")
+    
+    prompts = SPEAKING_PROMPTS.get(exam_type, SPEAKING_PROMPTS.get("ielts", {}))
+    
+    return {
+        "exam_type": exam_type,
+        "prompts": prompts
+    }
+
+@api_router.get("/exams/{exam_type}/writing-tasks")
+async def get_writing_tasks(exam_type: str, current_user: dict = Depends(get_current_user)):
+    """Get writing tasks for practice"""
+    if exam_type not in EXAM_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid exam type")
+    
+    tasks = WRITING_TASKS.get(exam_type, WRITING_TASKS.get("ielts", {}))
+    
+    return {
+        "exam_type": exam_type,
+        "tasks": tasks
     }
 
 def generate_sample_questions(exam_type: str, section: str) -> List[Dict]:
