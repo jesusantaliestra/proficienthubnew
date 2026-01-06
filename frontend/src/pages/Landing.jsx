@@ -47,17 +47,17 @@ export default function Landing() {
   });
   const [monetizationResult, setMonetizationResult] = useState(null);
 
-  // Fetch exam packages function
+  // Fetch pricing tiers function
   const fetchExamPackages = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/pricing/exam-packages`);
-      setExamPackages(response.data.packages);
+      setPricingTiers(response.data.tiers);
     } catch (error) {
-      console.error('Error fetching packages:', error);
+      console.error('Error fetching pricing:', error);
     }
   }, []);
 
-  // Fetch exam packages on mount
+  // Fetch pricing tiers on mount
   useEffect(() => {
     fetchExamPackages();
   }, [fetchExamPackages]);
@@ -65,19 +65,19 @@ export default function Landing() {
   const calculatePackageROI = useCallback(async () => {
     try {
       const response = await axios.get(
-        `${API_URL}/pricing/roi-calculator?package_id=${selectedPackage}&num_students=${numStudents}&price_per_student=${pricePerStudent}&ai_tutor_minutes=${aiTutorMinutes}`
+        `${API_URL}/pricing/roi-calculator?num_licenses=${numLicenses}&price_per_student=${pricePerStudent}&ai_tutor_minutes_per_license=${aiTutorMinutes}`
       );
       setPackageRoiResult(response.data);
     } catch (error) {
       console.error('ROI calculation error:', error);
     }
-  }, [selectedPackage, numStudents, pricePerStudent, aiTutorMinutes]);
+  }, [numLicenses, pricePerStudent, aiTutorMinutes]);
 
   useEffect(() => {
-    if (selectedPackage && numStudents > 0) {
+    if (numLicenses > 0) {
       calculatePackageROI();
     }
-  }, [selectedPackage, numStudents, pricePerStudent, aiTutorMinutes, calculatePackageROI]);
+  }, [numLicenses, pricePerStudent, aiTutorMinutes, calculatePackageROI]);
 
   const calculateMonetization = async () => {
     try {
