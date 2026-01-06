@@ -676,7 +676,7 @@ export default function Landing() {
                     >
                       {examPackages.map(pkg => (
                         <option key={pkg.id} value={pkg.id}>
-                          {pkg.description} - ${pkg.price}
+                          {pkg.mock_tests} Tests - ${pkg.price} ({pkg.volume_discount} descuento)
                         </option>
                       ))}
                     </select>
@@ -705,11 +705,34 @@ export default function Landing() {
                     <Slider
                       value={[pricePerStudent]}
                       onValueChange={([v]) => setPricePerStudent(v)}
-                      max={200}
-                      min={20}
+                      max={100}
+                      min={5}
                       step={5}
                       className="w-full"
                     />
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <Label className="text-gray-700 font-semibold flex items-center gap-2">
+                        <Brain className="w-4 h-4 text-purple-600" />
+                        AI Tutor Add-on (minutos)
+                      </Label>
+                      <span className="text-purple-600 font-bold text-lg">{aiTutorMinutes} min</span>
+                    </div>
+                    <Slider
+                      value={[aiTutorMinutes]}
+                      onValueChange={([v]) => setAiTutorMinutes(v)}
+                      max={300}
+                      min={0}
+                      step={30}
+                      className="w-full"
+                    />
+                    {aiTutorMinutes > 0 && (
+                      <p className="text-sm text-purple-600 mt-1">
+                        + ${(aiTutorMinutes * 0.15).toFixed(2)} por AI Tutor
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -722,51 +745,59 @@ export default function Landing() {
                   <div className="space-y-4" data-testid="package-roi-results">
                     <div className="bg-white rounded-xl p-4 border border-gray-200">
                       <div className="text-sm text-gray-500 mb-1">Paquete Seleccionado</div>
-                      <div className="font-bold text-gray-900">{packageRoiResult.package.description}</div>
-                      <div className="text-sm text-gray-500">
-                        {packageRoiResult.package.mock_tests} tests + {packageRoiResult.package.ai_tutor_minutes} min AI
+                      <div className="font-bold text-gray-900">{packageRoiResult.package.mock_tests} Mock Tests</div>
+                      <div className="text-sm text-[#58CC02]">
+                        ${packageRoiResult.package.price_per_exam}/examen · {packageRoiResult.package.volume_discount} descuento
                       </div>
+                      {packageRoiResult.ai_tutor_addon.minutes > 0 && (
+                        <div className="text-sm text-purple-600 mt-1">
+                          + {packageRoiResult.ai_tutor_addon.minutes} min AI Tutor (${packageRoiResult.ai_tutor_addon.cost})
+                        </div>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                        <div className="text-sm text-gray-500">Tu Costo por Estudiante</div>
-                        <div className="text-2xl font-extrabold text-blue-600">${packageRoiResult.per_student.your_cost}</div>
+                      <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+                        <div className="text-sm text-gray-500">TU COSTE Total</div>
+                        <div className="text-2xl font-extrabold text-red-600">${packageRoiResult.total_investment}</div>
                       </div>
-                      <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-                        <div className="text-sm text-gray-500">Tu Margen</div>
-                        <div className="text-2xl font-extrabold text-green-600">{packageRoiResult.per_student.your_margin}%</div>
+                      <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                        <div className="text-sm text-gray-500">Coste por Estudiante</div>
+                        <div className="text-2xl font-extrabold text-blue-600">${packageRoiResult.per_student.your_cost}</div>
                       </div>
                     </div>
                     
                     <div className="bg-white rounded-xl p-4 border border-gray-200">
                       <div className="text-sm text-gray-500 mb-2">Por Estudiante Recibe</div>
-                      <div className="flex gap-4">
+                      <div className="flex gap-4 flex-wrap">
                         <Badge className="bg-purple-100 text-purple-700 border-0">
                           {packageRoiResult.per_student.mock_tests} mock tests
                         </Badge>
-                        <Badge className="bg-orange-100 text-orange-700 border-0">
-                          {packageRoiResult.per_student.ai_tutor_minutes} min AI tutor
-                        </Badge>
+                        {packageRoiResult.per_student.ai_tutor_minutes > 0 && (
+                          <Badge className="bg-orange-100 text-orange-700 border-0">
+                            {packageRoiResult.per_student.ai_tutor_minutes} min AI tutor
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     
                     <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-5 text-white">
                       <div className="grid grid-cols-3 gap-4 text-center">
                         <div>
-                          <div className="text-green-100 text-sm">Inversión</div>
+                          <div className="text-green-100 text-sm">Tu Inversión</div>
                           <div className="text-xl font-bold">${packageRoiResult.totals.your_investment}</div>
                         </div>
                         <div>
-                          <div className="text-green-100 text-sm">Ingresos</div>
+                          <div className="text-green-100 text-sm">Tus Ingresos</div>
                           <div className="text-xl font-bold">${packageRoiResult.totals.your_revenue}</div>
                         </div>
                         <div>
-                          <div className="text-green-100 text-sm">Ganancia</div>
+                          <div className="text-green-100 text-sm">Tu Ganancia</div>
                           <div className="text-xl font-bold">${packageRoiResult.totals.your_profit}</div>
                         </div>
                       </div>
-                      <div className="mt-4 pt-4 border-t border-green-400 text-center">
+                      <div className="mt-4 pt-4 border-t border-green-400 flex justify-between items-center">
+                        <div className="text-green-100">Tu Margen: {packageRoiResult.per_student.your_margin}%</div>
                         <div className="text-3xl font-extrabold">{packageRoiResult.totals.roi_percentage}% ROI</div>
                       </div>
                     </div>
