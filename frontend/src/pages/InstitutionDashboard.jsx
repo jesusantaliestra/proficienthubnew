@@ -41,7 +41,8 @@ export default function InstitutionDashboard() {
   const [loading, setLoading] = useState(true);
   const [addStudentOpen, setAddStudentOpen] = useState(false);
   const [addLibraryOpen, setAddLibraryOpen] = useState(false);
-  const [newStudent, setNewStudent] = useState({ name: '', email: '', password: '' });
+  const [newStudent, setNewStudent] = useState({ name: '', email: '', exam_type: 'ielts', credits: 100 });
+  const [createdStudentInfo, setCreatedStudentInfo] = useState(null);
   const [newLibraryItem, setNewLibraryItem] = useState({ 
     title: '', 
     item_type: 'material', 
@@ -77,10 +78,10 @@ export default function InstitutionDashboard() {
   const handleAddStudent = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_URL}/institution/students`, newStudent);
-      toast.success('Student added successfully!');
-      setAddStudentOpen(false);
-      setNewStudent({ name: '', email: '', password: '' });
+      const response = await axios.post(`${API_URL}/institution/students/create`, newStudent);
+      setCreatedStudentInfo(response.data);
+      toast.success('Student created with provisional credentials!');
+      setNewStudent({ name: '', email: '', exam_type: 'ielts', credits: 100 });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to add student');
