@@ -154,6 +154,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Toaster position="top-right" richColors />
+        <OfflineIndicator />
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>
