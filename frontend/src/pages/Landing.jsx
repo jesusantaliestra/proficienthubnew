@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -8,7 +8,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { 
   GraduationCap, Brain, BarChart3, Mic, 
-  Users, TrendingUp, ChevronRight, Star, CheckCircle,
+  Users, TrendingUp, ChevronRight, Star, CheckCircle, Check,
   BookOpen, Target, Clock, ArrowRight, Building,
   Calculator, AlertTriangle, Headphones,
   Video, FolderOpen, Volume2, Coins, Plus
