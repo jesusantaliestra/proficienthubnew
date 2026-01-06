@@ -639,8 +639,151 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ROI Calculator Section */}
-      <section id="calculator" className="py-20">
+      {/* Package ROI Calculator Section */}
+      <section id="calculator" className="py-20 bg-gray-50">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-4 py-2 mb-6 text-sm font-semibold">
+              <Calculator className="w-4 h-4 mr-2" />
+              Calculadora ROI de Paquetes
+            </Badge>
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Calcula tu ROI por Paquete</h2>
+            <p className="text-xl text-gray-600">Ve cuánto puedes ganar distribuyendo un paquete entre tus estudiantes</p>
+          </div>
+          
+          <Card className="bg-white border-2 border-gray-200 rounded-3xl overflow-hidden">
+            <div className="grid lg:grid-cols-2">
+              {/* Inputs */}
+              <div className="p-8 border-r border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">Configura tu escenario</h3>
+                
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-gray-700 font-semibold block mb-2">Selecciona Paquete</Label>
+                    <select 
+                      value={selectedPackage}
+                      onChange={(e) => setSelectedPackage(e.target.value)}
+                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#58CC02] outline-none"
+                      data-testid="package-selector"
+                    >
+                      {examPackages.map(pkg => (
+                        <option key={pkg.id} value={pkg.id}>
+                          {pkg.description} - ${pkg.price}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <Label className="text-gray-700 font-semibold">Número de Estudiantes</Label>
+                      <span className="text-[#58CC02] font-bold text-lg">{numStudents}</span>
+                    </div>
+                    <Slider
+                      value={[numStudents]}
+                      onValueChange={([v]) => setNumStudents(v)}
+                      max={100}
+                      min={1}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <Label className="text-gray-700 font-semibold">Precio que cobras por estudiante ($)</Label>
+                      <span className="text-[#58CC02] font-bold text-lg">${pricePerStudent}</span>
+                    </div>
+                    <Slider
+                      value={[pricePerStudent]}
+                      onValueChange={([v]) => setPricePerStudent(v)}
+                      max={200}
+                      min={20}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Results */}
+              <div className="p-8 bg-gradient-to-br from-green-50 to-white">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">Tu Proyección de ROI</h3>
+                
+                {packageRoiResult ? (
+                  <div className="space-y-4" data-testid="package-roi-results">
+                    <div className="bg-white rounded-xl p-4 border border-gray-200">
+                      <div className="text-sm text-gray-500 mb-1">Paquete Seleccionado</div>
+                      <div className="font-bold text-gray-900">{packageRoiResult.package.description}</div>
+                      <div className="text-sm text-gray-500">
+                        {packageRoiResult.package.mock_tests} tests + {packageRoiResult.package.ai_tutor_minutes} min AI
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                        <div className="text-sm text-gray-500">Tu Costo por Estudiante</div>
+                        <div className="text-2xl font-extrabold text-blue-600">${packageRoiResult.per_student.your_cost}</div>
+                      </div>
+                      <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                        <div className="text-sm text-gray-500">Tu Margen</div>
+                        <div className="text-2xl font-extrabold text-green-600">{packageRoiResult.per_student.your_margin}%</div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white rounded-xl p-4 border border-gray-200">
+                      <div className="text-sm text-gray-500 mb-2">Por Estudiante Recibe</div>
+                      <div className="flex gap-4">
+                        <Badge className="bg-purple-100 text-purple-700 border-0">
+                          {packageRoiResult.per_student.mock_tests} mock tests
+                        </Badge>
+                        <Badge className="bg-orange-100 text-orange-700 border-0">
+                          {packageRoiResult.per_student.ai_tutor_minutes} min AI tutor
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-5 text-white">
+                      <div className="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                          <div className="text-green-100 text-sm">Inversión</div>
+                          <div className="text-xl font-bold">${packageRoiResult.totals.your_investment}</div>
+                        </div>
+                        <div>
+                          <div className="text-green-100 text-sm">Ingresos</div>
+                          <div className="text-xl font-bold">${packageRoiResult.totals.your_revenue}</div>
+                        </div>
+                        <div>
+                          <div className="text-green-100 text-sm">Ganancia</div>
+                          <div className="text-xl font-bold">${packageRoiResult.totals.your_profit}</div>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-green-400 text-center">
+                        <div className="text-3xl font-extrabold">{packageRoiResult.totals.roi_percentage}% ROI</div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                        <div className="text-sm text-yellow-800">{packageRoiResult.recommendation}</div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-gray-400">
+                    <Calculator className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <p>Ajusta los parámetros para ver tu proyección de ROI</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      {/* ROI Calculator Section - Operations */}
+      <section id="calculator-ops" className="py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Calculate Your ROI</h2>
