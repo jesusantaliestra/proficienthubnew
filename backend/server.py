@@ -1719,57 +1719,27 @@ async def get_exam_cost_breakdown():
     }
 
 @api_router.get("/pricing/institutional")
-async def get_institutional_pricing(exam_count: int = 1, credit_tier: str = "basic"):
-    """Get institutional pricing"""
+async def get_institutional_pricing():
+    """Get institutional pricing packages"""
     return {
-        "pricing_model": "per_student",
-        "credit_tier": credit_tier,
-        "tiers": get_pricing_tiers(exam_count, credit_tier),
-        "exam_multipliers": EXAM_MULTIPLIERS,
-        "credit_tiers": {k: {
-            "credits": v["credits"],
-            "label": v["label"],
-            "description": v["description"],
-            "includes": v["includes"]
-        } for k, v in CREDIT_TIERS.items()}
+        "pricing_model": "exam_packages",
+        "packages": [
+            {
+                "id": pkg_id,
+                "mock_tests": pkg["mock_tests"],
+                "ai_tutor_minutes": pkg["ai_tutor_minutes"],
+                "price": pkg["price"],
+                "description": pkg["description"],
+                "features": pkg["features"],
+                "price_per_test": round(pkg["price"] / pkg["mock_tests"], 2)
+            }
+            for pkg_id, pkg in EXAM_PACKAGES.items()
+        ],
+        "exam_types": list(EXAM_COSTS.keys()),
+        "addons": AI_TUTOR_ADDONS
     }
 
-# ==================== WRITING & SPEAKING PACKAGES ENDPOINTS ====================
-
-@api_router.get("/pricing/test-packages")
-async def get_test_packages():
-    """Get available writing and speaking test packages for institutions"""
-    writing_packages = []
-    for pkg_id, pkg in WRITING_TEST_PACKAGES.items():
-        writing_packages.append({
-            "id": pkg_id,
-            "tests": pkg["tests"],
-            "price": pkg["price"],
-            "price_per_test": pkg["price_per_test"],
-            "type": "writing",
-            "description": f"{pkg['tests']} AI-graded writing tests with detailed feedback"
-        })
-    
-    speaking_packages = []
-    for pkg_id, pkg in SPEAKING_TEST_PACKAGES.items():
-        speaking_packages.append({
-            "id": pkg_id,
-            "tests": pkg["tests"],
-            "price": pkg["price"],
-            "price_per_test": pkg["price_per_test"],
-            "type": "speaking",
-            "description": f"{pkg['tests']} AI-powered speaking tests with pronunciation feedback"
-        })
-    
-    return {
-        "writing_packages": writing_packages,
-        "speaking_packages": speaking_packages,
-        "monetization_info": {
-            "description": "Institutions can resell these tests to recover subscription costs",
-            "suggested_markup": "2x-3x for profit",
-            "example": "Buy 100 writing tests at $1.00/test, sell at $3.00/test = $200 profit"
-        }
-    }
+# ==================== MONETIZATION CALCULATOR ====================
 
 @api_router.post("/pricing/monetization-calculator")
 async def calculate_monetization(
