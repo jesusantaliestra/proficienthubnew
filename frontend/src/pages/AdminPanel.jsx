@@ -275,6 +275,180 @@ export default function AdminPanel() {
           </div>
         )}
 
+        {/* Costs Tab - Internal Pricing Analysis */}
+        {activeTab === 'costs' && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900">Análisis de Costes Internos</h2>
+            <p className="text-gray-500">Vista de costes para administrador - NO compartir con clientes</p>
+            
+            {pricingAnalysis ? (
+              <>
+                {/* Costes por Tipo de Examen */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Database className="w-5 h-5 text-blue-600" />
+                      Coste por Tipo de Examen (Mock Test Completo)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-200">
+                            <th className="text-left py-3 px-4 font-semibold text-gray-600">Examen</th>
+                            <th className="text-center py-3 px-4 font-semibold text-gray-600">Speaking (min)</th>
+                            <th className="text-center py-3 px-4 font-semibold text-gray-600">Writing Tasks</th>
+                            <th className="text-right py-3 px-4 font-semibold text-gray-600">Coste Interno</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(pricingAnalysis.exam_costs).map(([key, exam]) => (
+                            <tr key={key} className="border-b border-gray-100 hover:bg-gray-50">
+                              <td className="py-3 px-4">
+                                <span className="font-semibold text-gray-900">{key.toUpperCase()}</span>
+                                <span className="block text-sm text-gray-500">{exam.description}</span>
+                              </td>
+                              <td className="text-center py-3 px-4">{exam.speaking_minutes} min</td>
+                              <td className="text-center py-3 px-4">{exam.writing_tasks}</td>
+                              <td className="text-right py-3 px-4">
+                                <span className="font-bold text-red-600">${exam.internal_cost.toFixed(2)}</span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-gray-50">
+                            <td colSpan="3" className="py-3 px-4 font-bold text-gray-900">PROMEDIO POR MOCK TEST</td>
+                            <td className="text-right py-3 px-4">
+                              <span className="font-bold text-red-600 text-lg">${pricingAnalysis.avg_mock_test_cost}</span>
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Costes Individuales */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Activity className="w-5 h-5 text-purple-600" />
+                      Costes Individuales (Desglose)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="p-4 bg-blue-50 rounded-xl text-center">
+                        <p className="text-sm text-gray-600 mb-1">Writing Test</p>
+                        <p className="text-2xl font-bold text-blue-600">${pricingAnalysis.individual_test_costs.writing}</p>
+                      </div>
+                      <div className="p-4 bg-purple-50 rounded-xl text-center">
+                        <p className="text-sm text-gray-600 mb-1">Speaking Test</p>
+                        <p className="text-2xl font-bold text-purple-600">${pricingAnalysis.individual_test_costs.speaking}</p>
+                      </div>
+                      <div className="p-4 bg-orange-50 rounded-xl text-center">
+                        <p className="text-sm text-gray-600 mb-1">AI Tutor (voz/min)</p>
+                        <p className="text-2xl font-bold text-orange-600">${pricingAnalysis.individual_test_costs.ai_tutor_per_min_voice}</p>
+                      </div>
+                      <div className="p-4 bg-green-50 rounded-xl text-center">
+                        <p className="text-sm text-gray-600 mb-1">AI Tutor (mixto/min)</p>
+                        <p className="text-2xl font-bold text-green-600">${pricingAnalysis.individual_test_costs.ai_tutor_per_min_mixed}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Análisis de Paquetes */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-green-600" />
+                      Análisis de Paquetes - Costes vs Precios vs Márgenes
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b-2 border-gray-200 bg-gray-50">
+                            <th className="text-left py-3 px-4 font-bold text-gray-700">Paquete</th>
+                            <th className="text-center py-3 px-4 font-bold text-gray-700">Mock Tests</th>
+                            <th className="text-center py-3 px-4 font-bold text-gray-700">AI Tutor</th>
+                            <th className="text-right py-3 px-4 font-bold text-red-600">TU COSTE</th>
+                            <th className="text-right py-3 px-4 font-bold text-blue-600">PRECIO VENTA</th>
+                            <th className="text-right py-3 px-4 font-bold text-green-600">GANANCIA</th>
+                            <th className="text-center py-3 px-4 font-bold text-gray-700">MARGEN</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pricingAnalysis.package_analysis.map((pkg, index) => (
+                            <tr key={pkg.package_id} className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                              <td className="py-4 px-4">
+                                <span className="font-semibold text-gray-900">{pkg.package_id.replace(/_/g, ' ').toUpperCase()}</span>
+                              </td>
+                              <td className="text-center py-4 px-4">{pkg.mock_tests}</td>
+                              <td className="text-center py-4 px-4">
+                                {pkg.ai_tutor_minutes > 0 ? `${pkg.ai_tutor_minutes} min` : '-'}
+                              </td>
+                              <td className="text-right py-4 px-4">
+                                <span className="font-bold text-red-600 bg-red-50 px-3 py-1 rounded-lg">
+                                  ${pkg.internal_cost.toFixed(2)}
+                                </span>
+                              </td>
+                              <td className="text-right py-4 px-4">
+                                <span className="font-bold text-blue-600">
+                                  ${pkg.price.toFixed(2)}
+                                </span>
+                              </td>
+                              <td className="text-right py-4 px-4">
+                                <span className="font-bold text-green-600 bg-green-50 px-3 py-1 rounded-lg">
+                                  ${pkg.profit.toFixed(2)}
+                                </span>
+                              </td>
+                              <td className="text-center py-4 px-4">
+                                <Badge className={`${
+                                  pkg.margin_percentage === '90%' ? 'bg-green-100 text-green-700' :
+                                  pkg.margin_percentage === '80%' ? 'bg-blue-100 text-blue-700' :
+                                  'bg-orange-100 text-orange-700'
+                                }`}>
+                                  {pkg.margin_percentage}
+                                </Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Resumen de Fórmulas */}
+                <Card className="bg-yellow-50 border-yellow-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-yellow-800">
+                      <AlertTriangle className="w-5 h-5" />
+                      Fórmulas de Cálculo
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm text-yellow-900 space-y-2">
+                    <p><strong>Speaking Test:</strong> STT ($0.06/min × 15min) + AI Eval ($0.01) + TTS Feedback ($0.48) = $1.39</p>
+                    <p><strong>Writing Test:</strong> AI Grading ($0.02) + TTS básico ($0.24) = $0.26</p>
+                    <p><strong>Mock Test:</strong> Speaking + Writing + Corrección automática ≈ $1.77 promedio</p>
+                    <p><strong>AI Tutor/min:</strong> STT ($0.06) + GPT ($0.004) + TTS ($0.12) = $0.18 (voz completo)</p>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <div className="text-center py-12">
+                <RefreshCw className="w-12 h-12 text-gray-300 mx-auto mb-4 animate-spin" />
+                <p className="text-gray-500">Cargando análisis de costes...</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Users Tab */}
         {activeTab === 'users' && (
           <div className="space-y-6">
