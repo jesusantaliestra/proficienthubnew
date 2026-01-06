@@ -109,8 +109,9 @@ export default function AdminPanel() {
 
   const tabs = [
     { id: 'overview', label: 'Resumen', icon: BarChart3 },
+    { id: 'costs', label: 'Costes', icon: DollarSign },
     { id: 'users', label: 'Usuarios', icon: Users },
-    { id: 'revenue', label: 'Ingresos', icon: DollarSign },
+    { id: 'revenue', label: 'Ingresos', icon: TrendingUp },
     { id: 'settings', label: 'API Keys', icon: Key },
   ];
 
