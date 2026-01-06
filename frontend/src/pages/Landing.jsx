@@ -313,87 +313,93 @@ export default function Landing() {
       <section id="pricing" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Exam Package Pricing</h2>
-            <p className="text-xl text-gray-600 mb-8">Buy mock test packages. All exams include Speaking + Writing with AI grading.</p>
-            
-            {/* Billing toggle */}
-            <div className="flex justify-center mb-8">
-              <div className="inline-flex bg-white border-2 border-gray-200 rounded-xl p-1">
-                <button
-                  className={`px-6 py-2 rounded-lg font-bold transition-all ${billingCycle === 'monthly' ? 'bg-gray-800 text-white' : 'text-gray-500'}`}
-                  onClick={() => setBillingCycle('monthly')}
-                >
-                  One-time
-                </button>
-                <button
-                  className={`px-6 py-2 rounded-lg font-bold transition-all ${billingCycle === 'yearly' ? 'bg-gray-800 text-white' : 'text-gray-500'}`}
-                  onClick={() => setBillingCycle('yearly')}
-                >
-                  Yearly
-                  <Badge className="ml-2 bg-green-100 text-green-700 border-0">Save 17%</Badge>
-                </button>
-              </div>
-            </div>
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Paquetes de Exámenes B2B</h2>
+            <p className="text-xl text-gray-600 mb-8">4 planes simples. Más volumen = menos precio por examen. AI Tutor opcional.</p>
           </div>
           
-          {/* Package Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {/* 4 Package Cards */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {examPackages.map((pkg, index) => (
               <div 
                 key={pkg.id} 
-                className={`bg-white rounded-2xl border-2 p-6 ${pkg.id === 'growth_40_ai' ? 'border-[#58CC02] ring-4 ring-green-100' : 'border-gray-200'}`}
+                className={`bg-white rounded-2xl border-2 p-6 ${pkg.id === 'plan_40' ? 'border-[#58CC02] ring-4 ring-green-100' : 'border-gray-200'}`}
                 data-testid={`package-${pkg.id}`}
               >
-                {pkg.id === 'growth_40_ai' && (
-                  <Badge className="bg-[#58CC02] text-white border-0 mb-4">Most Popular</Badge>
+                {pkg.id === 'plan_40' && (
+                  <Badge className="bg-[#58CC02] text-white border-0 mb-4">Más Popular</Badge>
                 )}
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{pkg.description}</h3>
+                {pkg.volume_discount !== "0%" && (
+                  <Badge className="bg-orange-100 text-orange-700 border-0 mb-4">-{pkg.volume_discount}</Badge>
+                )}
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{pkg.mock_tests} Tests</h3>
                 <div className="mb-4">
                   <span className="text-4xl font-extrabold text-gray-900">${pkg.price}</span>
-                  <span className="text-gray-500 ml-1">{billingCycle === 'yearly' ? '/year' : ''}</span>
                 </div>
                 
-                <div className="space-y-2 mb-6">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Check className="w-5 h-5 text-[#58CC02]" />
-                    <span><strong>{pkg.mock_tests}</strong> mock tests completos</span>
-                  </div>
-                  {pkg.has_ai_tutor && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Check className="w-5 h-5 text-[#58CC02]" />
-                      <span><strong>{pkg.ai_tutor_minutes}</strong> min AI Tutor con voz</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Check className="w-5 h-5 text-[#58CC02]" />
-                    <span>${pkg.price_per_test}/test</span>
-                  </div>
-                  {pkg.features.slice(0, 2).map((feature, i) => (
+                <div className="bg-green-50 rounded-lg p-3 mb-4">
+                  <div className="text-sm text-gray-600">Precio por examen</div>
+                  <div className="text-2xl font-bold text-[#58CC02]">${pkg.price_per_exam}</div>
+                </div>
+                
+                <div className="space-y-2 mb-6 text-sm">
+                  {pkg.features.slice(0, 4).map((feature, i) => (
                     <div key={i} className="flex items-center gap-2 text-gray-600">
-                      <Check className="w-5 h-5 text-[#58CC02]" />
+                      <Check className="w-4 h-4 text-[#58CC02]" />
                       <span>{feature}</span>
                     </div>
                   ))}
                 </div>
                 
                 <button 
-                  className={`w-full py-3 rounded-xl font-bold transition-all ${pkg.id === 'growth_40_ai' ? 'btn-duo' : 'btn-duo-outline'}`}
+                  className={`w-full py-3 rounded-xl font-bold transition-all ${pkg.id === 'plan_40' ? 'btn-duo' : 'btn-duo-outline'}`}
                   onClick={() => {
                     setSelectedPackage(pkg.id);
                     document.getElementById('calculator').scrollIntoView({ behavior: 'smooth' });
                   }}
                 >
-                  Calculate ROI
+                  Calcular ROI
                 </button>
               </div>
             ))}
+          </div>
+          
+          {/* AI Tutor Add-on */}
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-6 max-w-4xl mx-auto mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Brain className="w-8 h-8 text-purple-600" />
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">AI Tutor Add-on</h3>
+                <p className="text-gray-600">Añade tutorías con voz a cualquier plan</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white rounded-xl p-3 text-center">
+                <div className="font-bold text-gray-900">30 min</div>
+                <div className="text-purple-600 font-bold">+$4.50</div>
+              </div>
+              <div className="bg-white rounded-xl p-3 text-center">
+                <div className="font-bold text-gray-900">60 min</div>
+                <div className="text-purple-600 font-bold">+$8.00</div>
+              </div>
+              <div className="bg-white rounded-xl p-3 text-center">
+                <div className="font-bold text-gray-900">120 min</div>
+                <div className="text-purple-600 font-bold">+$14.00</div>
+              </div>
+              <div className="bg-white rounded-xl p-3 text-center">
+                <div className="font-bold text-gray-900">300 min</div>
+                <div className="text-purple-600 font-bold">+$30.00</div>
+              </div>
+            </div>
+            <p className="text-center text-gray-500 mt-4 text-sm">
+              $0.15/min - Conversación con voz, feedback personalizado, práctica de pronunciación
+            </p>
           </div>
           
           {/* Cost breakdown */}
           <div className="bg-gray-50 rounded-2xl p-6 max-w-4xl mx-auto">
             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Calculator className="w-5 h-5 text-[#58CC02]" />
-              Costo interno por tipo de examen
+              Tu coste interno por tipo de examen
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               {examTypes.map((exam) => (
@@ -407,7 +413,7 @@ export default function Landing() {
               ))}
             </div>
             <p className="text-center text-gray-500 mt-4 text-sm">
-              Promedio: <strong>$1.77</strong> por mock test (Speaking AI + Writing AI + Corrección)
+              Promedio: <strong>$0.94</strong> por mock test (Speaking AI + Writing AI + Corrección)
             </p>
           </div>
         </div>
