@@ -77,15 +77,6 @@ export default function Landing() {
     }
   }, [selectedPackage, numStudents, pricePerStudent]);
 
-  const calculatePricing = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/pricing/calculate?students=${studentCount}&exams=${selectedExams}&credit_tier=${selectedCreditTier}`);
-      setPricingResult(response.data);
-    } catch (error) {
-      console.error('Pricing calculation error:', error);
-    }
-  };
-
   const calculateMonetization = async () => {
     try {
       const response = await axios.post(
@@ -94,9 +85,9 @@ export default function Landing() {
       setMonetizationResult(response.data);
     } catch (error) {
       console.error('Monetization calculation error:', error);
-      // Fallback local calculation
-      const writingCost = monetizationValues.writingTests * 1.0;
-      const speakingCost = monetizationValues.speakingTests * 1.5;
+      // Fallback local calculation with new costs
+      const writingCost = monetizationValues.writingTests * 1.05;  // $1.05 per test from package
+      const speakingCost = monetizationValues.speakingTests * 5.55; // $5.55 per test from package
       const writingRevenue = monetizationValues.writingTests * monetizationValues.writingSellPrice;
       const speakingRevenue = monetizationValues.speakingTests * monetizationValues.speakingSellPrice;
       
@@ -115,10 +106,6 @@ export default function Landing() {
           investment: writingCost + speakingCost,
           profit: Math.round((writingRevenue - writingCost) + (speakingRevenue - speakingCost)),
           roi_percent: Math.round(((writingRevenue + speakingRevenue) / (writingCost + speakingCost) - 1) * 100)
-        },
-        subscription_recovery: {
-          writing_tests_needed: Math.ceil(500 / monetizationValues.writingSellPrice),
-          speaking_tests_needed: Math.ceil(500 / monetizationValues.speakingSellPrice)
         }
       });
     }
