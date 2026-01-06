@@ -730,111 +730,169 @@ async def get_tutor_history(exam_type: str, current_user: dict = Depends(get_cur
     return {"conversations": conversations}
 
 # ==================== PRICING ENDPOINTS ====================
-# Pricing with 85-95% margins (accounting for ElevenLabs ~$0.30/1K chars + OpenAI ~$0.03/1K tokens)
-# Heavy usage per student: ~$15-25/month in AI costs
-# Pricing ensures minimum 85% margin
+# COST CALCULATION per student/month (moderate AI usage):
+# - OpenAI GPT-4o (50 conversations): $0.30
+# - ElevenLabs voice (20 min): $2.50  
+# - OpenAI Whisper STT (20 min): $0.12
+# TOTAL AI COST: ~$3/student/month
+#
+# CREDIT SYSTEM: 1 credit = ~$0.06 AI cost
+# 50 credits/student/month = standard allocation
+#
+# MARGIN TARGETS:
+# - 1-10 students: 92% margin → $39/student
+# - 11-50 students: 90% margin → $29/student
+# - 51-100 students: 87% margin → $24/student  
+# - 101-200 students: 85% margin → $20/student
+# - 200+ students: 83% margin → $18/student
 
-def get_pricing_plans(exam_count: int = 1):
-    """Generate pricing plans based on exam count"""
-    exam_multiplier = 1.0 if exam_count == 1 else (1.6 if exam_count == 2 else 2.2)
+# Cost per credit (AI cost basis)
+CREDIT_COST = 0.06  # $0.06 per credit in AI costs
+CREDITS_PER_STUDENT = 50  # Standard monthly allocation
+
+# Dynamic unit pricing per student (price per student/month)
+UNIT_PRICING = {
+    "tier_1": {"min": 1, "max": 10, "price_per_student": 39, "margin": 0.92},
+    "tier_2": {"min": 11, "max": 50, "price_per_student": 29, "margin": 0.90},
+    "tier_3": {"min": 51, "max": 100, "price_per_student": 24, "margin": 0.87},
+    "tier_4": {"min": 101, "max": 200, "price_per_student": 20, "margin": 0.85},
+    "tier_5": {"min": 201, "max": 500, "price_per_student": 18, "margin": 0.83},
+}
+
+# Exam multipliers
+EXAM_MULTIPLIERS = {
+    1: 1.0,
+    2: 1.4,
+    3: 1.8  # 3 or more exams
+}
+
+def get_unit_price(num_students: int, num_exams: int = 1) -> dict:
+    """Calculate unit price per student based on volume"""
+    exam_mult = EXAM_MULTIPLIERS.get(min(num_exams, 3), 1.8)
     
-    plans = {
-        "starter": {
-            "id": "starter",
-            "name": "Starter",
-            "students": "1-10",
-            "max_students": 10,
-            "base_price_monthly": 149,
-            "base_price_yearly": 1490,
-            "features": [
-                "Up to 10 students",
-                f"{exam_count} exam type{'s' if exam_count > 1 else ''}",
-                "AI Tutoring",
-                "Basic Analytics",
-                "Email Support"
-            ],
-            "storage_gb": 1,
-            "video_classes": False,
-            "voice_enabled": False
-        },
-        "growth": {
-            "id": "growth",
-            "name": "Growth",
-            "students": "11-50",
-            "max_students": 50,
-            "base_price_monthly": 349,
-            "base_price_yearly": 3490,
-            "features": [
-                "Up to 50 students",
-                f"{exam_count} exam type{'s' if exam_count > 1 else ''}",
-                "AI Tutoring + Voice",
-                "Advanced Analytics",
-                "Library (5GB)",
-                "Priority Support"
-            ],
-            "storage_gb": 5,
-            "video_classes": False,
-            "voice_enabled": True
-        },
-        "professional": {
-            "id": "professional",
-            "name": "Professional",
-            "students": "51-100",
-            "max_students": 100,
-            "base_price_monthly": 699,
-            "base_price_yearly": 6990,
-            "features": [
-                "Up to 100 students",
-                f"{exam_count} exam type{'s' if exam_count > 1 else ''}",
-                "AI Tutoring + Voice",
-                "Premium Analytics",
-                "Library (25GB)",
-                "Video Classes",
-                "Dedicated Support"
-            ],
-            "storage_gb": 25,
-            "video_classes": True,
-            "voice_enabled": True,
-            "popular": True
-        },
-        "enterprise": {
-            "id": "enterprise",
-            "name": "Enterprise",
-            "students": "101-200",
-            "max_students": 200,
-            "base_price_monthly": 1299,
-            "base_price_yearly": 12990,
-            "extra_student_price": 8,
-            "features": [
-                "101-200 students (+$8/extra)",
-                "All exam types",
-                "Unlimited AI + Voice",
-                "Full Analytics Suite",
-                "Unlimited Library",
-                "Video Classes + Recording",
-                "White-label Option",
-                "Dedicated Account Manager"
-            ],
-            "storage_gb": 100,
-            "video_classes": True,
-            "voice_enabled": True
-        }
+    for tier_name, tier in UNIT_PRICING.items():
+        if tier["min"] <= num_students <= tier["max"]:
+            base_price = tier["price_per_student"]
+            final_price = round(base_price * exam_mult, 2)
+            ai_cost = CREDIT_COST * CREDITS_PER_STUDENT * exam_mult
+            actual_margin = round((final_price - ai_cost) / final_price * 100, 1)
+            
+            return {
+                "tier": tier_name,
+                "students_range": f"{tier['min']}-{tier['max']}",
+                "base_price_per_student": base_price,
+                "exam_multiplier": exam_mult,
+                "final_price_per_student": final_price,
+                "monthly_total": round(final_price * num_students, 2),
+                "yearly_total": round(final_price * num_students * 10, 2),  # 2 months free
+                "credits_per_student": int(CREDITS_PER_STUDENT * exam_mult),
+                "ai_cost_per_student": round(ai_cost, 2),
+                "margin_percentage": actual_margin,
+                "yearly_savings": "17%"
+            }
+    
+    # For 500+ students, custom pricing
+    return {
+        "tier": "enterprise_custom",
+        "students_range": "500+",
+        "message": "Contact us for custom enterprise pricing",
+        "base_price_per_student": 15,
+        "exam_multiplier": exam_mult
     }
+
+def get_pricing_tiers(num_exams: int = 1):
+    """Get all pricing tiers for display"""
+    exam_mult = EXAM_MULTIPLIERS.get(min(num_exams, 3), 1.8)
     
-    # Apply exam multiplier
-    for plan_id, plan in plans.items():
-        plan["price_monthly"] = round(plan["base_price_monthly"] * exam_multiplier)
-        plan["price_yearly"] = round(plan["base_price_yearly"] * exam_multiplier)
-        plan["exam_count"] = exam_count if plan_id != "enterprise" else "all"
+    tiers = []
+    for tier_name, tier in UNIT_PRICING.items():
+        base_price = tier["price_per_student"]
+        final_price = round(base_price * exam_mult, 2)
+        ai_cost = CREDIT_COST * CREDITS_PER_STUDENT * exam_mult
+        actual_margin = round((final_price - ai_cost) / final_price * 100, 1)
+        
+        # Example calculation for tier midpoint
+        example_students = (tier["min"] + tier["max"]) // 2
+        
+        tiers.append({
+            "id": tier_name,
+            "name": f"{tier['min']}-{tier['max']} Students",
+            "students_min": tier["min"],
+            "students_max": tier["max"],
+            "price_per_student": final_price,
+            "credits_per_student": int(CREDITS_PER_STUDENT * exam_mult),
+            "margin": actual_margin,
+            "example": {
+                "students": example_students,
+                "monthly": round(final_price * example_students, 2),
+                "yearly": round(final_price * example_students * 10, 2)
+            },
+            "features": get_tier_features(tier_name, num_exams)
+        })
     
-    return list(plans.values())
+    return tiers
+
+def get_tier_features(tier_name: str, num_exams: int) -> list:
+    """Get features for each tier"""
+    exam_text = f"{num_exams} exam{'s' if num_exams > 1 else ''}" if num_exams < 3 else "All 5 exams"
+    
+    base_features = [exam_text, "AI Tutoring", "Progress Analytics", "Exam Simulations"]
+    
+    if tier_name in ["tier_2", "tier_3", "tier_4", "tier_5"]:
+        base_features.extend(["Voice-enabled AI", "Speaking Practice"])
+    
+    if tier_name in ["tier_3", "tier_4", "tier_5"]:
+        base_features.extend(["Premium Analytics", "Risk Prediction", "Library (25GB)"])
+    
+    if tier_name in ["tier_4", "tier_5"]:
+        base_features.extend(["Video Classes", "Dedicated Support", "Custom Branding"])
+    
+    if tier_name == "tier_5":
+        base_features.extend(["White-label", "API Access", "Account Manager"])
+    
+    return base_features
+
+@api_router.get("/pricing/calculate")
+async def calculate_pricing(students: int, exams: int = 1):
+    """Calculate exact pricing for specific number of students and exams"""
+    return get_unit_price(students, exams)
+
+@api_router.get("/pricing/tiers")
+async def get_pricing_tiers_endpoint(exams: int = 1):
+    """Get all pricing tiers for display"""
+    return {
+        "exams_selected": exams,
+        "exam_multiplier": EXAM_MULTIPLIERS.get(min(exams, 3), 1.8),
+        "tiers": get_pricing_tiers(exams),
+        "cost_breakdown": {
+            "ai_cost_per_student": round(CREDIT_COST * CREDITS_PER_STUDENT, 2),
+            "credits_included": CREDITS_PER_STUDENT,
+            "credit_components": {
+                "openai_conversations": "50/month",
+                "elevenlabs_voice_minutes": "20/month",
+                "whisper_stt_minutes": "20/month"
+            }
+        },
+        "notes": [
+            "Prices shown are per student per month",
+            "Yearly billing saves 17% (2 months free)",
+            "Credits reset monthly",
+            "Overage: $0.80 per additional credit"
+        ]
+    }
 
 @api_router.get("/pricing/institutional")
 async def get_institutional_pricing(exam_count: int = 1):
-    return {"plans": get_pricing_plans(exam_count)}
+    """Legacy endpoint - returns tier-based pricing"""
+    return {
+        "pricing_model": "per_student",
+        "tiers": get_pricing_tiers(exam_count),
+        "exam_multipliers": EXAM_MULTIPLIERS
+    }
 
 @api_router.get("/pricing/individual")
 async def get_individual_pricing():
+    """Individual learner pricing"""
     return {
         "plans": [
             {
@@ -842,15 +900,46 @@ async def get_individual_pricing():
                 "name": "Single Exam",
                 "price_monthly": 29,
                 "price_yearly": 290,
-                "features": ["1 exam type", "Unlimited practice", "AI feedback", "Progress tracking"]
+                "credits": 50,
+                "features": ["1 exam type", "50 AI credits/month", "Voice practice", "Progress tracking"],
+                "ai_cost": 3,
+                "margin": 90
+            },
+            {
+                "id": "multi_exam",
+                "name": "Two Exams",
+                "price_monthly": 39,
+                "price_yearly": 390,
+                "credits": 70,
+                "features": ["2 exam types", "70 AI credits/month", "Voice practice", "Priority support"],
+                "ai_cost": 4.2,
+                "margin": 89
             },
             {
                 "id": "all_access",
-                "name": "All Access",
+                "name": "All Exams",
                 "price_monthly": 49,
                 "price_yearly": 490,
-                "features": ["All exam types", "Unlimited practice", "AI tutoring + Voice", "Speaking practice", "Priority support"]
+                "credits": 90,
+                "features": ["All 5 exam types", "90 AI credits/month", "Unlimited voice", "Premium support"],
+                "ai_cost": 5.4,
+                "margin": 89
             }
+        ]
+    }
+
+@api_router.get("/pricing/credits")
+async def get_credit_pricing():
+    """Get credit pack pricing for additional usage"""
+    return {
+        "credit_value": f"${CREDIT_COST} AI cost per credit",
+        "included_per_student": CREDITS_PER_STUDENT,
+        "overage_rate": 0.80,  # $0.80 per extra credit
+        "bulk_packs": [
+            {"credits": 100, "price": 70, "savings": "13%"},
+            {"credits": 500, "price": 300, "savings": "25%"},
+            {"credits": 1000, "price": 500, "savings": "38%"},
+            {"credits": 5000, "price": 2000, "savings": "50%"}
         ]
     }
 
