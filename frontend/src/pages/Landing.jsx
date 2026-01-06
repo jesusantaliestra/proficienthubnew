@@ -177,13 +177,6 @@ export default function Landing() {
     { id: 'pte', name: 'PTE', color: 'bg-orange-500', cost: '$1.76/test' },
     { id: 'oet', name: 'OET', color: 'bg-green-500', cost: '$1.91/test' }
   ];
-    }
-    if (['tier_4', 'tier_5'].includes(tierId)) {
-      base.push('Video Classes');
-    }
-    
-    return base;
-  };
 
   return (
     <div className="min-h-screen bg-white">
