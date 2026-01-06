@@ -1,0 +1,445 @@
+{
+  "en": {
+    "common": {
+      "loading": "Loading...",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "submit": "Submit",
+      "back": "Back",
+      "next": "Next",
+      "finish": "Finish",
+      "start": "Start",
+      "continue": "Continue",
+      "retry": "Retry",
+      "close": "Close"
+    },
+    "nav": {
+      "home": "Home",
+      "features": "Features",
+      "pricing": "Pricing",
+      "exams": "Exams",
+      "dashboard": "Dashboard",
+      "login": "Log In",
+      "register": "Get Started",
+      "logout": "Log Out"
+    },
+    "auth": {
+      "login": "Log In",
+      "register": "Create Account",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "name": "Full Name",
+      "forgotPassword": "Forgot Password?",
+      "noAccount": "Don't have an account?",
+      "hasAccount": "Already have an account?",
+      "signUp": "Sign Up",
+      "signIn": "Sign In"
+    },
+    "landing": {
+      "hero": {
+        "title": "Scale Your Academy 10x With AI-Powered Learning",
+        "subtitle": "Your current teachers can handle 10x more students with AI tutors, instant feedback, and premium analytics.",
+        "cta": "Start Free Trial",
+        "secondaryCta": "Calculate Your ROI"
+      },
+      "features": {
+        "title": "Everything Your Institution Needs",
+        "subtitle": "Premium features designed for scale and student success"
+      },
+      "pricing": {
+        "title": "Transparent Per-Student Pricing",
+        "subtitle": "Pay only for what you need. Volume discounts applied automatically.",
+        "monthly": "Monthly",
+        "yearly": "Yearly",
+        "savePercent": "Save 17%",
+        "perStudent": "per student/mo",
+        "contact": "Contact us for custom enterprise pricing"
+      },
+      "roi": {
+        "title": "Calculate Your ROI",
+        "subtitle": "See how AI can multiply your capacity without hiring more teachers",
+        "currentNumbers": "Your Current Numbers",
+        "projectedResults": "Your Projected Results",
+        "calculate": "Calculate My ROI"
+      }
+    },
+    "dashboard": {
+      "welcome": "Welcome back",
+      "students": "Students",
+      "exams": "Exams",
+      "analytics": "Analytics",
+      "library": "Library",
+      "settings": "Settings",
+      "totalStudents": "Total Students",
+      "passRate": "Pass Rate",
+      "atRisk": "At Risk",
+      "highPerformers": "High Performers"
+    },
+    "exams": {
+      "types": {
+        "toefl": "TOEFL",
+        "ielts": "IELTS",
+        "cambridge": "Cambridge",
+        "pte": "PTE",
+        "oet": "OET"
+      },
+      "sections": {
+        "reading": "Reading",
+        "listening": "Listening",
+        "speaking": "Speaking",
+        "writing": "Writing"
+      },
+      "practice": "Practice",
+      "mockTest": "Mock Test",
+      "timeRemaining": "Time Remaining",
+      "questionsRemaining": "Questions Remaining",
+      "submitExam": "Submit Exam"
+    },
+    "tutor": {
+      "title": "AI Tutor",
+      "askQuestion": "Ask a question...",
+      "voiceMode": "Voice Mode",
+      "textMode": "Text Mode",
+      "listening": "Listening...",
+      "speaking": "Speaking...",
+      "thinking": "Thinking..."
+    },
+    "speaking": {
+      "startRecording": "Start Recording",
+      "stopRecording": "Stop Recording",
+      "playback": "Play Recording",
+      "submitResponse": "Submit Response",
+      "preparationTime": "Preparation Time",
+      "speakingTime": "Speaking Time"
+    }
+  },
+  "es": {
+    "common": {
+      "loading": "Cargando...",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "delete": "Eliminar",
+      "edit": "Editar",
+      "submit": "Enviar",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "finish": "Finalizar",
+      "start": "Iniciar",
+      "continue": "Continuar",
+      "retry": "Reintentar",
+      "close": "Cerrar"
+    },
+    "nav": {
+      "home": "Inicio",
+      "features": "Funciones",
+      "pricing": "Precios",
+      "exams": "Exámenes",
+      "dashboard": "Panel",
+      "login": "Iniciar Sesión",
+      "register": "Comenzar",
+      "logout": "Cerrar Sesión"
+    },
+    "auth": {
+      "login": "Iniciar Sesión",
+      "register": "Crear Cuenta",
+      "email": "Correo Electrónico",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar Contraseña",
+      "name": "Nombre Completo",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "noAccount": "¿No tienes cuenta?",
+      "hasAccount": "¿Ya tienes cuenta?",
+      "signUp": "Registrarse",
+      "signIn": "Iniciar Sesión"
+    },
+    "landing": {
+      "hero": {
+        "title": "Escala Tu Academia 10x Con Aprendizaje Impulsado por IA",
+        "subtitle": "Tus profesores actuales pueden manejar 10x más estudiantes con tutores IA, feedback instantáneo y analíticas premium.",
+        "cta": "Prueba Gratuita",
+        "secondaryCta": "Calcula Tu ROI"
+      },
+      "features": {
+        "title": "Todo Lo Que Tu Institución Necesita",
+        "subtitle": "Funciones premium diseñadas para escalar y el éxito estudiantil"
+      },
+      "pricing": {
+        "title": "Precios Transparentes Por Estudiante",
+        "subtitle": "Paga solo por lo que necesitas. Descuentos por volumen aplicados automáticamente.",
+        "monthly": "Mensual",
+        "yearly": "Anual",
+        "savePercent": "Ahorra 17%",
+        "perStudent": "por estudiante/mes",
+        "contact": "Contáctanos para precios empresariales personalizados"
+      },
+      "roi": {
+        "title": "Calcula Tu ROI",
+        "subtitle": "Mira cómo la IA puede multiplicar tu capacidad sin contratar más profesores",
+        "currentNumbers": "Tus Números Actuales",
+        "projectedResults": "Tus Resultados Proyectados",
+        "calculate": "Calcular Mi ROI"
+      }
+    },
+    "dashboard": {
+      "welcome": "Bienvenido de nuevo",
+      "students": "Estudiantes",
+      "exams": "Exámenes",
+      "analytics": "Analíticas",
+      "library": "Biblioteca",
+      "settings": "Configuración",
+      "totalStudents": "Total Estudiantes",
+      "passRate": "Tasa de Aprobación",
+      "atRisk": "En Riesgo",
+      "highPerformers": "Alto Rendimiento"
+    },
+    "exams": {
+      "types": {
+        "toefl": "TOEFL",
+        "ielts": "IELTS",
+        "cambridge": "Cambridge",
+        "pte": "PTE",
+        "oet": "OET"
+      },
+      "sections": {
+        "reading": "Lectura",
+        "listening": "Comprensión Auditiva",
+        "speaking": "Expresión Oral",
+        "writing": "Escritura"
+      },
+      "practice": "Practicar",
+      "mockTest": "Examen Simulado",
+      "timeRemaining": "Tiempo Restante",
+      "questionsRemaining": "Preguntas Restantes",
+      "submitExam": "Enviar Examen"
+    },
+    "tutor": {
+      "title": "Tutor IA",
+      "askQuestion": "Haz una pregunta...",
+      "voiceMode": "Modo Voz",
+      "textMode": "Modo Texto",
+      "listening": "Escuchando...",
+      "speaking": "Hablando...",
+      "thinking": "Pensando..."
+    },
+    "speaking": {
+      "startRecording": "Iniciar Grabación",
+      "stopRecording": "Detener Grabación",
+      "playback": "Reproducir Grabación",
+      "submitResponse": "Enviar Respuesta",
+      "preparationTime": "Tiempo de Preparación",
+      "speakingTime": "Tiempo de Habla"
+    }
+  },
+  "pt": {
+    "common": {
+      "loading": "Carregando...",
+      "save": "Salvar",
+      "cancel": "Cancelar",
+      "delete": "Excluir",
+      "edit": "Editar",
+      "submit": "Enviar",
+      "back": "Voltar",
+      "next": "Próximo",
+      "finish": "Finalizar",
+      "start": "Iniciar",
+      "continue": "Continuar",
+      "retry": "Tentar Novamente",
+      "close": "Fechar"
+    },
+    "nav": {
+      "home": "Início",
+      "features": "Recursos",
+      "pricing": "Preços",
+      "exams": "Exames",
+      "dashboard": "Painel",
+      "login": "Entrar",
+      "register": "Começar",
+      "logout": "Sair"
+    },
+    "auth": {
+      "login": "Entrar",
+      "register": "Criar Conta",
+      "email": "E-mail",
+      "password": "Senha",
+      "confirmPassword": "Confirmar Senha",
+      "name": "Nome Completo",
+      "forgotPassword": "Esqueceu a senha?",
+      "noAccount": "Não tem conta?",
+      "hasAccount": "Já tem conta?",
+      "signUp": "Cadastrar",
+      "signIn": "Entrar"
+    },
+    "landing": {
+      "hero": {
+        "title": "Escale Sua Academia 10x Com Aprendizado Impulsionado por IA",
+        "subtitle": "Seus professores atuais podem gerenciar 10x mais alunos com tutores IA, feedback instantâneo e análises premium.",
+        "cta": "Teste Gratuito",
+        "secondaryCta": "Calcule Seu ROI"
+      },
+      "features": {
+        "title": "Tudo Que Sua Instituição Precisa",
+        "subtitle": "Recursos premium projetados para escala e sucesso dos alunos"
+      },
+      "pricing": {
+        "title": "Preços Transparentes Por Aluno",
+        "subtitle": "Pague apenas pelo que precisa. Descontos por volume aplicados automaticamente.",
+        "monthly": "Mensal",
+        "yearly": "Anual",
+        "savePercent": "Economize 17%",
+        "perStudent": "por aluno/mês",
+        "contact": "Entre em contato para preços empresariais personalizados"
+      }
+    },
+    "dashboard": {
+      "welcome": "Bem-vindo de volta",
+      "students": "Alunos",
+      "exams": "Exames",
+      "analytics": "Análises",
+      "library": "Biblioteca",
+      "settings": "Configurações"
+    },
+    "exams": {
+      "sections": {
+        "reading": "Leitura",
+        "listening": "Compreensão Auditiva",
+        "speaking": "Expressão Oral",
+        "writing": "Escrita"
+      },
+      "practice": "Praticar",
+      "mockTest": "Simulado"
+    },
+    "tutor": {
+      "title": "Tutor IA",
+      "askQuestion": "Faça uma pergunta...",
+      "voiceMode": "Modo Voz",
+      "textMode": "Modo Texto"
+    }
+  },
+  "fr": {
+    "common": {
+      "loading": "Chargement...",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "submit": "Soumettre",
+      "back": "Retour",
+      "next": "Suivant",
+      "finish": "Terminer",
+      "start": "Commencer",
+      "continue": "Continuer",
+      "retry": "Réessayer",
+      "close": "Fermer"
+    },
+    "nav": {
+      "home": "Accueil",
+      "features": "Fonctionnalités",
+      "pricing": "Tarifs",
+      "exams": "Examens",
+      "dashboard": "Tableau de bord",
+      "login": "Connexion",
+      "register": "Commencer",
+      "logout": "Déconnexion"
+    },
+    "auth": {
+      "login": "Connexion",
+      "register": "Créer un compte",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "name": "Nom complet"
+    },
+    "landing": {
+      "hero": {
+        "title": "Multipliez Votre Académie par 10 Avec l'IA",
+        "subtitle": "Vos enseignants actuels peuvent gérer 10x plus d'étudiants avec des tuteurs IA.",
+        "cta": "Essai Gratuit",
+        "secondaryCta": "Calculez Votre ROI"
+      }
+    },
+    "dashboard": {
+      "welcome": "Bienvenue",
+      "students": "Étudiants",
+      "exams": "Examens"
+    },
+    "exams": {
+      "sections": {
+        "reading": "Lecture",
+        "listening": "Compréhension Orale",
+        "speaking": "Expression Orale",
+        "writing": "Expression Écrite"
+      }
+    }
+  },
+  "de": {
+    "common": {
+      "loading": "Laden...",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "submit": "Absenden",
+      "back": "Zurück",
+      "next": "Weiter"
+    },
+    "nav": {
+      "home": "Startseite",
+      "features": "Funktionen",
+      "pricing": "Preise",
+      "exams": "Prüfungen",
+      "dashboard": "Dashboard",
+      "login": "Anmelden",
+      "register": "Starten"
+    },
+    "landing": {
+      "hero": {
+        "title": "Skalieren Sie Ihre Akademie 10x Mit KI-Lernen",
+        "subtitle": "Ihre aktuellen Lehrer können 10x mehr Schüler betreuen.",
+        "cta": "Kostenlos Testen"
+      }
+    },
+    "exams": {
+      "sections": {
+        "reading": "Lesen",
+        "listening": "Hören",
+        "speaking": "Sprechen",
+        "writing": "Schreiben"
+      }
+    }
+  },
+  "it": {
+    "common": {
+      "loading": "Caricamento...",
+      "save": "Salva",
+      "cancel": "Annulla",
+      "submit": "Invia",
+      "back": "Indietro",
+      "next": "Avanti"
+    },
+    "nav": {
+      "home": "Home",
+      "features": "Funzionalità",
+      "pricing": "Prezzi",
+      "exams": "Esami",
+      "dashboard": "Dashboard",
+      "login": "Accedi",
+      "register": "Inizia"
+    },
+    "landing": {
+      "hero": {
+        "title": "Scala la Tua Accademia 10x Con l'Apprendimento IA",
+        "subtitle": "I tuoi insegnanti attuali possono gestire 10x più studenti.",
+        "cta": "Prova Gratuita"
+      }
+    },
+    "exams": {
+      "sections": {
+        "reading": "Lettura",
+        "listening": "Ascolto",
+        "speaking": "Parlato",
+        "writing": "Scrittura"
+      }
+    }
+  }
+}
