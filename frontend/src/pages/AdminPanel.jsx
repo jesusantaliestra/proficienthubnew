@@ -23,6 +23,7 @@ export default function AdminPanel() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showKeys, setShowKeys] = useState({});
+  const [pricingAnalysis, setPricingAnalysis] = useState(null);
   
   const [apiKeys, setApiKeys] = useState({
     openai_key: '',
@@ -38,7 +39,20 @@ export default function AdminPanel() {
     }
     fetchStats();
     fetchSettings();
+    fetchPricingAnalysis();
   }, [user, navigate]);
+
+  const fetchPricingAnalysis = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/admin/pricing-analysis`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPricingAnalysis(response.data);
+    } catch (error) {
+      console.error('Error fetching pricing analysis:', error);
+    }
+  };
 
   const fetchStats = async () => {
     try {
