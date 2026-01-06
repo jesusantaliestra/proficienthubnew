@@ -731,32 +731,74 @@ async def get_tutor_history(exam_type: str, current_user: dict = Depends(get_cur
 
 # ==================== PRICING ENDPOINTS ====================
 # INTERNAL COST CALCULATION (NOT VISIBLE TO CLIENTS):
-# OpenAI GPT-4o (50 conversations): $0.30/student
-# ElevenLabs voice (20 min): $2.50/student
-# OpenAI Whisper STT (20 min): $0.12/student
-# Writing feedback (AI): $0.50/student
-# TOTAL AI COST: ~$3.50/student/month (basic 50 credits)
-# Medium (100 credits): ~$7/student
-# Intensive (200 credits): ~$14/student
+# 
+# CREDIT USAGE BREAKDOWN PER STUDENT/MONTH:
+# 
+# AI TEACHER (Tutoring conversations):
+#   - Basic: 50 conversations × $0.02 = $1.00
+#   - Medium: 100 conversations × $0.02 = $2.00
+#   - Intensive: 200 conversations × $0.02 = $4.00
+#
+# WRITING FEEDBACK (Essay grading + detailed feedback):
+#   - Basic: 5 essays × $0.30 = $1.50
+#   - Medium: 15 essays × $0.30 = $4.50
+#   - Intensive: 30 essays × $0.30 = $9.00
+#
+# VOICE PRACTICE (ElevenLabs TTS + Whisper STT):
+#   - Basic: 20 min × $0.15 = $3.00
+#   - Medium: 40 min × $0.15 = $6.00
+#   - Intensive: 80 min × $0.15 = $12.00
+#
+# TOTAL AI COSTS:
+#   - Basic (50 credits): $5.50/student/month
+#   - Medium (100 credits): $12.50/student/month  
+#   - Intensive (200 credits): $25.00/student/month
 
-# Credit tiers for institutions to choose
+# Credit tiers with detailed breakdown
 CREDIT_TIERS = {
-    "basic": {"credits": 50, "label": "Basic", "description": "50 AI conversations, 20 min voice"},
-    "medium": {"credits": 100, "label": "Medium", "description": "100 AI conversations, 40 min voice, writing feedback"},
-    "intensive": {"credits": 200, "label": "Intensive", "description": "200 AI conversations, 80 min voice, unlimited writing feedback"}
+    "basic": {
+        "credits": 50,
+        "label": "Basic",
+        "description": "Essential AI support for exam prep",
+        "includes": {
+            "ai_teacher_conversations": 50,
+            "writing_essays_graded": 5,
+            "voice_practice_minutes": 20
+        },
+        "internal_cost": 5.50
+    },
+    "medium": {
+        "credits": 100,
+        "label": "Medium",
+        "description": "Enhanced AI with writing feedback focus",
+        "includes": {
+            "ai_teacher_conversations": 100,
+            "writing_essays_graded": 15,
+            "voice_practice_minutes": 40
+        },
+        "internal_cost": 12.50
+    },
+    "intensive": {
+        "credits": 200,
+        "label": "Intensive",
+        "description": "Full AI immersion for maximum results",
+        "includes": {
+            "ai_teacher_conversations": 200,
+            "writing_essays_graded": 30,
+            "voice_practice_minutes": 80
+        },
+        "internal_cost": 25.00
+    }
 }
 
-# Internal cost per credit (NOT shown to clients)
-INTERNAL_CREDIT_COST = 0.07
-
-# Dynamic unit pricing per student (price per student/month) - Basic 50 credits
-# Margins: tier_1: 91%, tier_2: 88%, tier_3: 85%, tier_4: 82%, tier_5: 80%
+# Dynamic unit pricing per student (price per student/month) - Basic tier base prices
+# Calculated to maintain target margins after AI costs
 UNIT_PRICING = {
-    "tier_1": {"min": 1, "max": 10, "price_per_student": 39, "example_students": 5},
-    "tier_2": {"min": 11, "max": 50, "price_per_student": 29, "example_students": 30},
-    "tier_3": {"min": 51, "max": 100, "price_per_student": 24, "example_students": 75},
-    "tier_4": {"min": 101, "max": 200, "price_per_student": 20, "example_students": 150},
-    "tier_5": {"min": 201, "max": 500, "price_per_student": 18, "example_students": 300},
+    "tier_1": {"min": 1, "max": 10, "price_per_student": 49, "example_students": 5},
+    "tier_2": {"min": 11, "max": 50, "price_per_student": 39, "example_students": 30},
+    "tier_3": {"min": 51, "max": 100, "price_per_student": 32, "example_students": 75},
+    "tier_4": {"min": 101, "max": 200, "price_per_student": 28, "example_students": 150},
+    "tier_5": {"min": 201, "max": 500, "price_per_student": 25, "example_students": 300},
 }
 
 # Exam multipliers
@@ -767,26 +809,27 @@ EXAM_MULTIPLIERS = {
 }
 
 # Credit tier multipliers (for medium and intensive plans)
+# Intensive has higher multiplier due to significant AI cost increase
 CREDIT_TIER_MULTIPLIERS = {
     "basic": 1.0,      # 50 credits - base price
-    "medium": 1.7,     # 100 credits - 70% more
-    "intensive": 2.8   # 200 credits - 180% more
+    "medium": 1.8,     # 100 credits - 80% more (covers $12.50 cost)
+    "intensive": 3.2   # 200 credits - 220% more (covers $25 cost)
 }
 
 # Extra credits pricing (per credit) - varies by tier
 EXTRA_CREDIT_PRICING = {
-    "tier_1": 0.90,  # $0.90 per extra credit
-    "tier_2": 0.80,  # $0.80 per extra credit
-    "tier_3": 0.70,  # $0.70 per extra credit
-    "tier_4": 0.60,  # $0.60 per extra credit
-    "tier_5": 0.50,  # $0.50 per extra credit
+    "tier_1": 1.20,  # $1.20 per extra credit
+    "tier_2": 1.00,  # $1.00 per extra credit
+    "tier_3": 0.85,  # $0.85 per extra credit
+    "tier_4": 0.70,  # $0.70 per extra credit
+    "tier_5": 0.60,  # $0.60 per extra credit
 }
 
 def get_unit_price(num_students: int, num_exams: int = 1, credit_tier: str = "basic") -> dict:
     """Calculate unit price per student based on volume, exams, and credit tier"""
     exam_mult = EXAM_MULTIPLIERS.get(min(num_exams, 3), 1.8)
     credit_mult = CREDIT_TIER_MULTIPLIERS.get(credit_tier, 1.0)
-    credits = CREDIT_TIERS.get(credit_tier, CREDIT_TIERS["basic"])["credits"]
+    tier_info = CREDIT_TIERS.get(credit_tier, CREDIT_TIERS["basic"])
     
     for tier_name, tier in UNIT_PRICING.items():
         if tier["min"] <= num_students <= tier["max"]:
@@ -800,9 +843,10 @@ def get_unit_price(num_students: int, num_exams: int = 1, credit_tier: str = "ba
                 "price_per_student": final_price,
                 "monthly_total": round(final_price * num_students, 2),
                 "yearly_total": round(final_price * num_students * 10, 2),
-                "credits_per_student": credits,
+                "credits_per_student": tier_info["credits"],
                 "credit_tier": credit_tier,
-                "credit_tier_label": CREDIT_TIERS[credit_tier]["label"],
+                "credit_tier_label": tier_info["label"],
+                "includes": tier_info["includes"],
                 "extra_credit_price": extra_credit_price,
                 "yearly_savings": "17%"
             }
@@ -812,15 +856,15 @@ def get_unit_price(num_students: int, num_exams: int = 1, credit_tier: str = "ba
         "tier": "enterprise_custom",
         "students_range": "500+",
         "message": "Contact us for custom enterprise pricing",
-        "price_per_student": 15 * exam_mult * credit_mult,
-        "extra_credit_price": 0.40
+        "price_per_student": round(22 * exam_mult * credit_mult, 2),
+        "extra_credit_price": 0.50
     }
 
 def get_pricing_tiers(num_exams: int = 1, credit_tier: str = "basic"):
     """Get all pricing tiers for display"""
     exam_mult = EXAM_MULTIPLIERS.get(min(num_exams, 3), 1.8)
     credit_mult = CREDIT_TIER_MULTIPLIERS.get(credit_tier, 1.0)
-    credits = CREDIT_TIERS.get(credit_tier, CREDIT_TIERS["basic"])["credits"]
+    tier_info = CREDIT_TIERS.get(credit_tier, CREDIT_TIERS["basic"])
     
     tiers = []
     for tier_name, tier in UNIT_PRICING.items():
@@ -835,8 +879,9 @@ def get_pricing_tiers(num_exams: int = 1, credit_tier: str = "basic"):
             "students_min": tier["min"],
             "students_max": tier["max"],
             "price_per_student": final_price,
-            "credits_per_student": credits,
+            "credits_per_student": tier_info["credits"],
             "credit_tier": credit_tier,
+            "includes": tier_info["includes"],
             "extra_credit_price": extra_credit_price,
             "example": {
                 "students": example_students,
@@ -851,21 +896,23 @@ def get_pricing_tiers(num_exams: int = 1, credit_tier: str = "basic"):
 def get_tier_features(tier_name: str, num_exams: int, credit_tier: str) -> list:
     """Get features for each tier"""
     exam_text = f"{num_exams} exam{'s' if num_exams > 1 else ''}" if num_exams < 3 else "All 5 exams"
-    credits = CREDIT_TIERS.get(credit_tier, CREDIT_TIERS["basic"])["credits"]
+    tier_info = CREDIT_TIERS.get(credit_tier, CREDIT_TIERS["basic"])
     
-    base_features = [exam_text, "AI Tutoring", f"{credits} credits/student"]
-    
-    if credit_tier in ["medium", "intensive"]:
-        base_features.append("Writing AI Feedback")
+    base_features = [
+        exam_text,
+        f"{tier_info['includes']['ai_teacher_conversations']} AI Teacher sessions",
+        f"{tier_info['includes']['writing_essays_graded']} Writing reviews",
+        f"{tier_info['includes']['voice_practice_minutes']} min Voice practice"
+    ]
     
     if credit_tier == "intensive":
-        base_features.append("Priority AI Processing")
+        base_features.append("Priority AI processing")
     
     if tier_name in ["tier_2", "tier_3", "tier_4", "tier_5"]:
-        base_features.extend(["Voice AI", "Speaking Practice"])
+        base_features.append("Premium Analytics")
     
     if tier_name in ["tier_3", "tier_4", "tier_5"]:
-        base_features.extend(["Premium Analytics", "Risk Prediction"])
+        base_features.append("Risk Prediction")
     
     if tier_name in ["tier_4", "tier_5"]:
         base_features.extend(["Video Classes", "Library 50GB"])
@@ -883,31 +930,36 @@ async def calculate_pricing(students: int, exams: int = 1, credit_tier: str = "b
 @api_router.get("/pricing/tiers")
 async def get_pricing_tiers_endpoint(exams: int = 1, credit_tier: str = "basic"):
     """Get all pricing tiers for display"""
+    tier_info = CREDIT_TIERS.get(credit_tier, CREDIT_TIERS["basic"])
     return {
         "exams_selected": exams,
         "exam_multiplier": EXAM_MULTIPLIERS.get(min(exams, 3), 1.8),
         "credit_tier": credit_tier,
-        "credit_tiers_available": CREDIT_TIERS,
+        "credit_tier_info": tier_info,
+        "credit_tiers_available": {k: {
+            "credits": v["credits"],
+            "label": v["label"],
+            "description": v["description"],
+            "includes": v["includes"]
+        } for k, v in CREDIT_TIERS.items()},
         "tiers": get_pricing_tiers(exams, credit_tier),
         "extra_credits_info": {
             "description": "Additional credits can be purchased at tier-specific rates",
             "pricing": EXTRA_CREDIT_PRICING
-        },
-        "notes": [
-            "Prices shown are per student per month",
-            "Yearly billing saves 17% (2 months free)",
-            "Credits reset monthly",
-            "Extra credits available at discounted tier rates"
-        ]
+        }
     }
 
 @api_router.get("/pricing/credit-tiers")
 async def get_credit_tiers():
     """Get available credit tier options"""
     return {
-        "tiers": CREDIT_TIERS,
-        "multipliers": CREDIT_TIER_MULTIPLIERS,
-        "description": "Choose the AI usage level that fits your institution's needs"
+        "tiers": {k: {
+            "credits": v["credits"],
+            "label": v["label"],
+            "description": v["description"],
+            "includes": v["includes"]
+        } for k, v in CREDIT_TIERS.items()},
+        "multipliers": CREDIT_TIER_MULTIPLIERS
     }
 
 @api_router.get("/pricing/institutional")
@@ -918,7 +970,12 @@ async def get_institutional_pricing(exam_count: int = 1, credit_tier: str = "bas
         "credit_tier": credit_tier,
         "tiers": get_pricing_tiers(exam_count, credit_tier),
         "exam_multipliers": EXAM_MULTIPLIERS,
-        "credit_tiers": CREDIT_TIERS
+        "credit_tiers": {k: {
+            "credits": v["credits"],
+            "label": v["label"],
+            "description": v["description"],
+            "includes": v["includes"]
+        } for k, v in CREDIT_TIERS.items()}
     }
 
 @api_router.get("/pricing/individual")
@@ -929,29 +986,32 @@ async def get_individual_pricing():
             {
                 "id": "single_exam",
                 "name": "Single Exam",
-                "price_monthly": 29,
-                "price_yearly": 290,
+                "price_monthly": 39,
+                "price_yearly": 390,
                 "credits": 50,
-                "extra_credit_price": 0.90,
-                "features": ["1 exam type", "50 AI credits/month", "Voice practice", "Progress tracking"]
+                "extra_credit_price": 1.20,
+                "includes": CREDIT_TIERS["basic"]["includes"],
+                "features": ["1 exam type", "50 AI Teacher sessions", "5 Writing reviews", "20 min Voice"]
             },
             {
                 "id": "multi_exam",
                 "name": "Two Exams", 
-                "price_monthly": 39,
-                "price_yearly": 390,
-                "credits": 70,
-                "extra_credit_price": 0.80,
-                "features": ["2 exam types", "70 AI credits/month", "Voice practice", "Writing feedback"]
+                "price_monthly": 59,
+                "price_yearly": 590,
+                "credits": 100,
+                "extra_credit_price": 1.00,
+                "includes": CREDIT_TIERS["medium"]["includes"],
+                "features": ["2 exam types", "100 AI Teacher sessions", "15 Writing reviews", "40 min Voice"]
             },
             {
                 "id": "all_access",
-                "name": "All Exams",
-                "price_monthly": 49,
-                "price_yearly": 490,
-                "credits": 100,
-                "extra_credit_price": 0.70,
-                "features": ["All 5 exam types", "100 AI credits/month", "Unlimited voice", "Full AI tutoring"]
+                "name": "All Exams - Intensive",
+                "price_monthly": 99,
+                "price_yearly": 990,
+                "credits": 200,
+                "extra_credit_price": 0.85,
+                "includes": CREDIT_TIERS["intensive"]["includes"],
+                "features": ["All 5 exam types", "200 AI Teacher sessions", "30 Writing reviews", "80 min Voice"]
             }
         ]
     }
@@ -966,8 +1026,7 @@ async def get_pricing_analysis(current_user: dict = Depends(get_current_user)):
     analysis = []
     for tier_name, tier in UNIT_PRICING.items():
         for credit_tier_name, credit_mult in CREDIT_TIER_MULTIPLIERS.items():
-            credits = CREDIT_TIERS[credit_tier_name]["credits"]
-            ai_cost = credits * INTERNAL_CREDIT_COST
+            ai_cost = CREDIT_TIERS[credit_tier_name]["internal_cost"]
             price = tier["price_per_student"] * credit_mult
             margin = round((price - ai_cost) / price * 100, 1)
             
@@ -975,14 +1034,14 @@ async def get_pricing_analysis(current_user: dict = Depends(get_current_user)):
                 "tier": tier_name,
                 "students_range": f"{tier['min']}-{tier['max']}",
                 "credit_tier": credit_tier_name,
-                "credits": credits,
-                "ai_cost_per_student": round(ai_cost, 2),
+                "credits": CREDIT_TIERS[credit_tier_name]["credits"],
+                "ai_cost_per_student": ai_cost,
                 "price_per_student": round(price, 2),
                 "margin_percentage": margin
             })
     
     return {
-        "internal_credit_cost": INTERNAL_CREDIT_COST,
+        "credit_tier_costs": {k: v["internal_cost"] for k, v in CREDIT_TIERS.items()},
         "analysis": analysis,
         "note": "This data is internal only - never expose to clients"
     }
