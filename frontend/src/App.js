@@ -131,6 +131,17 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
+      <Route 
+        path="/exam/:examType" 
+        element={
+          <ProtectedRoute>
+            <ExamSimulator />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Dashboard redirect */}
+      <Route path="/dashboard" element={<Navigate to="/student/dashboard" replace />} />
       
       {/* Catch all - redirect to landing */}
       <Route path="*" element={<Navigate to="/" replace />} />
