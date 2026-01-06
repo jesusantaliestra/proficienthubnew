@@ -656,10 +656,10 @@ export default function Landing() {
           <div className="text-center mb-12">
             <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-4 py-2 mb-6 text-sm font-semibold">
               <Calculator className="w-4 h-4 mr-2" />
-              Calculadora ROI de Paquetes
+              Calculadora ROI por Licencias
             </Badge>
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Calcula tu ROI por Paquete</h2>
-            <p className="text-xl text-gray-600">Ve cuánto puedes ganar distribuyendo un paquete entre tus estudiantes</p>
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Calcula tu ROI</h2>
+            <p className="text-xl text-gray-600">Ve cuánto puedes ganar vendiendo licencias a tus estudiantes</p>
           </div>
           
           <Card className="bg-white border-2 border-gray-200 rounded-3xl overflow-hidden">
@@ -670,46 +670,37 @@ export default function Landing() {
                 
                 <div className="space-y-6">
                   <div>
-                    <Label className="text-gray-700 font-semibold block mb-2">Selecciona Paquete</Label>
-                    <select 
-                      value={selectedPackage}
-                      onChange={(e) => setSelectedPackage(e.target.value)}
-                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#58CC02] outline-none"
-                      data-testid="package-selector"
-                    >
-                      {examPackages.map(pkg => (
-                        <option key={pkg.id} value={pkg.id}>
-                          {pkg.mock_tests} Tests - ${pkg.price} ({pkg.volume_discount} descuento)
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
                     <div className="flex justify-between mb-2">
-                      <Label className="text-gray-700 font-semibold">Número de Estudiantes</Label>
-                      <span className="text-[#58CC02] font-bold text-lg">{numStudents}</span>
+                      <Label className="text-gray-700 font-semibold">Número de Licencias (Estudiantes)</Label>
+                      <span className="text-[#58CC02] font-bold text-lg">{numLicenses}</span>
                     </div>
                     <Slider
-                      value={[numStudents]}
-                      onValueChange={([v]) => setNumStudents(v)}
-                      max={100}
+                      value={[numLicenses]}
+                      onValueChange={([v]) => setNumLicenses(v)}
+                      max={600}
                       min={1}
                       step={1}
                       className="w-full"
                     />
+                    <div className="flex justify-between text-xs text-gray-400 mt-1">
+                      <span>1</span>
+                      <span>20</span>
+                      <span>100</span>
+                      <span>500</span>
+                      <span>600</span>
+                    </div>
                   </div>
                   
                   <div>
                     <div className="flex justify-between mb-2">
-                      <Label className="text-gray-700 font-semibold">Precio que cobras por estudiante ($)</Label>
+                      <Label className="text-gray-700 font-semibold">Precio que cobras por licencia ($)</Label>
                       <span className="text-[#58CC02] font-bold text-lg">${pricePerStudent}</span>
                     </div>
                     <Slider
                       value={[pricePerStudent]}
                       onValueChange={([v]) => setPricePerStudent(v)}
                       max={100}
-                      min={5}
+                      min={15}
                       step={5}
                       className="w-full"
                     />
@@ -719,21 +710,21 @@ export default function Landing() {
                     <div className="flex justify-between mb-2">
                       <Label className="text-gray-700 font-semibold flex items-center gap-2">
                         <Brain className="w-4 h-4 text-purple-600" />
-                        AI Tutor Add-on (minutos)
+                        AI Tutor por licencia (min)
                       </Label>
                       <span className="text-purple-600 font-bold text-lg">{aiTutorMinutes} min</span>
                     </div>
                     <Slider
                       value={[aiTutorMinutes]}
                       onValueChange={([v]) => setAiTutorMinutes(v)}
-                      max={300}
+                      max={120}
                       min={0}
                       step={30}
                       className="w-full"
                     />
                     {aiTutorMinutes > 0 && (
                       <p className="text-sm text-purple-600 mt-1">
-                        + ${(aiTutorMinutes * 0.15).toFixed(2)} por AI Tutor
+                        + ${(aiTutorMinutes * 0.20).toFixed(2)} por licencia (AI Tutor)
                       </p>
                     )}
                   </div>
@@ -747,38 +738,36 @@ export default function Landing() {
                 {packageRoiResult ? (
                   <div className="space-y-4" data-testid="package-roi-results">
                     <div className="bg-white rounded-xl p-4 border border-gray-200">
-                      <div className="text-sm text-gray-500 mb-1">Paquete Seleccionado</div>
-                      <div className="font-bold text-gray-900">{packageRoiResult.package.mock_tests} Mock Tests</div>
+                      <div className="text-sm text-gray-500 mb-1">Tier Aplicado</div>
+                      <div className="font-bold text-gray-900">{packageRoiResult.tier.description}</div>
                       <div className="text-sm text-[#58CC02]">
-                        ${packageRoiResult.package.price_per_exam}/examen · {packageRoiResult.package.volume_discount} descuento
+                        ${packageRoiResult.tier.price_per_license}/licencia · ${packageRoiResult.tier.price_per_exam}/examen · {packageRoiResult.tier.discount} descuento
                       </div>
-                      {packageRoiResult.ai_tutor_addon.minutes > 0 && (
-                        <div className="text-sm text-purple-600 mt-1">
-                          + {packageRoiResult.ai_tutor_addon.minutes} min AI Tutor (${packageRoiResult.ai_tutor_addon.cost})
-                        </div>
-                      )}
+                      <div className="text-xs text-gray-500 mt-1">
+                        Tu margen base: <span className="font-bold text-green-600">{packageRoiResult.tier.your_margin}</span>
+                      </div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-red-50 rounded-xl p-4 border border-red-200">
-                        <div className="text-sm text-gray-500">TU COSTE Total</div>
-                        <div className="text-2xl font-extrabold text-red-600">${packageRoiResult.total_investment}</div>
+                        <div className="text-sm text-gray-500">TU COSTE / Licencia</div>
+                        <div className="text-2xl font-extrabold text-red-600">${packageRoiResult.per_license.your_cost}</div>
                       </div>
                       <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                        <div className="text-sm text-gray-500">Coste por Estudiante</div>
-                        <div className="text-2xl font-extrabold text-blue-600">${packageRoiResult.per_student.your_cost}</div>
+                        <div className="text-sm text-gray-500">TU PRECIO / Licencia</div>
+                        <div className="text-2xl font-extrabold text-blue-600">${packageRoiResult.per_license.your_price}</div>
                       </div>
                     </div>
                     
                     <div className="bg-white rounded-xl p-4 border border-gray-200">
-                      <div className="text-sm text-gray-500 mb-2">Por Estudiante Recibe</div>
+                      <div className="text-sm text-gray-500 mb-2">Por Licencia Incluye</div>
                       <div className="flex gap-4 flex-wrap">
                         <Badge className="bg-purple-100 text-purple-700 border-0">
-                          {packageRoiResult.per_student.mock_tests} mock tests
+                          {packageRoiResult.per_license.mock_tests} mock tests
                         </Badge>
-                        {packageRoiResult.per_student.ai_tutor_minutes > 0 && (
+                        {packageRoiResult.per_license.ai_tutor_minutes > 0 && (
                           <Badge className="bg-orange-100 text-orange-700 border-0">
-                            {packageRoiResult.per_student.ai_tutor_minutes} min AI tutor
+                            {packageRoiResult.per_license.ai_tutor_minutes} min AI tutor
                           </Badge>
                         )}
                       </div>
@@ -800,7 +789,7 @@ export default function Landing() {
                         </div>
                       </div>
                       <div className="mt-4 pt-4 border-t border-green-400 flex justify-between items-center">
-                        <div className="text-green-100">Tu Margen: {packageRoiResult.per_student.your_margin}%</div>
+                        <div className="text-green-100">Tu Margen: {packageRoiResult.per_license.your_margin}%</div>
                         <div className="text-3xl font-extrabold">{packageRoiResult.totals.roi_percentage}% ROI</div>
                       </div>
                     </div>
