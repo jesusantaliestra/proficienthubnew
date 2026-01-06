@@ -9,7 +9,7 @@ import { Badge } from '../components/ui/badge';
 import { 
   Settings, Users, DollarSign, Key, BarChart3, 
   LogOut, Save, Eye, EyeOff, Database, Activity,
-  TrendingUp, AlertTriangle, CheckCircle, RefreshCw
+  TrendingUp, AlertTriangle, CheckCircle, RefreshCw, Brain
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
