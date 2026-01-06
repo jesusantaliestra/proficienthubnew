@@ -262,10 +262,51 @@ export default function InstitutionDashboard() {
                     Add Student
                   </button>
                 </DialogTrigger>
-                <DialogContent className="bg-white border-2 border-gray-200 rounded-2xl">
+                <DialogContent className="bg-white border-2 border-gray-200 rounded-2xl max-w-md">
                   <DialogHeader>
                     <DialogTitle className="text-gray-900 font-extrabold">Add New Student</DialogTitle>
                   </DialogHeader>
+                  
+                  {createdStudentInfo ? (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+                        <p className="text-green-800 font-semibold mb-2">✓ Student Created Successfully!</p>
+                        <div className="space-y-2 text-sm">
+                          <p><strong>Name:</strong> {createdStudentInfo.name}</p>
+                          <p><strong>Email:</strong> {createdStudentInfo.email}</p>
+                          <p><strong>Provisional Password:</strong> 
+                            <code className="bg-yellow-100 px-2 py-0.5 rounded ml-2 font-mono">
+                              {createdStudentInfo.provisional_password}
+                            </code>
+                          </p>
+                          <p><strong>Credits:</strong> {createdStudentInfo.credits}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Share these credentials with the student. They will be required to change their password on first login.
+                      </p>
+                      <div className="flex gap-3">
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(`Email: ${createdStudentInfo.email}\nPassword: ${createdStudentInfo.provisional_password}`);
+                            toast.success('Credentials copied!');
+                          }}
+                          className="flex-1 btn-duo-outline py-2"
+                        >
+                          Copy Credentials
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setCreatedStudentInfo(null);
+                            setAddStudentOpen(false);
+                          }}
+                          className="flex-1 btn-duo py-2"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
                   <form onSubmit={handleAddStudent} className="space-y-4">
                     <div className="space-y-2">
                       <Label className="text-gray-700 font-semibold">Full Name</Label>
@@ -291,20 +332,40 @@ export default function InstitutionDashboard() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-gray-700 font-semibold">Password (optional)</Label>
+                      <Label className="text-gray-700 font-semibold">Exam Type</Label>
+                      <Select 
+                        value={newStudent.exam_type} 
+                        onValueChange={(value) => setNewStudent(prev => ({ ...prev, exam_type: value }))}
+                      >
+                        <SelectTrigger className="input-duo" data-testid="new-student-exam">
+                          <SelectValue placeholder="Select exam" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ielts">IELTS</SelectItem>
+                          <SelectItem value="toefl">TOEFL</SelectItem>
+                          <SelectItem value="cambridge">Cambridge</SelectItem>
+                          <SelectItem value="pte">PTE</SelectItem>
+                          <SelectItem value="oet">OET</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-gray-700 font-semibold">Initial Credits</Label>
                       <Input
-                        type="password"
-                        value={newStudent.password}
-                        onChange={(e) => setNewStudent(prev => ({ ...prev, password: e.target.value }))}
+                        type="number"
+                        value={newStudent.credits}
+                        onChange={(e) => setNewStudent(prev => ({ ...prev, credits: parseInt(e.target.value) || 100 }))}
                         className="input-duo"
-                        placeholder="Leave blank for auto-generated"
-                        data-testid="new-student-password"
+                        min="1"
+                        data-testid="new-student-credits"
                       />
+                      <p className="text-xs text-gray-500">Credits for AI tutoring, writing feedback, and voice practice</p>
                     </div>
                     <button type="submit" className="btn-duo w-full py-3" data-testid="submit-new-student">
-                      Add Student
+                      Create Student
                     </button>
                   </form>
+                  )}
                 </DialogContent>
               </Dialog>
             </div>
