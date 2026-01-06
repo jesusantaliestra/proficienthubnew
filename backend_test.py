@@ -353,6 +353,26 @@ class ProficientHubAPITester:
                 self.log_test("Language Settings Update", True, "Language updated successfully")
             else:
                 self.log_test("Language Settings Update", False, "Failed to update language")
+
+    def test_unauthorized_access(self):
+        """Test that protected endpoints properly reject unauthorized access"""
+        print("\n🚫 Testing Unauthorized Access...")
+        
+        # Temporarily remove token
+        original_token = self.token
+        self.token = None
+        
+        # Test protected endpoints without token
+        self.run_test("Unauthorized Metrics Access", "GET", "institution/metrics", 401)
+        self.run_test("Unauthorized Students Access", "GET", "institution/students", 401)
+        self.run_test("Unauthorized User Info", "GET", "auth/me", 401)
+        
+        # Test with invalid token
+        self.token = "invalid_token_12345"
+        self.run_test("Invalid Token Access", "GET", "auth/me", 401)
+        
+        # Restore original token
+        self.token = original_token
         """Test that protected endpoints properly reject unauthorized access"""
         print("\n🚫 Testing Unauthorized Access...")
         
