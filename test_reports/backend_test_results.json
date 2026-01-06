@@ -1,197 +1,329 @@
 {
   "summary": {
-    "total_tests": 31,
-    "passed_tests": 27,
-    "failed_tests": 4,
-    "success_rate": 87.09677419354838
+    "total_tests": 53,
+    "passed_tests": 47,
+    "failed_tests": 6,
+    "success_rate": 88.67924528301887
   },
   "detailed_results": [
     {
       "test_name": "Root Endpoint",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:27.441024"
+      "timestamp": "2026-01-06T05:59:50.324965"
     },
     {
       "test_name": "Health Check",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:27.476555"
+      "timestamp": "2026-01-06T05:59:50.361450"
     },
     {
       "test_name": "Institutional Pricing",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:27.515614"
+      "timestamp": "2026-01-06T05:59:50.393247"
     },
     {
       "test_name": "Pricing Plans Structure",
       "success": true,
       "details": "Found 4 plans",
-      "timestamp": "2026-01-06T05:58:27.516339"
+      "timestamp": "2026-01-06T05:59:50.393878"
     },
     {
       "test_name": "Individual Pricing",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:27.558211"
+      "timestamp": "2026-01-06T05:59:50.430419"
     },
     {
       "test_name": "ROI Calculator",
-      "success": false,
-      "details": "Status: 422, Expected: 200, Response: {'detail': [{'type': 'missing', 'loc': ['query', 'current_students'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['query', 'current_teachers'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['query', 'current_pass_rate'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['query', 'current_no_show_rate'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}]}",
-      "timestamp": "2026-01-06T05:58:27.604260"
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2026-01-06T05:59:50.467500"
+    },
+    {
+      "test_name": "ROI Calculator Response Structure",
+      "success": true,
+      "details": "All required fields present",
+      "timestamp": "2026-01-06T05:59:50.468108"
+    },
+    {
+      "test_name": "Institutional Pricing with Exam Count",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2026-01-06T05:59:50.501765"
+    },
+    {
+      "test_name": "Pricing with Exam Count",
+      "success": true,
+      "details": "Found 4 plans for 1 exam",
+      "timestamp": "2026-01-06T05:59:50.502413"
+    },
+    {
+      "test_name": "Institutional Pricing 3+ Exams",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2026-01-06T05:59:50.546359"
+    },
+    {
+      "test_name": "Pricing with 3+ Exams",
+      "success": true,
+      "details": "Found 4 plans for 3+ exams",
+      "timestamp": "2026-01-06T05:59:50.547011"
     },
     {
       "test_name": "Exam Types",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:27.680989"
+      "timestamp": "2026-01-06T05:59:50.582324"
     },
     {
       "test_name": "Exam Types Structure",
       "success": true,
       "details": "Found 5 exam types",
-      "timestamp": "2026-01-06T05:58:27.681629"
+      "timestamp": "2026-01-06T05:59:50.582992"
     },
     {
       "test_name": "User Registration",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:27.951246"
+      "timestamp": "2026-01-06T05:59:50.839485"
     },
     {
       "test_name": "Registration Token Received",
       "success": true,
       "details": "Token stored for subsequent tests",
-      "timestamp": "2026-01-06T05:58:27.951985"
+      "timestamp": "2026-01-06T05:59:50.840339"
     },
     {
       "test_name": "User Login",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:28.212675"
+      "timestamp": "2026-01-06T05:59:51.095279"
     },
     {
       "test_name": "Login Token Received",
       "success": true,
       "details": "Login successful",
-      "timestamp": "2026-01-06T05:58:28.213320"
+      "timestamp": "2026-01-06T05:59:51.095947"
     },
     {
       "test_name": "Get Current User",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:28.255384"
+      "timestamp": "2026-01-06T05:59:51.169925"
     },
     {
       "test_name": "Protected Route Access",
       "success": true,
       "details": "Successfully accessed protected endpoint",
-      "timestamp": "2026-01-06T05:58:28.256015"
+      "timestamp": "2026-01-06T05:59:51.170616"
     },
     {
       "test_name": "Institution Metrics",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:28.296673"
+      "timestamp": "2026-01-06T05:59:51.203779"
     },
     {
       "test_name": "Metrics Structure",
       "success": true,
       "details": "All required metrics present",
-      "timestamp": "2026-01-06T05:58:28.297331"
+      "timestamp": "2026-01-06T05:59:51.204507"
     },
     {
       "test_name": "Get Students List",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:28.329755"
+      "timestamp": "2026-01-06T05:59:51.236251"
     },
     {
       "test_name": "Students List Access",
       "success": true,
       "details": "Retrieved 0 students",
-      "timestamp": "2026-01-06T05:58:28.330353"
+      "timestamp": "2026-01-06T05:59:51.236736"
     },
     {
       "test_name": "Add Student",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:28.585908"
+      "timestamp": "2026-01-06T05:59:51.496027"
     },
     {
       "test_name": "Student Creation",
       "success": true,
-      "details": "Student created with ID: bf4478a2-5388-42f7-b0c4-0cf847cdff38",
-      "timestamp": "2026-01-06T05:58:28.586666"
+      "details": "Student created with ID: d78c747a-e107-4a42-96e5-db317617b62a",
+      "timestamp": "2026-01-06T05:59:51.496750"
     },
     {
       "test_name": "Updated Students List",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:28.634237"
+      "timestamp": "2026-01-06T05:59:51.527758"
     },
     {
       "test_name": "Student List Updated",
       "success": true,
       "details": "Now showing 1 students",
-      "timestamp": "2026-01-06T05:58:28.634818"
+      "timestamp": "2026-01-06T05:59:51.528336"
+    },
+    {
+      "test_name": "Get Library Items",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2026-01-06T05:59:51.600562"
+    },
+    {
+      "test_name": "Library Items Access",
+      "success": true,
+      "details": "Retrieved 0 items",
+      "timestamp": "2026-01-06T05:59:51.601225"
+    },
+    {
+      "test_name": "Create Library Item",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2026-01-06T05:59:51.634423"
+    },
+    {
+      "test_name": "Library Item Creation",
+      "success": true,
+      "details": "Item created with ID: 7840a447-680d-4d52-89d5-3d481472d314",
+      "timestamp": "2026-01-06T05:59:51.635114"
+    },
+    {
+      "test_name": "Updated Library Items",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2026-01-06T05:59:51.668144"
+    },
+    {
+      "test_name": "Library Items Updated",
+      "success": true,
+      "details": "Now showing 1 items",
+      "timestamp": "2026-01-06T05:59:51.668687"
+    },
+    {
+      "test_name": "Delete Library Item",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2026-01-06T05:59:51.719473"
+    },
+    {
+      "test_name": "Create Flashcard Set",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2026-01-06T05:59:51.754062"
+    },
+    {
+      "test_name": "Flashcard Creation",
+      "success": true,
+      "details": "Flashcard set created with ID: 1b6616e3-cb77-4169-a9a5-9c614f3a17b0",
+      "timestamp": "2026-01-06T05:59:51.754555"
     },
     {
       "test_name": "Practice Questions TOEFL",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:28.670050"
+      "timestamp": "2026-01-06T05:59:51.789149"
     },
     {
       "test_name": "Practice Questions Structure",
       "success": true,
       "details": "Retrieved 3 questions",
-      "timestamp": "2026-01-06T05:58:28.670727"
+      "timestamp": "2026-01-06T05:59:51.789751"
     },
     {
       "test_name": "Exam History",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:28.707943"
+      "timestamp": "2026-01-06T05:59:51.823082"
     },
     {
       "test_name": "AI Tutor Chat",
       "success": true,
       "details": "Status: 200, Expected: 200",
-      "timestamp": "2026-01-06T05:58:34.540369"
+      "timestamp": "2026-01-06T05:59:55.223996"
     },
     {
       "test_name": "AI Tutor Response",
       "success": true,
-      "details": "Received response: Improving time management in the IELTS Reading sec...",
-      "timestamp": "2026-01-06T05:58:34.541027"
+      "details": "Received response: Time management is crucial in the IELTS Reading se...",
+      "timestamp": "2026-01-06T05:59:55.224614"
+    },
+    {
+      "test_name": "Supported Languages",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2026-01-06T05:59:55.256415"
+    },
+    {
+      "test_name": "Language Support Complete",
+      "success": true,
+      "details": "All 6 languages supported",
+      "timestamp": "2026-01-06T05:59:55.257048"
+    },
+    {
+      "test_name": "Update Language Settings",
+      "success": true,
+      "details": "Status: 200, Expected: 200",
+      "timestamp": "2026-01-06T05:59:55.292378"
+    },
+    {
+      "test_name": "Language Settings Update",
+      "success": true,
+      "details": "Language updated successfully",
+      "timestamp": "2026-01-06T05:59:55.293022"
     },
     {
       "test_name": "Unauthorized Metrics Access",
       "success": false,
       "details": "Status: 403, Expected: 401, Response: {'detail': 'Not authenticated'}",
-      "timestamp": "2026-01-06T05:58:34.586791"
+      "timestamp": "2026-01-06T05:59:55.347265"
     },
     {
       "test_name": "Unauthorized Students Access",
       "success": false,
       "details": "Status: 403, Expected: 401, Response: {'detail': 'Not authenticated'}",
-      "timestamp": "2026-01-06T05:58:34.629772"
+      "timestamp": "2026-01-06T05:59:55.388287"
     },
     {
       "test_name": "Unauthorized User Info",
       "success": false,
       "details": "Status: 403, Expected: 401, Response: {'detail': 'Not authenticated'}",
-      "timestamp": "2026-01-06T05:58:34.662192"
+      "timestamp": "2026-01-06T05:59:55.419487"
     },
     {
       "test_name": "Invalid Token Access",
       "success": true,
       "details": "Status: 401, Expected: 401",
-      "timestamp": "2026-01-06T05:58:34.737036"
+      "timestamp": "2026-01-06T05:59:55.451604"
+    },
+    {
+      "test_name": "Unauthorized Metrics Access",
+      "success": false,
+      "details": "Status: 403, Expected: 401, Response: {'detail': 'Not authenticated'}",
+      "timestamp": "2026-01-06T05:59:55.481762"
+    },
+    {
+      "test_name": "Unauthorized Students Access",
+      "success": false,
+      "details": "Status: 403, Expected: 401, Response: {'detail': 'Not authenticated'}",
+      "timestamp": "2026-01-06T05:59:55.554107"
+    },
+    {
+      "test_name": "Unauthorized User Info",
+      "success": false,
+      "details": "Status: 403, Expected: 401, Response: {'detail': 'Not authenticated'}",
+      "timestamp": "2026-01-06T05:59:55.591593"
+    },
+    {
+      "test_name": "Invalid Token Access",
+      "success": true,
+      "details": "Status: 401, Expected: 401",
+      "timestamp": "2026-01-06T05:59:55.624880"
     }
   ],
-  "timestamp": "2026-01-06T05:58:34.737988"
+  "timestamp": "2026-01-06T05:59:55.625714"
 }
