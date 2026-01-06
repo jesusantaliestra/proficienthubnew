@@ -1590,54 +1590,16 @@ EXAM_PACKAGES = {
         "features": ["100 mock tests completos", "300 min AI Tutor", "White-label + API", "Account manager dedicado"]
     }
 }
-    
-    # GROWTH - 40 exámenes (80% margen)
-    "growth_40": {
-        "mock_tests": 40,
-        "ai_tutor_minutes": 0,
-        "internal_cost": 70.80,  # 40 × $1.77
-        "price": 354.00,
-        "margin": 0.80,
-        "description": "40 Mock Tests - Sin AI Tutor",
-        "features": ["40 mock tests completos", "Speaking con AI grading", "Writing con feedback", "Analytics básico"]
-    },
-    "growth_40_ai": {
-        "mock_tests": 40,
-        "ai_tutor_minutes": 150,
-        "internal_cost": 85.80,  # 70.80 + (150 × $0.10)
-        "price": 429.00,
-        "margin": 0.80,
-        "description": "40 Mock Tests + 150 min AI Tutor",
-        "features": ["40 mock tests completos", "150 min AI Tutor con voz", "Analytics avanzado", "Soporte prioritario"]
-    },
-    
-    # SCALE - 100 exámenes (90% margen)
-    "scale_100": {
-        "mock_tests": 100,
-        "ai_tutor_minutes": 0,
-        "internal_cost": 177.00,  # 100 × $1.77
-        "price": 1770.00,
-        "margin": 0.90,
-        "description": "100 Mock Tests - Sin AI Tutor",
-        "features": ["100 mock tests completos", "White-label portal", "Analytics completo", "API access"]
-    },
-    "scale_100_ai": {
-        "mock_tests": 100,
-        "ai_tutor_minutes": 500,
-        "internal_cost": 227.00,  # 177 + (500 × $0.10)
-        "price": 2270.00,
-        "margin": 0.90,
-        "description": "100 Mock Tests + 500 min AI Tutor",
-        "features": ["100 mock tests completos", "500 min AI Tutor con voz", "White-label completo", "API + Webhooks"]
-    }
-}
 
 # ==================== PAQUETES SEPARADOS WRITING & SPEAKING ====================
 # Para instituciones que quieren comprar tests individuales para reventa
+# PRECIOS OPTIMIZADOS
 
 WRITING_TEST_PACKAGES = {
-    "writing_20": {"tests": 20, "price": 21.00, "price_per_test": 1.05, "internal_cost": 5.20, "margin": 0.75},
-    "writing_50": {"tests": 50, "price": 65.00, "price_per_test": 1.30, "internal_cost": 13.00, "margin": 0.80},
+    "writing_20": {"tests": 20, "price": 5.00, "price_per_test": 0.25, "internal_cost": 1.00, "margin": 0.80},
+    "writing_50": {"tests": 50, "price": 10.00, "price_per_test": 0.20, "internal_cost": 2.50, "margin": 0.75},
+    "writing_100": {"tests": 100, "price": 15.00, "price_per_test": 0.15, "internal_cost": 5.00, "margin": 0.67},
+}
     "writing_100": {"tests": 100, "price": 173.00, "price_per_test": 1.73, "internal_cost": 26.00, "margin": 0.85},
 }
 
