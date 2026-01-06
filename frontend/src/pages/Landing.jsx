@@ -933,7 +933,7 @@ export default function Landing() {
                           <div className="font-bold text-blue-800">No New Hires Needed</div>
                           <div className="text-sm text-blue-600">
                             Your {calculatorValues.teachers} teachers can handle {roiResults.potentialStudents} students with AI support.
-                            Without AI, you'd need to hire <strong>{roiResults.teachersYouWouldNeedToHire} additional teachers</strong>.
+                            Without AI, you&apos;d need to hire <strong>{roiResults.teachersYouWouldNeedToHire} additional teachers</strong>.
                           </div>
                         </div>
                       </div>
