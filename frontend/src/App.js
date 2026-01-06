@@ -11,6 +11,7 @@ import InstitutionDashboard from './pages/InstitutionDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import AITutor from './pages/AITutor';
 import ExamSimulator from './pages/ExamSimulator';
+import PaymentSuccess from './pages/PaymentSuccess';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
