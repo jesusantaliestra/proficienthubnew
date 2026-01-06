@@ -29,10 +29,13 @@ export default function Landing() {
   const [roiResults, setRoiResults] = useState(null);
   const [calculating, setCalculating] = useState(false);
   const [billingCycle, setBillingCycle] = useState('monthly');
-  const [selectedExams, setSelectedExams] = useState(1);
-  const [selectedCreditTier, setSelectedCreditTier] = useState('basic');
-  const [studentCount, setStudentCount] = useState(30);
-  const [pricingResult, setPricingResult] = useState(null);
+  
+  // New exam package pricing state
+  const [selectedPackage, setSelectedPackage] = useState('growth_40_ai');
+  const [numStudents, setNumStudents] = useState(20);
+  const [pricePerStudent, setPricePerStudent] = useState(60);
+  const [examPackages, setExamPackages] = useState([]);
+  const [packageRoiResult, setPackageRoiResult] = useState(null);
   
   // Monetization calculator state
   const [monetizationValues, setMonetizationValues] = useState({
@@ -43,16 +46,36 @@ export default function Landing() {
   });
   const [monetizationResult, setMonetizationResult] = useState(null);
 
-  // Credit tier definitions
-  const creditTiers = {
-    basic: { credits: 50, label: 'Basic', description: '50 AI interactions, 20 min voice' },
-    medium: { credits: 100, label: 'Medium', description: '100 AI interactions, writing feedback' },
-    intensive: { credits: 200, label: 'Intensive', description: '200 AI interactions, full AI support' }
+  // Fetch exam packages on mount
+  useEffect(() => {
+    fetchExamPackages();
+  }, []);
+
+  const fetchExamPackages = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/pricing/exam-packages`);
+      setExamPackages(response.data.packages);
+    } catch (error) {
+      console.error('Error fetching packages:', error);
+    }
+  };
+
+  const calculatePackageROI = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/pricing/roi-calculator?package_id=${selectedPackage}&num_students=${numStudents}&price_per_student=${pricePerStudent}`
+      );
+      setPackageRoiResult(response.data);
+    } catch (error) {
+      console.error('ROI calculation error:', error);
+    }
   };
 
   useEffect(() => {
-    calculatePricing();
-  }, [studentCount, selectedExams, selectedCreditTier]);
+    if (selectedPackage && numStudents > 0) {
+      calculatePackageROI();
+    }
+  }, [selectedPackage, numStudents, pricePerStudent]);
 
   const calculatePricing = async () => {
     try {
