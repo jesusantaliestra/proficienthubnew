@@ -2,9 +2,9 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 2.0  
-**Date:** January 2025  
-**Status:** MVP Complete with Full Features
+**Version:** 2.1  
+**Date:** January 2026  
+**Status:** B2B Premium System Complete
 
 ## Original Problem Statement
 Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, IELTS, Cambridge, PTE, OET) with:
@@ -14,8 +14,26 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - Offline capabilities
 - B2B focus with institutional dashboard
 - Multi-language support
+- White-label student portals
+- Provisional credential system
 
-## Features Implemented (Session 4)
+## Features Implemented (Session 5) - January 6, 2026
+
+### 🆕 B2B Premium Authentication System
+- **White-Label Student Portal**: `/student-portal/:slug` with institution branding (logo, colors, tagline)
+- **Provisional Credentials**: Institutions create students with auto-generated 12-char passwords
+- **Forced Password Change**: First login redirects to password change page
+- **Password Requirements**: 8+ chars, uppercase, lowercase, number, special character
+- **Student Credits System**: Credits for AI tutoring, writing feedback, voice practice
+- **Institution Branding API**: `PUT /api/institution/branding` creates custom portal URLs
+
+### Updated Add Student Dialog
+- Exam Type selector (IELTS, TOEFL, Cambridge, PTE, OET)
+- Initial credits allocation
+- Shows provisional password after creation
+- Copy credentials button
+
+## Previous Features (Session 4)
 
 ### 1. 🎓 Complete Exam Simulators
 - **5 Exam Types**: TOEFL, IELTS, Cambridge, PTE, OET
