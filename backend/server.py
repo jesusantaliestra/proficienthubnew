@@ -2089,38 +2089,32 @@ async def stripe_webhook(request: Request):
 
 @api_router.get("/pricing/individual")
 async def get_individual_pricing():
-    """Individual learner pricing"""
+    """Individual learner pricing - based on exam packages"""
     return {
         "plans": [
             {
-                "id": "single_exam",
-                "name": "Single Exam",
-                "price_monthly": 39,
-                "price_yearly": 390,
-                "credits": 50,
-                "extra_credit_price": 1.20,
-                "includes": CREDIT_TIERS["basic"]["includes"],
-                "features": ["1 exam type", "50 AI Teacher sessions", "5 Writing reviews", "20 min Voice"]
+                "id": "individual_starter",
+                "name": "Starter Pack",
+                "price": 29,
+                "mock_tests": 5,
+                "ai_tutor_minutes": 15,
+                "features": ["5 mock tests completos", "15 min AI Tutor", "1 tipo de examen"]
             },
             {
-                "id": "multi_exam",
-                "name": "Two Exams", 
-                "price_monthly": 59,
-                "price_yearly": 590,
-                "credits": 100,
-                "extra_credit_price": 1.00,
-                "includes": CREDIT_TIERS["medium"]["includes"],
-                "features": ["2 exam types", "100 AI Teacher sessions", "15 Writing reviews", "40 min Voice"]
+                "id": "individual_pro",
+                "name": "Pro Pack", 
+                "price": 79,
+                "mock_tests": 15,
+                "ai_tutor_minutes": 60,
+                "features": ["15 mock tests completos", "60 min AI Tutor", "Todos los exámenes", "Feedback detallado"]
             },
             {
-                "id": "all_access",
-                "name": "All Exams - Intensive",
-                "price_monthly": 99,
-                "price_yearly": 990,
-                "credits": 200,
-                "extra_credit_price": 0.85,
-                "includes": CREDIT_TIERS["intensive"]["includes"],
-                "features": ["All 5 exam types", "200 AI Teacher sessions", "30 Writing reviews", "80 min Voice"]
+                "id": "individual_premium",
+                "name": "Premium Pack",
+                "price": 149,
+                "mock_tests": 40,
+                "ai_tutor_minutes": 200,
+                "features": ["40 mock tests completos", "200 min AI Tutor", "Todos los exámenes", "Progreso analytics"]
             }
         ]
     }
@@ -2133,30 +2127,32 @@ async def get_pricing_analysis(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Admin access required")
     
     analysis = []
-    for tier_name, tier in UNIT_PRICING.items():
-        for credit_tier_name, credit_mult in CREDIT_TIER_MULTIPLIERS.items():
-            ai_cost = CREDIT_TIERS[credit_tier_name]["internal_cost"]
-            price = tier["price_per_student"] * credit_mult
-            margin = round((price - ai_cost) / price * 100, 1)
-            
-            analysis.append({
-                "tier": tier_name,
-                "students_range": f"{tier['min']}-{tier['max']}",
-                "credit_tier": credit_tier_name,
-                "credits": CREDIT_TIERS[credit_tier_name]["credits"],
-                "ai_cost_per_student": ai_cost,
-                "price_per_student": round(price, 2),
-                "margin_percentage": margin
-            })
+    for pkg_id, pkg in EXAM_PACKAGES.items():
+        margin = pkg["margin"]
+        internal_cost = pkg["internal_cost"]
+        price = pkg["price"]
+        profit = price - internal_cost
+        
+        analysis.append({
+            "package_id": pkg_id,
+            "mock_tests": pkg["mock_tests"],
+            "ai_tutor_minutes": pkg["ai_tutor_minutes"],
+            "internal_cost": internal_cost,
+            "price": price,
+            "profit": round(profit, 2),
+            "margin_percentage": f"{int(margin * 100)}%"
+        })
     
     return {
-        "credit_tier_costs": {k: v["internal_cost"] for k, v in CREDIT_TIERS.items()},
-        "analysis": analysis,
+        "exam_costs": EXAM_COSTS,
+        "individual_test_costs": INDIVIDUAL_TEST_COSTS,
+        "avg_mock_test_cost": AVG_MOCK_TEST_COST,
+        "package_analysis": analysis,
         "note": "This data is internal only - never expose to clients"
     }
 
-@api_router.post("/pricing/calculate-roi")
-async def calculate_roi(
+@api_router.post("/pricing/calculate-roi-legacy")
+async def calculate_roi_legacy(
     current_students: int,
     current_teachers: int,
     current_pass_rate: float,
