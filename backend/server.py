@@ -70,6 +70,7 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+    requires_password_change: bool = False
 
 class StudentCreate(BaseModel):
     email: EmailStr
