@@ -12,6 +12,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import AITutor from './pages/AITutor';
 import ExamSimulator from './pages/ExamSimulator';
 import PaymentSuccess from './pages/PaymentSuccess';
+import AdminPanel from './pages/AdminPanel';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
