@@ -729,6 +729,258 @@ async def get_tutor_history(exam_type: str, current_user: dict = Depends(get_cur
     
     return {"conversations": conversations}
 
+# ==================== VOICE AI ENDPOINTS (TTS & STT) ====================
+
+from emergentintegrations.llm.openai import OpenAITextToSpeech, OpenAISpeechToText
+from fastapi.responses import Response
+
+# Available TTS voices
+TTS_VOICES = ["alloy", "ash", "coral", "echo", "fable", "nova", "onyx", "sage", "shimmer"]
+
+class VoiceChatRequest(BaseModel):
+    message: str
+    exam_type: str
+    voice: str = "nova"  # Default voice for tutoring
+    context: Optional[str] = None
+
+@api_router.post("/ai-tutor/voice-chat")
+async def voice_chat_with_tutor(request: VoiceChatRequest, current_user: dict = Depends(get_current_user)):
+    """Chat with AI tutor and get voice response"""
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        api_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not api_key:
+            return {"error": "AI tutor is currently unavailable."}
+        
+        # Get text response from AI
+        system_prompt = f"""You are an expert {request.exam_type.upper()} exam tutor. You are:
+- Knowledgeable about all sections of the {request.exam_type.upper()} exam
+- Encouraging but honest about areas needing improvement
+- Focused on practical tips and strategies
+- Speaking naturally as if having a conversation
+Keep responses concise (under 200 words) for better voice delivery."""
+        
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"voice-tutor-{current_user['id']}-{request.exam_type}",
+            system_message=system_prompt
+        )
+        
+        context_info = f"\nContext: {request.context}" if request.context else ""
+        user_msg = UserMessage(text=f"{request.message}{context_info}")
+        
+        text_response = await chat.send_message(user_msg)
+        
+        # Convert to speech
+        tts = OpenAITextToSpeech(api_key=api_key)
+        voice = request.voice if request.voice in TTS_VOICES else "nova"
+        
+        audio_base64 = await tts.generate_speech_base64(
+            text=text_response,
+            model="tts-1",
+            voice=voice
+        )
+        
+        # Save conversation
+        await db.tutor_conversations.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": current_user["id"],
+            "exam_type": request.exam_type,
+            "user_message": request.message,
+            "ai_response": text_response,
+            "voice_enabled": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {
+            "text_response": text_response,
+            "audio_base64": audio_base64,
+            "voice": voice
+        }
+        
+    except Exception as e:
+        logger.error(f"Voice chat error: {e}")
+        return {"error": str(e)}
+
+@api_router.post("/voice/text-to-speech")
+async def text_to_speech(
+    text: str,
+    voice: str = "nova",
+    speed: float = 1.0,
+    current_user: dict = Depends(get_current_user)
+):
+    """Convert text to speech audio"""
+    try:
+        api_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="TTS not configured")
+        
+        if len(text) > 4096:
+            raise HTTPException(status_code=400, detail="Text too long (max 4096 characters)")
+        
+        tts = OpenAITextToSpeech(api_key=api_key)
+        voice = voice if voice in TTS_VOICES else "nova"
+        
+        audio_base64 = await tts.generate_speech_base64(
+            text=text,
+            model="tts-1",
+            voice=voice,
+            speed=speed
+        )
+        
+        return {"audio_base64": audio_base64, "voice": voice}
+        
+    except Exception as e:
+        logger.error(f"TTS error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/voice/speech-to-text")
+async def speech_to_text(
+    audio_file: UploadFile = File(...),
+    language: str = "en",
+    current_user: dict = Depends(get_current_user)
+):
+    """Transcribe audio to text using Whisper"""
+    try:
+        api_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="STT not configured")
+        
+        # Check file size (25MB limit)
+        content = await audio_file.read()
+        if len(content) > 25 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Audio file too large (max 25MB)")
+        
+        # Check file format
+        allowed_formats = ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"]
+        file_ext = audio_file.filename.split(".")[-1].lower() if audio_file.filename else "mp3"
+        if file_ext not in allowed_formats:
+            raise HTTPException(status_code=400, detail=f"Unsupported format. Use: {', '.join(allowed_formats)}")
+        
+        stt = OpenAISpeechToText(api_key=api_key)
+        
+        # Create a file-like object from bytes
+        import io
+        audio_io = io.BytesIO(content)
+        audio_io.name = audio_file.filename or f"audio.{file_ext}"
+        
+        response = await stt.transcribe(
+            file=audio_io,
+            model="whisper-1",
+            language=language,
+            response_format="json"
+        )
+        
+        return {
+            "text": response.text,
+            "language": language
+        }
+        
+    except Exception as e:
+        logger.error(f"STT error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/voice/available-voices")
+async def get_available_voices():
+    """Get list of available TTS voices"""
+    return {
+        "voices": [
+            {"id": "alloy", "name": "Alloy", "description": "Neutral, balanced"},
+            {"id": "ash", "name": "Ash", "description": "Clear, articulate"},
+            {"id": "coral", "name": "Coral", "description": "Warm, friendly"},
+            {"id": "echo", "name": "Echo", "description": "Smooth, calm"},
+            {"id": "fable", "name": "Fable", "description": "Expressive, storytelling"},
+            {"id": "nova", "name": "Nova", "description": "Energetic, upbeat"},
+            {"id": "onyx", "name": "Onyx", "description": "Deep, authoritative"},
+            {"id": "sage", "name": "Sage", "description": "Wise, measured"},
+            {"id": "shimmer", "name": "Shimmer", "description": "Bright, cheerful"}
+        ],
+        "default": "nova"
+    }
+
+# ==================== SPEAKING TEST ENDPOINTS ====================
+
+class SpeakingTestSubmission(BaseModel):
+    exam_type: str
+    prompt_id: str
+    audio_base64: str  # Base64 encoded audio
+    
+@api_router.post("/speaking-test/submit")
+async def submit_speaking_test(
+    submission: SpeakingTestSubmission,
+    current_user: dict = Depends(get_current_user)
+):
+    """Submit speaking test for AI evaluation"""
+    try:
+        api_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="AI evaluation not configured")
+        
+        # Decode audio
+        import io
+        audio_bytes = base64.b64decode(submission.audio_base64)
+        audio_io = io.BytesIO(audio_bytes)
+        audio_io.name = "speaking_test.webm"
+        
+        # Transcribe
+        stt = OpenAISpeechToText(api_key=api_key)
+        transcription = await stt.transcribe(
+            file=audio_io,
+            model="whisper-1",
+            language="en",
+            response_format="json"
+        )
+        
+        # Get AI evaluation
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        eval_chat = LlmChat(
+            api_key=api_key,
+            session_id=f"speaking-eval-{uuid.uuid4()}",
+            system_message=f"""You are an expert {submission.exam_type.upper()} speaking examiner. 
+Evaluate the student's spoken response based on:
+1. Fluency and Coherence (1-9)
+2. Lexical Resource (1-9)
+3. Grammatical Range and Accuracy (1-9)
+4. Pronunciation (1-9)
+
+Provide specific feedback and an overall band score.
+Format your response as JSON with keys: fluency_score, lexical_score, grammar_score, pronunciation_score, overall_score, feedback, strengths, areas_to_improve"""
+        )
+        
+        eval_msg = UserMessage(text=f"Student's transcribed response:\n\n{transcription.text}")
+        evaluation = await eval_chat.send_message(eval_msg)
+        
+        # Try to parse as JSON, otherwise wrap in object
+        try:
+            import json
+            eval_data = json.loads(evaluation)
+        except:
+            eval_data = {"feedback": evaluation, "overall_score": 6.0}
+        
+        # Save attempt
+        attempt_id = str(uuid.uuid4())
+        await db.speaking_attempts.insert_one({
+            "id": attempt_id,
+            "user_id": current_user["id"],
+            "exam_type": submission.exam_type,
+            "prompt_id": submission.prompt_id,
+            "transcription": transcription.text,
+            "evaluation": eval_data,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {
+            "id": attempt_id,
+            "transcription": transcription.text,
+            "evaluation": eval_data
+        }
+        
+    except Exception as e:
+        logger.error(f"Speaking test error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ==================== STRIPE CHECKOUT ====================
 
 from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
