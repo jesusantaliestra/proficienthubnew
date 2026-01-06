@@ -1582,141 +1582,140 @@ AI_TUTOR_ADDONS = {
     "tutor_300min": {"minutes": 300, "price": 120.00, "internal_cost": 30.00},
 }
 
-def get_unit_price(num_students: int, num_exams: int = 1, credit_tier: str = "basic") -> dict:
-    """Calculate unit price per student based on volume, exams, and credit tier"""
-    exam_mult = EXAM_MULTIPLIERS.get(min(num_exams, 3), 1.8)
-    credit_mult = CREDIT_TIER_MULTIPLIERS.get(credit_tier, 1.0)
-    tier_info = CREDIT_TIERS.get(credit_tier, CREDIT_TIERS["basic"])
-    
-    for tier_name, tier in UNIT_PRICING.items():
-        if tier["min"] <= num_students <= tier["max"]:
-            base_price = tier["price_per_student"]
-            final_price = round(base_price * exam_mult * credit_mult, 2)
-            extra_credit_price = EXTRA_CREDIT_PRICING[tier_name]
-            
-            return {
-                "tier": tier_name,
-                "students_range": f"{tier['min']}-{tier['max']}",
-                "price_per_student": final_price,
-                "monthly_total": round(final_price * num_students, 2),
-                "yearly_total": round(final_price * num_students * 10, 2),
-                "credits_per_student": tier_info["credits"],
-                "credit_tier": credit_tier,
-                "credit_tier_label": tier_info["label"],
-                "includes": tier_info["includes"],
-                "extra_credit_price": extra_credit_price,
-                "yearly_savings": "17%"
-            }
-    
-    # For 500+ students
+# ==================== NUEVAS FUNCIONES DE PRICING ====================
+
+@api_router.get("/pricing/exam-packages")
+async def get_exam_packages():
+    """Get all exam packages with pricing"""
+    packages = []
+    for pkg_id, pkg in EXAM_PACKAGES.items():
+        packages.append({
+            "id": pkg_id,
+            "mock_tests": pkg["mock_tests"],
+            "ai_tutor_minutes": pkg["ai_tutor_minutes"],
+            "price": pkg["price"],
+            "price_per_test": round(pkg["price"] / pkg["mock_tests"], 2),
+            "has_ai_tutor": pkg["ai_tutor_minutes"] > 0,
+            "description": pkg["description"],
+            "features": pkg["features"],
+            "margin": f"{int(pkg['margin'] * 100)}%"
+        })
     return {
-        "tier": "enterprise_custom",
-        "students_range": "500+",
-        "message": "Contact us for custom enterprise pricing",
-        "price_per_student": round(22 * exam_mult * credit_mult, 2),
-        "extra_credit_price": 0.50
+        "packages": packages,
+        "exam_types": list(EXAM_COSTS.keys()),
+        "exam_details": {k: {"description": v["description"]} for k, v in EXAM_COSTS.items()}
     }
 
-def get_pricing_tiers(num_exams: int = 1, credit_tier: str = "basic"):
-    """Get all pricing tiers for display"""
-    exam_mult = EXAM_MULTIPLIERS.get(min(num_exams, 3), 1.8)
-    credit_mult = CREDIT_TIER_MULTIPLIERS.get(credit_tier, 1.0)
-    tier_info = CREDIT_TIERS.get(credit_tier, CREDIT_TIERS["basic"])
-    
-    tiers = []
-    for tier_name, tier in UNIT_PRICING.items():
-        base_price = tier["price_per_student"]
-        final_price = round(base_price * exam_mult * credit_mult, 2)
-        example_students = tier["example_students"]
-        extra_credit_price = EXTRA_CREDIT_PRICING[tier_name]
-        
-        tiers.append({
-            "id": tier_name,
-            "name": f"{tier['min']}-{tier['max']} Students",
-            "students_min": tier["min"],
-            "students_max": tier["max"],
-            "price_per_student": final_price,
-            "credits_per_student": tier_info["credits"],
-            "credit_tier": credit_tier,
-            "includes": tier_info["includes"],
-            "extra_credit_price": extra_credit_price,
-            "example": {
-                "students": example_students,
-                "monthly": round(final_price * example_students, 2),
-                "yearly": round(final_price * example_students * 10, 2)
-            },
-            "features": get_tier_features(tier_name, num_exams, credit_tier)
+@api_router.get("/pricing/test-packages")
+async def get_test_packages():
+    """Get writing and speaking test packages for resale"""
+    writing = []
+    for pkg_id, pkg in WRITING_TEST_PACKAGES.items():
+        writing.append({
+            "id": pkg_id,
+            "tests": pkg["tests"],
+            "price": pkg["price"],
+            "price_per_test": pkg["price_per_test"],
+            "suggested_resale": round(pkg["price_per_test"] * 3, 2),  # 3x markup for institutions
+            "margin": f"{int(pkg['margin'] * 100)}%"
         })
     
-    return tiers
-
-def get_tier_features(tier_name: str, num_exams: int, credit_tier: str) -> list:
-    """Get features for each tier"""
-    exam_text = f"{num_exams} exam{'s' if num_exams > 1 else ''}" if num_exams < 3 else "All 5 exams"
-    tier_info = CREDIT_TIERS.get(credit_tier, CREDIT_TIERS["basic"])
+    speaking = []
+    for pkg_id, pkg in SPEAKING_TEST_PACKAGES.items():
+        speaking.append({
+            "id": pkg_id,
+            "tests": pkg["tests"],
+            "price": pkg["price"],
+            "price_per_test": pkg["price_per_test"],
+            "suggested_resale": round(pkg["price_per_test"] * 2, 2),  # 2x markup for institutions
+            "margin": f"{int(pkg['margin'] * 100)}%"
+        })
     
-    base_features = [
-        exam_text,
-        f"{tier_info['includes']['ai_teacher_conversations']} AI Teacher sessions",
-        f"{tier_info['includes']['writing_essays_graded']} Writing reviews",
-        f"{tier_info['includes']['voice_practice_minutes']} min Voice practice"
-    ]
-    
-    if credit_tier == "intensive":
-        base_features.append("Priority AI processing")
-    
-    if tier_name in ["tier_2", "tier_3", "tier_4", "tier_5"]:
-        base_features.append("Premium Analytics")
-    
-    if tier_name in ["tier_3", "tier_4", "tier_5"]:
-        base_features.append("Risk Prediction")
-    
-    if tier_name in ["tier_4", "tier_5"]:
-        base_features.extend(["Video Classes", "Library 50GB"])
-    
-    if tier_name == "tier_5":
-        base_features.extend(["White-label", "API Access"])
-    
-    return base_features
-
-@api_router.get("/pricing/calculate")
-async def calculate_pricing(students: int, exams: int = 1, credit_tier: str = "basic"):
-    """Calculate exact pricing for specific configuration"""
-    return get_unit_price(students, exams, credit_tier)
-
-@api_router.get("/pricing/tiers")
-async def get_pricing_tiers_endpoint(exams: int = 1, credit_tier: str = "basic"):
-    """Get all pricing tiers for display"""
-    tier_info = CREDIT_TIERS.get(credit_tier, CREDIT_TIERS["basic"])
     return {
-        "exams_selected": exams,
-        "exam_multiplier": EXAM_MULTIPLIERS.get(min(exams, 3), 1.8),
-        "credit_tier": credit_tier,
-        "credit_tier_info": tier_info,
-        "credit_tiers_available": {k: {
-            "credits": v["credits"],
-            "label": v["label"],
-            "description": v["description"],
-            "includes": v["includes"]
-        } for k, v in CREDIT_TIERS.items()},
-        "tiers": get_pricing_tiers(exams, credit_tier),
-        "extra_credits_info": {
-            "description": "Additional credits can be purchased at tier-specific rates",
-            "pricing": EXTRA_CREDIT_PRICING
-        }
+        "writing_packages": writing,
+        "speaking_packages": speaking,
+        "ai_tutor_addons": [
+            {"id": k, "minutes": v["minutes"], "price": v["price"]} 
+            for k, v in AI_TUTOR_ADDONS.items()
+        ]
     }
 
-@api_router.get("/pricing/credit-tiers")
-async def get_credit_tiers():
-    """Get available credit tier options"""
+@api_router.get("/pricing/roi-calculator")
+async def calculate_roi(
+    package_id: str,
+    num_students: int,
+    price_per_student: float = 60.0
+):
+    """Calculate ROI for institutions"""
+    if package_id not in EXAM_PACKAGES:
+        raise HTTPException(status_code=400, detail="Invalid package")
+    
+    pkg = EXAM_PACKAGES[package_id]
+    
+    # Institution costs
+    package_cost = pkg["price"]
+    cost_per_student = package_cost / num_students
+    tests_per_student = pkg["mock_tests"] / num_students
+    tutor_mins_per_student = pkg["ai_tutor_minutes"] / num_students
+    
+    # Institution revenue
+    revenue = price_per_student * num_students
+    profit = revenue - package_cost
+    roi_percentage = (profit / package_cost) * 100 if package_cost > 0 else 0
+    
     return {
-        "tiers": {k: {
-            "credits": v["credits"],
-            "label": v["label"],
-            "description": v["description"],
-            "includes": v["includes"]
-        } for k, v in CREDIT_TIERS.items()},
-        "multipliers": CREDIT_TIER_MULTIPLIERS
+        "package": {
+            "id": package_id,
+            "description": pkg["description"],
+            "mock_tests": pkg["mock_tests"],
+            "ai_tutor_minutes": pkg["ai_tutor_minutes"],
+            "price": package_cost
+        },
+        "students": num_students,
+        "per_student": {
+            "your_cost": round(cost_per_student, 2),
+            "your_price": price_per_student,
+            "your_margin": round(((price_per_student - cost_per_student) / price_per_student) * 100, 1),
+            "mock_tests": round(tests_per_student, 1),
+            "ai_tutor_minutes": round(tutor_mins_per_student, 1)
+        },
+        "totals": {
+            "your_investment": package_cost,
+            "your_revenue": revenue,
+            "your_profit": round(profit, 2),
+            "roi_percentage": round(roi_percentage, 1)
+        },
+        "recommendation": get_roi_recommendation(roi_percentage, num_students, tests_per_student)
+    }
+
+def get_roi_recommendation(roi: float, students: int, tests_per_student: float) -> str:
+    if tests_per_student < 1:
+        return "⚠️ Considera un paquete más pequeño o más estudiantes para mejor aprovechamiento"
+    if roi > 200:
+        return "🚀 Excelente ROI! Margen muy saludable para tu negocio"
+    if roi > 100:
+        return "✅ Buen ROI. Tienes margen para ofertas o servicios adicionales"
+    if roi > 50:
+        return "👍 ROI aceptable. Considera aumentar precio o agregar servicios premium"
+    return "⚡ ROI bajo. Evalúa aumentar estudiantes o ajustar precios"
+
+@api_router.get("/pricing/exam-costs")
+async def get_exam_cost_breakdown():
+    """Get detailed cost breakdown per exam type (for internal use)"""
+    return {
+        "exam_costs": {
+            k: {
+                "description": v["description"],
+                "speaking_minutes": v["speaking_minutes"],
+                "writing_tasks": v["writing_tasks"]
+            } for k, v in EXAM_COSTS.items()
+        },
+        "average_mock_test_cost_display": f"${AVG_MOCK_TEST_COST}",
+        "individual_test_costs_display": {
+            "writing_test": f"${INDIVIDUAL_TEST_COSTS['writing']}",
+            "speaking_test": f"${INDIVIDUAL_TEST_COSTS['speaking']}",
+            "ai_tutor_per_minute": f"${INDIVIDUAL_TEST_COSTS['ai_tutor_per_min_mixed']}"
+        }
     }
 
 @api_router.get("/pricing/institutional")
