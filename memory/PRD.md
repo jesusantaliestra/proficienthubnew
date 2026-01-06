@@ -2,9 +2,9 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 1.1  
+**Version:** 1.2  
 **Date:** January 2025  
-**Status:** MVP Complete with B2B Features
+**Status:** MVP Complete with B2B Features + Pricing + Stripe
 
 ## Original Problem Statement
 Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, IELTS, Cambridge, PTE, OET) with:
@@ -20,13 +20,14 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - Admin panel with API configuration
 - Library for institutions (materials, flashcards, audio, video, streaming)
 - Pricing with 70-90% margins accounting for ElevenLabs + OpenAI costs
+- **Writing & Speaking test packages for institutions to resell and monetize**
 
 ## User Personas
 
 ### 1. Institution Admin
 - Language schools, universities, corporate training
-- Needs: student management, analytics, risk metrics, ROI tracking, content library
-- Goals: 10x student capacity with same teachers, improve pass rates, reduce no-show
+- Needs: student management, analytics, risk metrics, ROI tracking, content library, test monetization
+- Goals: 10x student capacity with same teachers, improve pass rates, reduce no-show, generate additional revenue
 
 ### 2. Individual Learner
 - Self-study students preparing for proficiency exams
@@ -52,19 +53,32 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - [x] Realistic 10x student capacity calculation
 - [x] Feature showcase
 - [x] Exam types display (TOEFL, IELTS, Cambridge, PTE, OET)
-- [x] Pricing with exam selector and student tiers
 
-### Pricing Structure (85-95% Margins)
-Tiers by student count (accounting for ElevenLabs + OpenAI costs):
-- **Starter** (1-10 students): $149/mo (1 exam), $238/mo (2 exams), $328/mo (3+)
-- **Growth** (11-50 students): $349/mo (1 exam), $558/mo (2 exams), $768/mo (3+)
-- **Professional** (51-100 students): $699/mo (1 exam), $1,118/mo (2 exams), $1,538/mo (3+)
-- **Enterprise** (101-200 students): $1,299/mo + $8/extra student
+### Pricing Structure (Per-Student, Volume-Based)
+- [x] **3-tier credit system**: Basic (50), Medium (100), Intensive (200)
+- [x] **Volume discounts**: 1-10, 11-50, 51-100, 101-200, 201-500 students
+- [x] **Exam multipliers**: 1 exam, 2 exams, All 5 exams
+- [x] **Extra credits pricing**: Per-tier rates for additional credits
+- [x] **Yearly discount**: 17% savings
+
+### Writing & Speaking Test Packages (NEW)
+- [x] **Writing packages**: 10, 50, 100, 250, 500, 1000 tests
+- [x] **Speaking packages**: 10, 50, 100, 250, 500, 1000 tests
+- [x] **Volume discounts**: Lower per-test price with higher volume
+- [x] **Monetization calculator**: Shows profit potential for institutions
+- [x] **Subscription recovery**: Shows how many tests to sell to recover subscription cost
+
+### Stripe Payment Integration (NEW)
+- [x] Checkout session creation for subscriptions
+- [x] Checkout session creation for test packages
+- [x] Payment status checking
+- [x] Webhook handling
+- [x] PaymentSuccess page with polling
 
 ### Institution Dashboard
 - [x] Student management with risk metrics
 - [x] Premium analytics (pass probability, risk score, engagement)
-- [x] **Library Section** for content management
+- [x] Library Section for content management
 - [x] Language selector (EN, ES, PT, DE, IT, FR)
 - [x] Exam management
 
@@ -87,35 +101,52 @@ Tiers by student count (accounting for ElevenLabs + OpenAI costs):
 - [x] OpenAI integration via Emergent Universal Key
 - [ ] Voice-enabled AI agents (ElevenLabs - ready for integration)
 
-### ROI Calculator Metrics
-- 10x student capacity with AI (100:1 vs 15:1 ratio)
-- +20% pass rate improvement
-- 60% no-show reduction
-- Teacher time saved: 30h/week per teacher
-- Revenue + cost savings calculation
-
 ## Technical Architecture
 
 ```
 Frontend (React 19 + Duolingo-style)
 ├── /src
-│   ├── /pages (Landing, Auth, Dashboards, Exam, Tutor)
+│   ├── /pages
+│   │   ├── Landing.jsx (pricing, ROI calc, monetization calc)
+│   │   ├── PaymentSuccess.jsx (Stripe success/failure)
+│   │   ├── Auth.jsx
+│   │   ├── InstitutionDashboard.jsx
+│   │   ├── StudentDashboard.jsx
+│   │   ├── ExamSimulator.jsx
+│   │   └── AITutor.jsx
 │   ├── /components/ui (Shadcn components)
 │   ├── /contexts (AuthContext)
 │   └── /i18n (EN, ES, PT, DE, IT, FR)
 
 Backend (FastAPI)
-├── server.py (main API)
+├── server.py
 │   ├── Auth endpoints
 │   ├── Institution endpoints
 │   ├── Library endpoints
 │   ├── Exam endpoints
 │   ├── AI Tutor endpoints
-│   ├── Pricing endpoints
+│   ├── Pricing endpoints (NEW: test packages, monetization)
+│   ├── Stripe Checkout endpoints (NEW)
 │   └── Admin endpoints
-├── MongoDB (users, exams, library_items, conversations)
+├── MongoDB (users, exams, library_items, conversations, payment_transactions)
 └── External APIs (OpenAI, Stripe, ElevenLabs ready)
 ```
+
+## API Endpoints
+
+### Pricing (Updated)
+- `GET /api/pricing/calculate` - Calculate per-student pricing
+- `GET /api/pricing/tiers` - Get all pricing tiers
+- `GET /api/pricing/credit-tiers` - Get credit tier options
+- `GET /api/pricing/test-packages` - Get writing/speaking packages
+- `POST /api/pricing/monetization-calculator` - Calculate profit potential
+- `GET /api/pricing/institutional` - Get institutional pricing
+
+### Stripe Checkout (NEW)
+- `POST /api/checkout/subscription` - Create subscription checkout
+- `POST /api/checkout/test-package` - Create test package checkout
+- `GET /api/checkout/status/{session_id}` - Get payment status
+- `POST /api/webhook/stripe` - Handle Stripe webhooks
 
 ## Database Collections
 - users (all user types with language preference)
@@ -123,14 +154,15 @@ Backend (FastAPI)
 - tutor_conversations (AI chat logs)
 - library_items (materials, flashcards, audio, video)
 - admin_settings
+- payment_transactions (NEW - for Stripe payments)
 
 ## What's Been Implemented (January 2025)
 
-### Iteration 1
+### Session 1
 - Basic MVP with dark theme
 - Auth, dashboards, exam simulator, AI tutor
 
-### Iteration 2
+### Session 2
 - Duolingo-style green design
 - B2B focused messaging
 - Realistic ROI calculator (10x multiplier)
@@ -140,20 +172,27 @@ Backend (FastAPI)
 - Flashcard creation
 - Library item management
 
+### Session 3 (Current)
+- **3-tier credit system** (Basic/Medium/Intensive)
+- **Writing & Speaking test packages** for institutions
+- **Monetization calculator** showing profit potential
+- **Stripe payment integration** via emergent library
+- **PaymentSuccess page** with polling
+- Comprehensive test suite for pricing features
+
 ## Prioritized Backlog
 
 ### P0 - Critical (Next Phase)
 1. ElevenLabs integration for voice-enabled AI tutors
 2. Audio recording/playback for speaking tests
-3. Video streaming and recording for classes
-4. Stripe webhook integration for live payments
-5. Admin panel full implementation with API key management
+3. Admin panel full implementation with API key management
 
 ### P1 - High Priority
 1. Offline mode with service workers
 2. More practice questions per exam (real exam-style)
 3. Student invite via email
 4. Institution branding/white-label for Enterprise
+5. Video streaming and recording for classes
 
 ### P2 - Medium Priority
 1. Real exam score conversion (band scores)
@@ -167,14 +206,12 @@ Backend (FastAPI)
 3. Community features
 4. API for third-party integrations
 
-## Test Results
-- Backend: 88.7% tests passing
-- Frontend: 98% tests passing
+## Test Results (Session 3)
+- Backend: 100% (18/18 tests passed)
+- Frontend: 100% (all pricing features working)
 - All core flows working
 
-## Next Tasks
-1. Integrate ElevenLabs for voice AI agents
-2. Add audio recording component for speaking tests
-3. Implement video streaming (WebRTC or pre-recorded)
-4. Complete Stripe webhook handling
-5. Build admin panel with API key configuration
+## Notes
+- "Made with Emergent" badge is platform feature in preview, not in code
+- Stripe integration uses emergent integration library (sk_test_emergent)
+- AI costs factored into pricing model but hidden from clients
