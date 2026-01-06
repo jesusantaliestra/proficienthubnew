@@ -1,367 +1,727 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from '../components/ui/button';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Progress } from '../components/ui/progress';
-import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
-import { Label } from '../components/ui/label';
-import { Textarea } from '../components/ui/textarea';
+import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { Textarea } from '../components/ui/textarea';
+import { Progress } from '../components/ui/progress';
 import { 
-  Clock, ArrowLeft, ArrowRight, CheckCircle, XCircle,
-  AlertTriangle, BookOpen, Send, Loader2
+  BookOpen, Headphones, Mic, PenTool, Clock, ChevronRight, 
+  ChevronLeft, Check, X, Play, Pause, Square, Volume2,
+  AlertCircle, CheckCircle, Loader2, RotateCcw
 } from 'lucide-react';
 import axios from 'axios';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export default function ExamSimulator() {
-  const { examType, section } = useParams();
   const navigate = useNavigate();
-  const [questions, setQuestions] = useState([]);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [timeLeft, setTimeLeft] = useState(0);
+  const { examType = 'ielts' } = useParams();
+  const { user } = useAuth();
+  
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [examData, setExamData] = useState(null);
+  const [currentSection, setCurrentSection] = useState('reading');
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState(null);
-  const [startTime] = useState(Date.now());
+  
+  // Speaking test state
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [preparationTime, setPreparationTime] = useState(0);
+  const [speakingTime, setSpeakingTime] = useState(0);
+  const [speakingPhase, setSpeakingPhase] = useState('idle'); // idle, preparing, speaking, done
+  
+  // Audio refs
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const timerRef = useRef(null);
 
-  const examNames = {
-    toefl: 'TOEFL',
-    ielts: 'IELTS',
-    cambridge: 'Cambridge',
-    pte: 'PTE',
-    oet: 'OET'
+  const sectionIcons = {
+    reading: BookOpen,
+    listening: Headphones,
+    speaking: Mic,
+    writing: PenTool
   };
 
   useEffect(() => {
-    fetchQuestions();
-  }, [examType, section]);
+    fetchExamData();
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [examType, currentSection]);
 
-  useEffect(() => {
-    if (timeLeft <= 0 || results) return;
-    
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          handleSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeLeft, results]);
-
-  const fetchQuestions = async () => {
+  const fetchExamData = async () => {
     try {
-      const response = await axios.get(`${API_URL}/exams/${examType}/practice?section=${section}`);
-      setQuestions(response.data.questions || []);
-      setTimeLeft(response.data.time_limit * 60); // Convert minutes to seconds
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_URL}/exams/${examType}/practice?section=${currentSection}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setExamData(response.data);
+      setTimeRemaining(response.data.time_limit * 60);
+      setCurrentQuestionIndex(0);
+      setAnswers({});
     } catch (error) {
-      console.error('Failed to fetch questions:', error);
-      toast.error('Failed to load exam questions');
+      console.error('Error fetching exam:', error);
+      toast.error('Error loading exam');
     } finally {
       setLoading(false);
     }
   };
 
+  // Timer effect
+  useEffect(() => {
+    if (timeRemaining > 0 && !showResults) {
+      timerRef.current = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            handleSubmitSection();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [currentSection, showResults]);
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleAnswer = (questionId, answer) => {
+  const handleAnswerChange = (questionId, answer) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
   };
 
-  const handleSubmit = async () => {
-    setSubmitting(true);
-    const timeSpent = Math.round((Date.now() - startTime) / 1000);
-    
+  // Recording functions for speaking tests
+  const startRecording = async () => {
     try {
-      const formattedAnswers = questions.map(q => ({
-        question_id: q.id,
-        answer: answers[q.id] || '',
-        is_correct: answers[q.id] === q.correct_answer
-      }));
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
 
-      const response = await axios.post(`${API_URL}/exams/submit`, {
-        exam_type: examType,
-        section: section,
-        answers: formattedAnswers,
-        time_spent: timeSpent
-      });
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
 
-      setResults(response.data);
-      toast.success('Exam submitted successfully!');
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(audioBlob);
+        setAudioUrl(URL.createObjectURL(audioBlob));
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setSpeakingPhase('speaking');
     } catch (error) {
-      console.error('Submit error:', error);
-      toast.error('Failed to submit exam');
-    } finally {
-      setSubmitting(false);
+      console.error('Error starting recording:', error);
+      toast.error('Could not access microphone');
     }
   };
 
-  const getTimerColor = () => {
-    if (timeLeft < 60) return 'text-red-500 animate-pulse';
-    if (timeLeft < 300) return 'text-amber-500';
-    return 'text-white';
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      setSpeakingPhase('done');
+    }
   };
 
-  if (loading) {
+  const startSpeakingTest = () => {
+    const question = examData?.questions?.[currentQuestionIndex];
+    if (!question) return;
+
+    setSpeakingPhase('preparing');
+    setPreparationTime(question.preparation_time || 60);
+    setSpeakingTime(question.speaking_time || 120);
+
+    // Preparation countdown
+    const prepTimer = setInterval(() => {
+      setPreparationTime(prev => {
+        if (prev <= 1) {
+          clearInterval(prepTimer);
+          startRecording();
+          // Start speaking countdown
+          const speakTimer = setInterval(() => {
+            setSpeakingTime(prev => {
+              if (prev <= 1) {
+                clearInterval(speakTimer);
+                stopRecording();
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const submitSpeakingResponse = async () => {
+    if (!audioBlob) return;
+
+    try {
+      setIsSubmitting(true);
+      const token = localStorage.getItem('token');
+      
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      reader.onloadend = async () => {
+        const base64Audio = reader.result.split(',')[1];
+        
+        const response = await axios.post(
+          `${API_URL}/speaking-test/submit`,
+          {
+            exam_type: examType,
+            prompt_id: examData?.questions?.[currentQuestionIndex]?.id || 'unknown',
+            audio_base64: base64Audio
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        toast.success('Speaking response submitted!');
+        setResults(response.data);
+        setShowResults(true);
+      };
+    } catch (error) {
+      console.error('Error submitting speaking:', error);
+      toast.error('Error submitting response');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmitSection = async () => {
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Calculate score locally for reading/listening
+      let correctCount = 0;
+      let totalQuestions = 0;
+      
+      examData?.questions?.forEach((q, idx) => {
+        if (q.questions) {
+          q.questions.forEach(subQ => {
+            totalQuestions++;
+            if (answers[subQ.id] === subQ.correct_answer) {
+              correctCount++;
+            }
+          });
+        } else if (q.correct_answer) {
+          totalQuestions++;
+          if (answers[q.id] === q.correct_answer) {
+            correctCount++;
+          }
+        }
+      });
+
+      const score = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
+      
+      // Save attempt
+      await axios.post(
+        `${API_URL}/exams/submit`,
+        {
+          exam_type: examType,
+          section: currentSection,
+          answers,
+          score,
+          time_taken: (examData?.time_limit * 60) - timeRemaining
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setResults({
+        score: score.toFixed(1),
+        correct: correctCount,
+        total: totalQuestions,
+        bandScore: calculateBandScore(score)
+      });
+      setShowResults(true);
+      toast.success('Section completed!');
+    } catch (error) {
+      console.error('Error submitting:', error);
+      toast.error('Error submitting answers');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const calculateBandScore = (percentage) => {
+    if (percentage >= 90) return 9;
+    if (percentage >= 80) return 8;
+    if (percentage >= 70) return 7;
+    if (percentage >= 60) return 6;
+    if (percentage >= 50) return 5;
+    if (percentage >= 40) return 4;
+    return 3;
+  };
+
+  const renderQuestion = () => {
+    if (!examData?.questions) return null;
+    
+    if (currentSection === 'reading') {
+      return renderReadingQuestion();
+    } else if (currentSection === 'speaking') {
+      return renderSpeakingQuestion();
+    } else if (currentSection === 'writing') {
+      return renderWritingQuestion();
+    }
+    return null;
+  };
+
+  const renderReadingQuestion = () => {
+    const passage = examData.questions[currentQuestionIndex];
+    if (!passage) return null;
+
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-slate-400">Loading exam...</p>
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Passage */}
+        <Card className="h-fit">
+          <CardHeader>
+            <CardTitle className="text-lg">{passage.passage?.title || 'Reading Passage'}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+              {passage.passage?.passage || passage.passage}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Questions */}
+        <div className="space-y-4">
+          {(passage.questions || [passage]).map((q, idx) => (
+            <Card key={q.id} className={answers[q.id] ? 'border-green-300 bg-green-50' : ''}>
+              <CardContent className="p-4">
+                <p className="font-semibold mb-3">
+                  {idx + 1}. {q.question}
+                </p>
+                <div className="space-y-2">
+                  {q.options?.map((option, optIdx) => (
+                    <label
+                      key={optIdx}
+                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all
+                        ${answers[q.id] === option.charAt(0) 
+                          ? 'border-[#58CC02] bg-green-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                    >
+                      <input
+                        type="radio"
+                        name={q.id}
+                        value={option.charAt(0)}
+                        checked={answers[q.id] === option.charAt(0)}
+                        onChange={() => handleAnswerChange(q.id, option.charAt(0))}
+                        className="w-4 h-4 text-[#58CC02]"
+                      />
+                      <span className="text-sm">{option}</span>
+                    </label>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     );
-  }
+  };
 
-  if (results) {
+  const renderSpeakingQuestion = () => {
+    const question = examData.questions[currentQuestionIndex];
+    if (!question) return null;
+
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6" data-testid="exam-results">
-        <Toaster position="top-right" richColors />
-        <Card className="max-w-2xl w-full bg-slate-900/50 border-slate-800">
-          <CardHeader className="text-center">
-            <div className={`w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center ${results.score >= 70 ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>
-              {results.score >= 70 ? (
-                <CheckCircle className="w-10 h-10 text-emerald-400" />
-              ) : (
-                <AlertTriangle className="w-10 h-10 text-amber-400" />
-              )}
-            </div>
-            <CardTitle className="text-3xl text-white font-outfit">
-              {results.score >= 70 ? 'Great Job!' : 'Keep Practicing!'}
+      <div className="max-w-2xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mic className="w-5 h-5 text-[#58CC02]" />
+              Speaking Task
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="text-center">
-              <div className="text-6xl font-bold text-white font-outfit mb-2">{results.score}%</div>
-              <p className="text-slate-400">Your Score</p>
+            {/* Prompt */}
+            <div className="bg-gray-50 rounded-xl p-6">
+              <h3 className="font-bold text-lg mb-3">{question.topic || 'Speaking Prompt'}</h3>
+              <p className="text-gray-700 whitespace-pre-line">
+                {question.cue_card || question.prompt}
+              </p>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-800/50 rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold text-blue-400">{Math.round(results.time_spent / 60)}</p>
-                <p className="text-slate-500 text-sm">Minutes Spent</p>
-              </div>
-              <div className="bg-slate-800/50 rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold text-purple-400">{examNames[examType]}</p>
-                <p className="text-slate-500 text-sm capitalize">{section}</p>
-              </div>
-            </div>
-            
-            <div className="bg-slate-800/30 rounded-xl p-6">
-              <h4 className="text-white font-semibold mb-3">AI Feedback</h4>
-              <p className="text-slate-300 text-sm leading-relaxed">{results.feedback}</p>
-            </div>
-            
-            <div className="flex gap-4">
+
+            {/* Speaking Controls */}
+            {speakingPhase === 'idle' && (
               <Button 
-                variant="outline" 
-                className="flex-1 border-slate-700"
-                onClick={() => navigate('/student/dashboard')}
-                data-testid="back-to-dashboard"
+                className="w-full bg-[#58CC02] hover:bg-[#46A302]"
+                onClick={startSpeakingTest}
               >
-                Back to Dashboard
+                <Play className="w-4 h-4 mr-2" />
+                Start Speaking Test
               </Button>
+            )}
+
+            {speakingPhase === 'preparing' && (
+              <div className="text-center py-8">
+                <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-yellow-100 flex items-center justify-center">
+                  <span className="text-3xl font-bold text-yellow-600">{preparationTime}</span>
+                </div>
+                <p className="text-lg font-semibold text-yellow-600">Preparation Time</p>
+                <p className="text-gray-500">Read the prompt and prepare your response</p>
+              </div>
+            )}
+
+            {speakingPhase === 'speaking' && (
+              <div className="text-center py-8">
+                <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center animate-pulse">
+                  <Mic className="w-10 h-10 text-red-600" />
+                </div>
+                <p className="text-3xl font-bold text-red-600 mb-2">{formatTime(speakingTime)}</p>
+                <p className="text-lg font-semibold">Recording...</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={stopRecording}
+                >
+                  <Square className="w-4 h-4 mr-2" />
+                  Stop Early
+                </Button>
+              </div>
+            )}
+
+            {speakingPhase === 'done' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-2 text-green-600">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="font-semibold">Recording Complete</span>
+                </div>
+                
+                {audioUrl && (
+                  <audio controls className="w-full" src={audioUrl} />
+                )}
+
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => {
+                      setAudioBlob(null);
+                      setAudioUrl(null);
+                      setSpeakingPhase('idle');
+                    }}
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Re-record
+                  </Button>
+                  <Button 
+                    className="flex-1 bg-[#58CC02] hover:bg-[#46A302]"
+                    onClick={submitSpeakingResponse}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4 mr-2" />
+                    )}
+                    Submit for Evaluation
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderWritingQuestion = () => {
+    const task = examData.questions[currentQuestionIndex];
+    if (!task) return null;
+
+    return (
+      <div className="max-w-4xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PenTool className="w-5 h-5 text-[#58CC02]" />
+              Writing Task
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="bg-gray-50 rounded-xl p-6">
+              <p className="text-gray-700">{task.prompt}</p>
+              <div className="mt-4 flex gap-4 text-sm text-gray-500">
+                <span>Minimum: {task.min_words} words</span>
+                {task.max_words && <span>Maximum: {task.max_words} words</span>}
+              </div>
+            </div>
+
+            <Textarea
+              placeholder="Write your response here..."
+              className="min-h-[400px] text-base"
+              value={answers[task.id] || ''}
+              onChange={(e) => handleAnswerChange(task.id, e.target.value)}
+            />
+
+            <div className="flex justify-between items-center text-sm text-gray-500">
+              <span>
+                Word count: {(answers[task.id] || '').split(/\s+/).filter(Boolean).length}
+              </span>
               <Button 
-                className="flex-1 bg-blue-500 hover:bg-blue-600"
-                onClick={() => window.location.reload()}
-                data-testid="try-again"
+                className="bg-[#58CC02] hover:bg-[#46A302]"
+                onClick={handleSubmitSection}
+                disabled={isSubmitting}
               >
-                Try Again
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4 mr-2" />
+                )}
+                Submit Essay
               </Button>
             </div>
           </CardContent>
         </Card>
       </div>
     );
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#58CC02]" />
+      </div>
+    );
   }
 
-  const currentQ = questions[currentQuestion];
+  if (showResults) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-2xl mx-auto px-6">
+          <Card>
+            <CardHeader className="text-center">
+              <CheckCircle className="w-16 h-16 mx-auto text-[#58CC02] mb-4" />
+              <CardTitle className="text-2xl">Section Complete!</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {results?.evaluation ? (
+                // Speaking results
+                <div className="space-y-4">
+                  <div className="bg-green-50 rounded-xl p-6 text-center">
+                    <div className="text-4xl font-bold text-[#58CC02] mb-2">
+                      Band {results.evaluation.overall_score || 6}
+                    </div>
+                    <p className="text-gray-600">Overall Score</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    {['fluency_score', 'lexical_score', 'grammar_score', 'pronunciation_score'].map(key => (
+                      results.evaluation[key] && (
+                        <div key={key} className="bg-gray-50 rounded-lg p-4 text-center">
+                          <div className="text-2xl font-bold text-gray-900">
+                            {results.evaluation[key]}
+                          </div>
+                          <p className="text-sm text-gray-500 capitalize">
+                            {key.replace('_score', '').replace('_', ' ')}
+                          </p>
+                        </div>
+                      )
+                    ))}
+                  </div>
+
+                  {results.evaluation.feedback && (
+                    <div className="bg-blue-50 rounded-xl p-4">
+                      <h4 className="font-semibold text-blue-800 mb-2">Feedback</h4>
+                      <p className="text-blue-700 text-sm">{results.evaluation.feedback}</p>
+                    </div>
+                  )}
+
+                  {results.transcription && (
+                    <div className="bg-gray-50 rounded-xl p-4">
+                      <h4 className="font-semibold text-gray-800 mb-2">Your Response (Transcribed)</h4>
+                      <p className="text-gray-600 text-sm">{results.transcription}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Reading/Listening results
+                <div className="space-y-4">
+                  <div className="bg-green-50 rounded-xl p-6 text-center">
+                    <div className="text-4xl font-bold text-[#58CC02] mb-2">
+                      {results?.score}%
+                    </div>
+                    <p className="text-gray-600">
+                      {results?.correct}/{results?.total} correct
+                    </p>
+                    <p className="text-lg font-semibold text-gray-700 mt-2">
+                      Estimated Band Score: {results?.bandScore}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => navigate('/student/dashboard')}
+                >
+                  Back to Dashboard
+                </Button>
+                <Button 
+                  className="flex-1 bg-[#58CC02] hover:bg-[#46A302]"
+                  onClick={() => {
+                    setShowResults(false);
+                    setResults(null);
+                    setAnswers({});
+                    setSpeakingPhase('idle');
+                    setAudioBlob(null);
+                    setAudioUrl(null);
+                    fetchExamData();
+                  }}
+                >
+                  Practice Again
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950" data-testid="exam-simulator">
-      <Toaster position="top-right" richColors />
-      
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-slate-900/50 border-b border-slate-800 px-6 py-4 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate(-1)}
-              className="text-slate-400 hover:text-white"
-              data-testid="exit-exam"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div>
-              <h1 className="text-lg font-bold text-white font-outfit">
-                {examNames[examType]} - <span className="capitalize">{section}</span>
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h1 className="text-xl font-bold text-gray-900">
+                {examType.toUpperCase()} Practice
               </h1>
-              <p className="text-xs text-slate-500">Question {currentQuestion + 1} of {questions.length}</p>
+              <Badge className="bg-[#58CC02] text-white border-0 capitalize">
+                {currentSection}
+              </Badge>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-6">
-            <div className={`flex items-center gap-2 font-mono text-lg ${getTimerColor()}`}>
-              <Clock className="w-5 h-5" />
-              <span data-testid="timer">{formatTime(timeLeft)}</span>
+            
+            <div className="flex items-center gap-4">
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                timeRemaining < 300 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
+              }`}>
+                <Clock className="w-4 h-4" />
+                <span className="font-mono font-bold">{formatTime(timeRemaining)}</span>
+              </div>
+              
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/student/dashboard')}
+              >
+                Exit
+              </Button>
             </div>
-            <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20">
-              {Math.round((Object.keys(answers).length / questions.length) * 100)}% Complete
-            </Badge>
           </div>
         </div>
       </header>
 
-      {/* Progress */}
-      <div className="max-w-4xl mx-auto px-6 py-4">
-        <Progress value={(currentQuestion + 1) / questions.length * 100} className="h-2" />
-        <div className="flex justify-between mt-2">
-          {questions.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentQuestion(index)}
-              className={`w-8 h-8 rounded-full text-xs font-medium transition-all ${
-                index === currentQuestion 
-                  ? 'bg-blue-500 text-white' 
-                  : answers[questions[index]?.id]
-                    ? 'bg-emerald-500/20 text-emerald-400'
-                    : 'bg-slate-800 text-slate-500'
-              }`}
-              data-testid={`question-nav-${index}`}
-            >
-              {index + 1}
-            </button>
-          ))}
+      {/* Section Tabs */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex gap-2 py-4">
+            {['reading', 'listening', 'speaking', 'writing'].map((section) => {
+              const Icon = sectionIcons[section];
+              return (
+                <button
+                  key={section}
+                  onClick={() => setCurrentSection(section)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
+                    currentSection === section
+                      ? 'bg-[#58CC02] text-white'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="capitalize">{section}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Question */}
-      <main className="max-w-4xl mx-auto px-6 py-8">
-        {currentQ && (
-          <Card className="bg-slate-900/50 border-slate-800">
-            <CardContent className="p-8 space-y-6">
-              {/* Passage if exists */}
-              {currentQ.passage && (
-                <div className="bg-slate-800/50 rounded-xl p-6 mb-6">
-                  <div className="flex items-center gap-2 text-slate-400 text-sm mb-3">
-                    <BookOpen className="w-4 h-4" />
-                    <span>Reading Passage</span>
-                  </div>
-                  <p className="text-slate-200 leading-relaxed">{currentQ.passage}</p>
-                </div>
-              )}
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {renderQuestion()}
 
-              {/* Question */}
-              <div>
-                <Badge className="mb-4 capitalize">{currentQ.type.replace('_', ' ')}</Badge>
-                <h2 className="text-xl font-semibold text-white mb-6">{currentQ.question}</h2>
-              </div>
+        {/* Navigation for reading/listening */}
+        {(currentSection === 'reading' || currentSection === 'listening') && (
+          <div className="flex justify-between items-center mt-8">
+            <Button
+              variant="outline"
+              disabled={currentQuestionIndex === 0}
+              onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Previous
+            </Button>
 
-              {/* Answer Options */}
-              {currentQ.type === 'multiple_choice' || currentQ.type === 'true_false_not_given' ? (
-                <RadioGroup
-                  value={answers[currentQ.id] || ''}
-                  onValueChange={(value) => handleAnswer(currentQ.id, value)}
-                  className="space-y-3"
+            <div className="flex items-center gap-2">
+              {examData?.questions?.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentQuestionIndex(idx)}
+                  className={`w-8 h-8 rounded-full text-sm font-semibold transition-all ${
+                    currentQuestionIndex === idx
+                      ? 'bg-[#58CC02] text-white'
+                      : answers[examData.questions[idx]?.id || `q${idx}`]
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-gray-100 text-gray-600'
+                  }`}
                 >
-                  {currentQ.options.map((option, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-center space-x-3 p-4 rounded-xl border transition-all cursor-pointer ${
-                        answers[currentQ.id] === option
-                          ? 'border-blue-500 bg-blue-500/10'
-                          : 'border-slate-700 hover:border-slate-600 bg-slate-800/30'
-                      }`}
-                      onClick={() => handleAnswer(currentQ.id, option)}
-                      data-testid={`option-${index}`}
-                    >
-                      <RadioGroupItem value={option} id={`option-${index}`} />
-                      <Label htmlFor={`option-${index}`} className="text-slate-200 cursor-pointer flex-1">
-                        {option}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              ) : currentQ.type === 'essay' ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between text-sm text-slate-400">
-                    <span>Min: {currentQ.min_words} words</span>
-                    <span>Max: {currentQ.max_words} words</span>
-                  </div>
-                  <Textarea
-                    value={answers[currentQ.id] || ''}
-                    onChange={(e) => handleAnswer(currentQ.id, e.target.value)}
-                    placeholder="Write your essay here..."
-                    className="min-h-[300px] bg-slate-800 border-slate-700 text-white"
-                    data-testid="essay-input"
-                  />
-                  <p className="text-sm text-slate-500">
-                    Word count: {(answers[currentQ.id] || '').split(/\s+/).filter(Boolean).length}
-                  </p>
-                </div>
-              ) : currentQ.type === 'fill_blank' ? (
-                <input
-                  type="text"
-                  value={answers[currentQ.id] || ''}
-                  onChange={(e) => handleAnswer(currentQ.id, e.target.value)}
-                  placeholder="Type your answer..."
-                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  data-testid="fill-blank-input"
-                />
-              ) : null}
+                  {idx + 1}
+                </button>
+              ))}
+            </div>
 
-              {/* Navigation */}
-              <div className="flex justify-between pt-6 border-t border-slate-800">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
-                  disabled={currentQuestion === 0}
-                  className="border-slate-700"
-                  data-testid="prev-question"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Previous
-                </Button>
-                
-                {currentQuestion === questions.length - 1 ? (
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={submitting}
-                    className="bg-emerald-500 hover:bg-emerald-600"
-                    data-testid="submit-exam"
-                  >
-                    {submitting ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4 mr-2" />
-                    )}
-                    Submit Exam
-                  </Button>
+            {currentQuestionIndex === (examData?.questions?.length || 1) - 1 ? (
+              <Button 
+                className="bg-[#58CC02] hover:bg-[#46A302]"
+                onClick={handleSubmitSection}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <Button
-                    onClick={() => setCurrentQuestion(prev => Math.min(questions.length - 1, prev + 1))}
-                    className="bg-blue-500 hover:bg-blue-600"
-                    data-testid="next-question"
-                  >
-                    Next
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
+                  <Check className="w-4 h-4 mr-2" />
                 )}
-              </div>
-            </CardContent>
-          </Card>
+                Submit Section
+              </Button>
+            ) : (
+              <Button
+                onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+              >
+                Next
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            )}
+          </div>
         )}
       </main>
     </div>
