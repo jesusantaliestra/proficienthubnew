@@ -982,6 +982,359 @@ async def get_institutional_pricing(exam_count: int = 1, credit_tier: str = "bas
         } for k, v in CREDIT_TIERS.items()}
     }
 
+# ==================== WRITING & SPEAKING PACKAGES ENDPOINTS ====================
+
+@api_router.get("/pricing/test-packages")
+async def get_test_packages():
+    """Get available writing and speaking test packages for institutions"""
+    writing_packages = []
+    for pkg_id, pkg in WRITING_TEST_PACKAGES.items():
+        writing_packages.append({
+            "id": pkg_id,
+            "tests": pkg["tests"],
+            "price": pkg["price"],
+            "price_per_test": pkg["price_per_test"],
+            "type": "writing",
+            "description": f"{pkg['tests']} AI-graded writing tests with detailed feedback"
+        })
+    
+    speaking_packages = []
+    for pkg_id, pkg in SPEAKING_TEST_PACKAGES.items():
+        speaking_packages.append({
+            "id": pkg_id,
+            "tests": pkg["tests"],
+            "price": pkg["price"],
+            "price_per_test": pkg["price_per_test"],
+            "type": "speaking",
+            "description": f"{pkg['tests']} AI-powered speaking tests with pronunciation feedback"
+        })
+    
+    return {
+        "writing_packages": writing_packages,
+        "speaking_packages": speaking_packages,
+        "monetization_info": {
+            "description": "Institutions can resell these tests to recover subscription costs",
+            "suggested_markup": "2x-3x for profit",
+            "example": "Buy 100 writing tests at $1.00/test, sell at $3.00/test = $200 profit"
+        }
+    }
+
+@api_router.post("/pricing/monetization-calculator")
+async def calculate_monetization(
+    writing_tests: int = 0,
+    speaking_tests: int = 0,
+    writing_sell_price: float = 3.0,
+    speaking_sell_price: float = 4.0
+):
+    """
+    Calculate potential monetization revenue for institutions.
+    Shows how much profit they can make by reselling tests to their students.
+    """
+    # Find best package prices
+    def get_best_writing_price(tests: int) -> tuple:
+        if tests == 0:
+            return 0, 0, "none"
+        best_pkg = None
+        for pkg_id, pkg in sorted(WRITING_TEST_PACKAGES.items(), key=lambda x: x[1]["tests"]):
+            if pkg["tests"] >= tests:
+                best_pkg = (pkg["price"], pkg["price_per_test"], pkg_id)
+                break
+        if not best_pkg:
+            # Use largest package, may need multiple
+            largest = WRITING_TEST_PACKAGES["writing_1000"]
+            num_packs = (tests + 999) // 1000
+            return largest["price"] * num_packs, largest["price_per_test"], "writing_1000"
+        return best_pkg
+    
+    def get_best_speaking_price(tests: int) -> tuple:
+        if tests == 0:
+            return 0, 0, "none"
+        best_pkg = None
+        for pkg_id, pkg in sorted(SPEAKING_TEST_PACKAGES.items(), key=lambda x: x[1]["tests"]):
+            if pkg["tests"] >= tests:
+                best_pkg = (pkg["price"], pkg["price_per_test"], pkg_id)
+                break
+        if not best_pkg:
+            largest = SPEAKING_TEST_PACKAGES["speaking_1000"]
+            num_packs = (tests + 999) // 1000
+            return largest["price"] * num_packs, largest["price_per_test"], "speaking_1000"
+        return best_pkg
+    
+    # Calculate writing
+    w_cost, w_unit_cost, w_pkg = get_best_writing_price(writing_tests)
+    w_revenue = writing_tests * writing_sell_price
+    w_profit = w_revenue - w_cost
+    w_margin = (w_profit / w_revenue * 100) if w_revenue > 0 else 0
+    
+    # Calculate speaking
+    s_cost, s_unit_cost, s_pkg = get_best_speaking_price(speaking_tests)
+    s_revenue = speaking_tests * speaking_sell_price
+    s_profit = s_revenue - s_cost
+    s_margin = (s_profit / s_revenue * 100) if s_revenue > 0 else 0
+    
+    # Totals
+    total_cost = w_cost + s_cost
+    total_revenue = w_revenue + s_revenue
+    total_profit = w_profit + s_profit
+    total_margin = (total_profit / total_revenue * 100) if total_revenue > 0 else 0
+    
+    return {
+        "writing": {
+            "tests_purchased": writing_tests,
+            "package_recommended": w_pkg,
+            "cost": round(w_cost, 2),
+            "cost_per_test": round(w_unit_cost, 2),
+            "sell_price_per_test": writing_sell_price,
+            "revenue": round(w_revenue, 2),
+            "profit": round(w_profit, 2),
+            "margin_percent": round(w_margin, 1)
+        },
+        "speaking": {
+            "tests_purchased": speaking_tests,
+            "package_recommended": s_pkg,
+            "cost": round(s_cost, 2),
+            "cost_per_test": round(s_unit_cost, 2),
+            "sell_price_per_test": speaking_sell_price,
+            "revenue": round(s_revenue, 2),
+            "profit": round(s_profit, 2),
+            "margin_percent": round(s_margin, 1)
+        },
+        "totals": {
+            "investment": round(total_cost, 2),
+            "potential_revenue": round(total_revenue, 2),
+            "profit": round(total_profit, 2),
+            "roi_percent": round((total_profit / total_cost * 100) if total_cost > 0 else 0, 1),
+            "margin_percent": round(total_margin, 1)
+        },
+        "subscription_recovery": {
+            "description": "How many tests to sell to recover your subscription cost",
+            "example_monthly_sub": 500,
+            "writing_tests_needed": round(500 / writing_sell_price) if writing_sell_price > 0 else 0,
+            "speaking_tests_needed": round(500 / speaking_sell_price) if speaking_sell_price > 0 else 0
+        }
+    }
+
+# ==================== STRIPE CHECKOUT ENDPOINTS ====================
+
+class CheckoutRequest(BaseModel):
+    package_type: str  # 'subscription', 'writing_package', 'speaking_package'
+    package_id: str
+    origin_url: str
+    quantity: int = 1
+
+class SubscriptionCheckoutRequest(BaseModel):
+    students: int
+    exams: int = 1
+    credit_tier: str = "basic"
+    billing_cycle: str = "monthly"  # 'monthly' or 'yearly'
+    origin_url: str
+
+@api_router.post("/checkout/subscription")
+async def create_subscription_checkout(request: SubscriptionCheckoutRequest, http_request: Request):
+    """Create Stripe checkout session for subscription"""
+    try:
+        # Calculate price server-side
+        pricing = get_unit_price(request.students, request.exams, request.credit_tier)
+        
+        if "message" in pricing:  # Enterprise custom
+            raise HTTPException(status_code=400, detail="Contact sales for enterprise pricing")
+        
+        price = pricing["price_per_student"]
+        if request.billing_cycle == "yearly":
+            # 10 months for the price of 12 (17% discount)
+            amount = price * request.students * 10
+        else:
+            amount = price * request.students
+        
+        # Initialize Stripe checkout
+        webhook_url = f"{str(http_request.base_url).rstrip('/')}api/webhook/stripe"
+        stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
+        
+        # Build URLs
+        success_url = f"{request.origin_url}/payment-success?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{request.origin_url}/pricing"
+        
+        # Metadata for tracking
+        metadata = {
+            "type": "subscription",
+            "students": str(request.students),
+            "exams": str(request.exams),
+            "credit_tier": request.credit_tier,
+            "billing_cycle": request.billing_cycle,
+            "price_per_student": str(price)
+        }
+        
+        # Create checkout session
+        checkout_request = CheckoutSessionRequest(
+            amount=float(amount),
+            currency="usd",
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata=metadata
+        )
+        
+        session = await stripe_checkout.create_checkout_session(checkout_request)
+        
+        # Store transaction in DB
+        transaction = {
+            "id": str(uuid.uuid4()),
+            "session_id": session.session_id,
+            "type": "subscription",
+            "amount": amount,
+            "currency": "usd",
+            "metadata": metadata,
+            "payment_status": "pending",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.payment_transactions.insert_one(transaction)
+        
+        return {
+            "checkout_url": session.url,
+            "session_id": session.session_id,
+            "amount": amount,
+            "billing_cycle": request.billing_cycle
+        }
+        
+    except Exception as e:
+        logger.error(f"Checkout error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/checkout/test-package")
+async def create_test_package_checkout(
+    package_type: str,  # 'writing' or 'speaking'
+    package_id: str,
+    origin_url: str,
+    http_request: Request
+):
+    """Create Stripe checkout session for writing/speaking test packages"""
+    try:
+        # Get package server-side
+        if package_type == "writing":
+            if package_id not in WRITING_TEST_PACKAGES:
+                raise HTTPException(status_code=400, detail="Invalid writing package")
+            package = WRITING_TEST_PACKAGES[package_id]
+        elif package_type == "speaking":
+            if package_id not in SPEAKING_TEST_PACKAGES:
+                raise HTTPException(status_code=400, detail="Invalid speaking package")
+            package = SPEAKING_TEST_PACKAGES[package_id]
+        else:
+            raise HTTPException(status_code=400, detail="Invalid package type")
+        
+        amount = package["price"]
+        
+        # Initialize Stripe checkout
+        webhook_url = f"{str(http_request.base_url).rstrip('/')}api/webhook/stripe"
+        stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
+        
+        # Build URLs
+        success_url = f"{origin_url}/payment-success?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{origin_url}/pricing"
+        
+        metadata = {
+            "type": f"{package_type}_package",
+            "package_id": package_id,
+            "tests": str(package["tests"])
+        }
+        
+        checkout_request = CheckoutSessionRequest(
+            amount=float(amount),
+            currency="usd",
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata=metadata
+        )
+        
+        session = await stripe_checkout.create_checkout_session(checkout_request)
+        
+        # Store transaction
+        transaction = {
+            "id": str(uuid.uuid4()),
+            "session_id": session.session_id,
+            "type": f"{package_type}_package",
+            "package_id": package_id,
+            "amount": amount,
+            "currency": "usd",
+            "metadata": metadata,
+            "payment_status": "pending",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.payment_transactions.insert_one(transaction)
+        
+        return {
+            "checkout_url": session.url,
+            "session_id": session.session_id,
+            "amount": amount,
+            "tests": package["tests"]
+        }
+        
+    except Exception as e:
+        logger.error(f"Test package checkout error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/checkout/status/{session_id}")
+async def get_checkout_status(session_id: str, http_request: Request):
+    """Get payment status for a checkout session"""
+    try:
+        webhook_url = f"{str(http_request.base_url).rstrip('/')}api/webhook/stripe"
+        stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
+        
+        status = await stripe_checkout.get_checkout_status(session_id)
+        
+        # Update transaction in DB if paid
+        if status.payment_status == "paid":
+            existing = await db.payment_transactions.find_one({"session_id": session_id})
+            if existing and existing.get("payment_status") != "paid":
+                await db.payment_transactions.update_one(
+                    {"session_id": session_id},
+                    {"$set": {
+                        "payment_status": "paid",
+                        "paid_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+        
+        return {
+            "status": status.status,
+            "payment_status": status.payment_status,
+            "amount_total": status.amount_total,
+            "currency": status.currency,
+            "metadata": status.metadata
+        }
+        
+    except Exception as e:
+        logger.error(f"Checkout status error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/webhook/stripe")
+async def stripe_webhook(request: Request):
+    """Handle Stripe webhooks"""
+    try:
+        body = await request.body()
+        signature = request.headers.get("Stripe-Signature")
+        
+        webhook_url = f"{str(request.base_url).rstrip('/')}api/webhook/stripe"
+        stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
+        
+        event = await stripe_checkout.handle_webhook(body, signature)
+        
+        logger.info(f"Stripe webhook received: {event.event_type}")
+        
+        # Update payment transaction
+        if event.session_id:
+            await db.payment_transactions.update_one(
+                {"session_id": event.session_id},
+                {"$set": {
+                    "payment_status": event.payment_status,
+                    "event_type": event.event_type,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+        
+        return {"received": True}
+        
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
 @api_router.get("/pricing/individual")
 async def get_individual_pricing():
     """Individual learner pricing"""
