@@ -1679,66 +1679,75 @@ async def get_test_packages():
 
 @api_router.get("/pricing/roi-calculator")
 async def calculate_roi(
-    package_id: str,
-    num_students: int,
+    num_licenses: int,
     price_per_student: float = 30.0,
-    ai_tutor_minutes: int = 0
+    ai_tutor_minutes_per_license: int = 0
 ):
-    """Calculate ROI for institutions with optional AI Tutor add-on"""
-    if package_id not in EXAM_PACKAGES:
-        raise HTTPException(status_code=400, detail="Invalid package")
+    """Calculate ROI based on number of licenses contracted"""
     
-    pkg = EXAM_PACKAGES[package_id]
+    # Find the right tier based on num_licenses
+    selected_tier = None
+    tier_id = None
+    for tid, tier in EXAM_PACKAGES.items():
+        if tier["min_licenses"] <= num_licenses <= tier["max_licenses"]:
+            selected_tier = tier
+            tier_id = tid
+            break
     
-    # Base package cost
-    package_cost = pkg["price"]
+    if not selected_tier:
+        # Default to highest tier for 500+
+        tier_id = "tier_500_plus"
+        selected_tier = EXAM_PACKAGES[tier_id]
+    
+    # Calculate costs
+    license_cost = selected_tier["price_per_license"]
+    total_license_cost = license_cost * num_licenses
     
     # Add AI Tutor cost if selected
-    ai_tutor_cost = 0
-    if ai_tutor_minutes > 0:
-        ai_tutor_cost = ai_tutor_minutes * AI_TUTOR_ADDON["price_per_minute"]
+    ai_tutor_cost_per_license = 0
+    if ai_tutor_minutes_per_license > 0:
+        ai_tutor_cost_per_license = ai_tutor_minutes_per_license * AI_TUTOR_ADDON["price_per_minute"]
     
-    total_cost = package_cost + ai_tutor_cost
+    total_ai_tutor_cost = ai_tutor_cost_per_license * num_licenses
+    total_investment = total_license_cost + total_ai_tutor_cost
+    cost_per_license = license_cost + ai_tutor_cost_per_license
     
-    # Per student calculations
-    cost_per_student = total_cost / num_students
-    tests_per_student = pkg["mock_tests"] / num_students
-    tutor_mins_per_student = ai_tutor_minutes / num_students if ai_tutor_minutes > 0 else 0
-    
-    # Institution revenue
-    revenue = price_per_student * num_students
-    profit = revenue - total_cost
-    roi_percentage = (profit / total_cost) * 100 if total_cost > 0 else 0
+    # Revenue from selling to students
+    revenue = price_per_student * num_licenses
+    profit = revenue - total_investment
+    roi_percentage = (profit / total_investment) * 100 if total_investment > 0 else 0
+    margin_percentage = ((price_per_student - cost_per_license) / price_per_student) * 100 if price_per_student > 0 else 0
     
     return {
-        "package": {
-            "id": package_id,
-            "description": pkg["description"],
-            "mock_tests": pkg["mock_tests"],
-            "price": package_cost,
-            "price_per_exam": pkg["price_per_exam"],
-            "volume_discount": pkg["volume_discount"]
+        "tier": {
+            "id": tier_id,
+            "description": selected_tier["description"],
+            "price_per_license": license_cost,
+            "price_per_exam": selected_tier["price_per_exam"],
+            "mock_tests_per_license": selected_tier["mock_tests_per_license"],
+            "discount": selected_tier["discount"],
+            "your_margin": f"{int(selected_tier['margin'] * 100)}%"
         },
+        "licenses": num_licenses,
         "ai_tutor_addon": {
-            "minutes": ai_tutor_minutes,
-            "cost": ai_tutor_cost
+            "minutes_per_license": ai_tutor_minutes_per_license,
+            "cost_per_license": ai_tutor_cost_per_license,
+            "total_cost": total_ai_tutor_cost
         },
-        "total_investment": total_cost,
-        "students": num_students,
-        "per_student": {
-            "your_cost": round(cost_per_student, 2),
+        "per_license": {
+            "your_cost": round(cost_per_license, 2),
             "your_price": price_per_student,
-            "your_margin": round(((price_per_student - cost_per_student) / price_per_student) * 100, 1),
-            "mock_tests": round(tests_per_student, 1),
-            "ai_tutor_minutes": round(tutor_mins_per_student, 1)
+            "your_margin": round(margin_percentage, 1),
+            "mock_tests": selected_tier["mock_tests_per_license"],
+            "ai_tutor_minutes": ai_tutor_minutes_per_license
         },
         "totals": {
-            "your_investment": total_cost,
-            "your_revenue": revenue,
+            "your_investment": round(total_investment, 2),
+            "your_revenue": round(revenue, 2),
             "your_profit": round(profit, 2),
             "roi_percentage": round(roi_percentage, 1)
         },
-        "recommendation": get_roi_recommendation(roi_percentage, num_students, tests_per_student)
+        "recommendation": get_roi_recommendation(roi_percentage, num_licenses, selected_tier["mock_tests_per_license"])
     }
 
 def get_roi_recommendation(roi: float, students: int, tests_per_student: float) -> str:
