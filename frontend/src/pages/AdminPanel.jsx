@@ -360,12 +360,12 @@ export default function AdminPanel() {
                   </CardContent>
                 </Card>
 
-                {/* Análisis de Paquetes */}
+                {/* Análisis de Tiers por Licencias */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <TrendingUp className="w-5 h-5 text-green-600" />
-                      4 Planes B2B - Costes vs Precios vs Márgenes
+                      Tiers por Volumen de Licencias - Costes vs Precios vs Márgenes
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -373,48 +373,55 @@ export default function AdminPanel() {
                       <table className="w-full">
                         <thead>
                           <tr className="border-b-2 border-gray-200 bg-gray-50">
-                            <th className="text-left py-3 px-4 font-bold text-gray-700">Plan</th>
-                            <th className="text-center py-3 px-4 font-bold text-gray-700">Tests</th>
-                            <th className="text-center py-3 px-4 font-bold text-gray-700">€/Test</th>
+                            <th className="text-left py-3 px-4 font-bold text-gray-700">Tier</th>
+                            <th className="text-center py-3 px-4 font-bold text-gray-700">Licencias</th>
+                            <th className="text-center py-3 px-4 font-bold text-gray-700">€/Licencia</th>
+                            <th className="text-center py-3 px-4 font-bold text-gray-700">€/Examen</th>
                             <th className="text-center py-3 px-4 font-bold text-gray-700">Descuento</th>
                             <th className="text-right py-3 px-4 font-bold text-red-600">TU COSTE</th>
-                            <th className="text-right py-3 px-4 font-bold text-blue-600">PRECIO</th>
                             <th className="text-right py-3 px-4 font-bold text-green-600">GANANCIA</th>
                             <th className="text-center py-3 px-4 font-bold text-gray-700">MARGEN</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {pricingAnalysis.package_analysis.map((pkg, index) => (
-                            <tr key={pkg.package_id} className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                          {pricingAnalysis.tier_analysis && pricingAnalysis.tier_analysis.map((tier, index) => (
+                            <tr key={tier.tier_id} className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                               <td className="py-4 px-4">
-                                <span className="font-semibold text-gray-900">{pkg.mock_tests} Tests</span>
+                                <span className="font-semibold text-gray-900">{tier.tier_id.replace(/_/g, ' ')}</span>
                               </td>
-                              <td className="text-center py-4 px-4 font-bold">{pkg.mock_tests}</td>
-                              <td className="text-center py-4 px-4 text-[#58CC02] font-bold">${pkg.price_per_exam}</td>
+                              <td className="text-center py-4 px-4 font-bold">{tier.licenses_range}</td>
+                              <td className="text-center py-4 px-4 text-blue-600 font-bold">${tier.price_per_license}</td>
+                              <td className="text-center py-4 px-4 text-[#58CC02] font-bold">${tier.price_per_exam}</td>
                               <td className="text-center py-4 px-4">
-                                <Badge className="bg-orange-100 text-orange-700 border-0">{pkg.volume_discount}</Badge>
+                                <Badge className="bg-orange-100 text-orange-700 border-0">{tier.discount}</Badge>
                               </td>
                               <td className="text-right py-4 px-4">
                                 <span className="font-bold text-red-600 bg-red-50 px-3 py-1 rounded-lg">
-                                  ${pkg.internal_cost.toFixed(2)}
+                                  ${tier.internal_cost.toFixed(2)}
                                 </span>
-                              </td>
-                              <td className="text-right py-4 px-4">
-                                <span className="font-bold text-blue-600">${pkg.price.toFixed(2)}</span>
                               </td>
                               <td className="text-right py-4 px-4">
                                 <span className="font-bold text-green-600 bg-green-50 px-3 py-1 rounded-lg">
-                                  ${pkg.profit.toFixed(2)}
+                                  ${tier.profit_per_license.toFixed(2)}
                                 </span>
                               </td>
                               <td className="text-center py-4 px-4">
-                                <Badge className="bg-gray-100 text-gray-700">{pkg.margin_percentage}</Badge>
+                                <Badge className={`${
+                                  parseInt(tier.margin_percentage) >= 40 ? 'bg-green-100 text-green-700' :
+                                  parseInt(tier.margin_percentage) >= 30 ? 'bg-blue-100 text-blue-700' :
+                                  'bg-orange-100 text-orange-700'
+                                }`}>
+                                  {tier.margin_percentage}
+                                </Badge>
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
+                    <p className="text-sm text-gray-500 mt-4 text-center">
+                      Cada licencia incluye 10 mock tests. Coste base por licencia: $9.40
+                    </p>
                   </CardContent>
                 </Card>
 
