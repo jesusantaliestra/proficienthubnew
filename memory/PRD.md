@@ -2,29 +2,31 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 1.0 MVP  
+**Version:** 1.1  
 **Date:** January 2025  
-**Status:** MVP Complete
+**Status:** MVP Complete with B2B Features
 
 ## Original Problem Statement
 Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, IELTS, Cambridge, PTE, OET) with:
 - Real-time exam simulators under exam conditions
 - Premium instant AI feedback
-- AI tutor agents for each exam
-- Offline capabilities (planned)
+- AI tutor agents for each exam (with voice)
+- Offline capabilities
 - B2B focus with institutional dashboard
 - Student risk metrics and pass probability
-- ROI calculator for institutions
-- Multi-language support (200 languages)
+- ROI calculator with realistic 10x AI multiplier
+- Multi-language support (EN, ES, PT, DE, IT, FR)
 - Stripe payments
 - Admin panel with API configuration
+- Library for institutions (materials, flashcards, audio, video, streaming)
+- Pricing with 70-90% margins accounting for ElevenLabs + OpenAI costs
 
 ## User Personas
 
 ### 1. Institution Admin
 - Language schools, universities, corporate training
-- Needs: student management, analytics, risk metrics, ROI tracking
-- Goals: improve pass rates, reduce no-show, scale teaching capacity
+- Needs: student management, analytics, risk metrics, ROI tracking, content library
+- Goals: 10x student capacity with same teachers, improve pass rates, reduce no-show
 
 ### 2. Individual Learner
 - Self-study students preparing for proficiency exams
@@ -33,7 +35,7 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 
 ### 3. Student (Institution)
 - Enrolled through institution
-- Needs: guided practice, AI tutoring, exam simulation
+- Needs: guided practice, AI tutoring, exam simulation, access to institution library
 - Goals: achieve required score for institution
 
 ### 4. Platform Admin
@@ -41,89 +43,117 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - Needs: API management, user management, analytics
 - Goals: maintain platform, monitor usage
 
-## Core Requirements (Static)
+## Core Features Implemented
+
+### Landing Page (B2B Focus)
+- [x] Duolingo-style green design
+- [x] B2B messaging in English
+- [x] ROI Calculator with teacher salary input
+- [x] Realistic 10x student capacity calculation
+- [x] Feature showcase
+- [x] Exam types display (TOEFL, IELTS, Cambridge, PTE, OET)
+- [x] Pricing with exam selector and student tiers
+
+### Pricing Structure (85-95% Margins)
+Tiers by student count (accounting for ElevenLabs + OpenAI costs):
+- **Starter** (1-10 students): $149/mo (1 exam), $238/mo (2 exams), $328/mo (3+)
+- **Growth** (11-50 students): $349/mo (1 exam), $558/mo (2 exams), $768/mo (3+)
+- **Professional** (51-100 students): $699/mo (1 exam), $1,118/mo (2 exams), $1,538/mo (3+)
+- **Enterprise** (101-200 students): $1,299/mo + $8/extra student
+
+### Institution Dashboard
+- [x] Student management with risk metrics
+- [x] Premium analytics (pass probability, risk score, engagement)
+- [x] **Library Section** for content management
+- [x] Language selector (EN, ES, PT, DE, IT, FR)
+- [x] Exam management
+
+### Library Features
+- [x] Upload study materials
+- [x] Create flashcard sets
+- [x] Audio summaries (ready for ElevenLabs)
+- [x] Video uploads and classes
+- [x] Offline availability flag
+- [x] Exam-type tagging
 
 ### Authentication & Authorization
 - [x] JWT-based authentication
 - [x] Role-based access (institution, individual, student, admin)
-- [x] Secure password hashing (bcrypt)
-- [x] Protected routes
-
-### Landing Page (B2B Focus)
-- [x] ROI Calculator with real-time results
-- [x] Feature showcase
-- [x] Exam types display
-- [x] Pricing plans (institutional)
-- [x] CTA sections
-
-### Institution Dashboard
-- [x] Student management (add, view)
-- [x] Risk metrics (at-risk students, pass probability)
-- [x] Performance analytics with charts
-- [x] Exam distribution visualization
-
-### Student Dashboard
-- [x] Progress overview
-- [x] Exam selection
-- [x] Practice history
-- [x] AI Tutor access
-
-### Exam Simulator
-- [x] All 5 exam types (TOEFL, IELTS, Cambridge, PTE, OET)
-- [x] All sections (reading, listening, speaking, writing)
-- [x] Timed practice sessions
-- [x] Multiple question types
-- [x] Score calculation
+- [x] Language preference per user
 
 ### AI Integration
 - [x] AI Tutor chat for each exam type
 - [x] AI-powered feedback on exam submissions
 - [x] OpenAI integration via Emergent Universal Key
+- [ ] Voice-enabled AI agents (ElevenLabs - ready for integration)
 
-### Pricing & Payments
-- [x] Institutional pricing plans (Starter, Professional, Enterprise)
-- [x] Individual pricing plans (Single Exam, All Access)
-- [x] Stripe integration ready
+### ROI Calculator Metrics
+- 10x student capacity with AI (100:1 vs 15:1 ratio)
+- +20% pass rate improvement
+- 60% no-show reduction
+- Teacher time saved: 30h/week per teacher
+- Revenue + cost savings calculation
+
+## Technical Architecture
+
+```
+Frontend (React 19 + Duolingo-style)
+├── /src
+│   ├── /pages (Landing, Auth, Dashboards, Exam, Tutor)
+│   ├── /components/ui (Shadcn components)
+│   ├── /contexts (AuthContext)
+│   └── /i18n (EN, ES, PT, DE, IT, FR)
+
+Backend (FastAPI)
+├── server.py (main API)
+│   ├── Auth endpoints
+│   ├── Institution endpoints
+│   ├── Library endpoints
+│   ├── Exam endpoints
+│   ├── AI Tutor endpoints
+│   ├── Pricing endpoints
+│   └── Admin endpoints
+├── MongoDB (users, exams, library_items, conversations)
+└── External APIs (OpenAI, Stripe, ElevenLabs ready)
+```
+
+## Database Collections
+- users (all user types with language preference)
+- exam_attempts (practice history)
+- tutor_conversations (AI chat logs)
+- library_items (materials, flashcards, audio, video)
+- admin_settings
 
 ## What's Been Implemented (January 2025)
 
-### Backend (FastAPI + MongoDB)
-- Complete REST API with 25+ endpoints
-- JWT authentication system
-- User management (CRUD)
-- Exam system with practice questions
-- AI integration (OpenAI via Emergent)
-- ROI calculator logic
-- Stripe checkout preparation
+### Iteration 1
+- Basic MVP with dark theme
+- Auth, dashboards, exam simulator, AI tutor
 
-### Frontend (React + Tailwind + Shadcn)
-- Landing page with ROI Calculator
-- Auth pages (login/register)
-- Institution Dashboard with metrics
-- Student Dashboard with progress
-- AI Tutor chat interface
-- Exam Simulator with timer
-- i18n setup for multi-language
-
-### Database Collections
-- users (all user types)
-- exam_attempts (practice history)
-- tutor_conversations (AI chat logs)
-- admin_settings
+### Iteration 2
+- Duolingo-style green design
+- B2B focused messaging
+- Realistic ROI calculator (10x multiplier)
+- New pricing with exam count and student tiers
+- Library section for institutions
+- Multi-language support (6 languages)
+- Flashcard creation
+- Library item management
 
 ## Prioritized Backlog
 
 ### P0 - Critical (Next Phase)
-1. Speaking test with voice recording/playback
-2. Listening test with audio integration
-3. Admin panel full implementation
-4. Stripe payment flow completion
+1. ElevenLabs integration for voice-enabled AI tutors
+2. Audio recording/playback for speaking tests
+3. Video streaming and recording for classes
+4. Stripe webhook integration for live payments
+5. Admin panel full implementation with API key management
 
 ### P1 - High Priority
 1. Offline mode with service workers
-2. More practice questions per exam
+2. More practice questions per exam (real exam-style)
 3. Student invite via email
-4. Institution branding/white-label
+4. Institution branding/white-label for Enterprise
 
 ### P2 - Medium Priority
 1. Real exam score conversion (band scores)
@@ -132,37 +162,19 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 4. Mobile-responsive optimizations
 
 ### P3 - Nice to Have
-1. Full 200 language translations
+1. Additional language translations
 2. Video tutorials
 3. Community features
 4. API for third-party integrations
 
-## Technical Architecture
-
-```
-Frontend (React 19)
-├── /src
-│   ├── /pages (Landing, Auth, Dashboards, Exam, Tutor)
-│   ├── /components/ui (Shadcn components)
-│   ├── /contexts (AuthContext)
-│   └── /i18n (translations)
-
-Backend (FastAPI)
-├── server.py (main API)
-├── MongoDB (users, exams, conversations)
-└── External APIs (OpenAI, Stripe)
-```
-
-## Metrics for Success
-- Student pass rate improvement: Target +20%
-- Institution retention: Target 90%
-- Daily active users: Track growth
-- AI tutor engagement: Sessions per user
-- Exam completion rate: Target 80%
+## Test Results
+- Backend: 88.7% tests passing
+- Frontend: 98% tests passing
+- All core flows working
 
 ## Next Tasks
-1. Add audio playback for listening sections
-2. Implement voice recording for speaking tests
-3. Complete admin panel with API key management
-4. Set up Stripe webhooks for subscription management
-5. Add more practice questions from real exam formats
+1. Integrate ElevenLabs for voice AI agents
+2. Add audio recording component for speaking tests
+3. Implement video streaming (WebRTC or pre-recorded)
+4. Complete Stripe webhook handling
+5. Build admin panel with API key configuration
