@@ -84,6 +84,14 @@ function AppRoutes() {
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/pricing" element={<Landing />} />
       
+      {/* Student Portal - White-label access */}
+      <Route path="/student-portal" element={<StudentPortal />} />
+      <Route path="/student-portal/:slug" element={<StudentPortal />} />
+      
+      {/* Password Change - Required for first login */}
+      <Route path="/change-password" element={<ChangePassword />} />
+      <Route path="/student/change-password" element={<ChangePassword />} />
+      
       {/* Admin Routes */}
       <Route 
         path="/admin" 
