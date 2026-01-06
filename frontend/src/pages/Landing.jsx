@@ -1,25 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import { Slider } from '../components/ui/slider';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { 
-  GraduationCap, Brain, BarChart3, Mic, Globe, Shield, 
-  Zap, Users, TrendingUp, ChevronRight, Star, CheckCircle,
-  BookOpen, Target, Award, Clock, ArrowRight, Building,
-  DollarSign, Calculator, UserCheck, AlertTriangle, Headphones,
-  Video, FolderOpen, Volume2, CreditCard, Coins
+  GraduationCap, Brain, BarChart3, Mic, 
+  Users, TrendingUp, ChevronRight, Star, CheckCircle,
+  BookOpen, Target, Clock, ArrowRight, Building,
+  Calculator, AlertTriangle, Headphones,
+  Video, FolderOpen, Volume2, Coins, Plus
 } from 'lucide-react';
 import axios from 'axios';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export default function Landing() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [calculatorValues, setCalculatorValues] = useState({
     students: 50,
@@ -32,49 +30,58 @@ export default function Landing() {
   const [calculating, setCalculating] = useState(false);
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [selectedExams, setSelectedExams] = useState(1);
+  const [selectedCreditTier, setSelectedCreditTier] = useState('basic');
   const [studentCount, setStudentCount] = useState(30);
   const [pricingResult, setPricingResult] = useState(null);
 
-  // Calculate pricing when student count or exams change
+  // Credit tier definitions
+  const creditTiers = {
+    basic: { credits: 50, label: 'Basic', description: '50 AI interactions, 20 min voice' },
+    medium: { credits: 100, label: 'Medium', description: '100 AI interactions, writing feedback' },
+    intensive: { credits: 200, label: 'Intensive', description: '200 AI interactions, full AI support' }
+  };
+
   useEffect(() => {
     calculatePricing();
-  }, [studentCount, selectedExams]);
+  }, [studentCount, selectedExams, selectedCreditTier]);
 
   const calculatePricing = async () => {
     try {
-      const response = await axios.get(`${API_URL}/pricing/calculate?students=${studentCount}&exams=${selectedExams}`);
+      const response = await axios.get(`${API_URL}/pricing/calculate?students=${studentCount}&exams=${selectedExams}&credit_tier=${selectedCreditTier}`);
       setPricingResult(response.data);
     } catch (error) {
       console.error('Pricing calculation error:', error);
     }
   };
 
-  // ROI calculation
   const calculateROI = async () => {
     setCalculating(true);
     
-    const currentRatio = calculatorValues.students / calculatorValues.teachers;
-    const aiEnhancedRatio = 100;
+    // With AI, same teachers can handle 10x students (no need to hire more)
+    const aiEnhancedRatio = 100; // 1 teacher can manage 100 students with AI support
     const potentialStudents = calculatorValues.teachers * aiEnhancedRatio;
     const additionalStudents = Math.max(0, potentialStudents - calculatorValues.students);
     const multiplier = Math.round(potentialStudents / calculatorValues.students);
     
-    const passRateImprovement = 0.20;
-    const newPassRate = Math.min(95, calculatorValues.passRate + (passRateImprovement * 100));
+    // Pass rate improvement with AI feedback
+    const newPassRate = Math.min(95, calculatorValues.passRate + 20);
     
-    const noShowReduction = 0.60;
-    const newNoShowRate = Math.max(5, calculatorValues.noShowRate * (1 - noShowReduction));
+    // No-show reduction with AI engagement
+    const newNoShowRate = Math.max(5, calculatorValues.noShowRate * 0.4);
     
+    // Revenue calculation
     const avgRevenuePerStudent = 500;
     const currentRevenue = calculatorValues.students * avgRevenuePerStudent * (calculatorValues.passRate / 100);
     const projectedRevenue = potentialStudents * avgRevenuePerStudent * (newPassRate / 100);
     const revenueIncrease = projectedRevenue - currentRevenue;
     
-    const standardRatio = 15;
+    // Cost AVOIDANCE (not firing teachers, but not needing to hire more)
+    const standardRatio = 15; // Traditional ratio without AI
     const teachersNeededWithoutAI = Math.ceil(potentialStudents / standardRatio);
-    const additionalTeachersNeeded = teachersNeededWithoutAI - calculatorValues.teachers;
-    const teacherCostSavings = additionalTeachersNeeded * calculatorValues.teacherSalary * 12;
+    const teachersYouWouldNeedToHire = Math.max(0, teachersNeededWithoutAI - calculatorValues.teachers);
+    const hiringCostAvoided = teachersYouWouldNeedToHire * calculatorValues.teacherSalary * 12;
     
+    // Teacher time freed for higher-value tasks
     const timeSavedPerTeacher = 30;
     const totalTimeSaved = timeSavedPerTeacher * calculatorValues.teachers;
 
@@ -88,56 +95,70 @@ export default function Landing() {
       currentNoShow: calculatorValues.noShowRate,
       reducedNoShow: newNoShowRate,
       revenueIncrease: Math.round(revenueIncrease),
-      teacherCostSavings: Math.round(teacherCostSavings),
+      hiringCostAvoided: Math.round(hiringCostAvoided),
+      teachersYouWouldNeedToHire: teachersYouWouldNeedToHire,
       timeSavedWeekly: totalTimeSaved,
-      totalAnnualBenefit: Math.round(revenueIncrease + teacherCostSavings)
+      totalAnnualBenefit: Math.round(revenueIncrease + hiringCostAvoided)
     });
     
     setCalculating(false);
   };
 
   const features = [
-    { icon: Brain, title: 'AI Tutoring Agents', description: 'Personal AI tutor for each exam type with voice conversations', color: 'feature-icon-green' },
-    { icon: Volume2, title: 'Voice-Enabled Practice', description: 'Speaking tests with real-time AI feedback using advanced voice technology', color: 'feature-icon-blue' },
-    { icon: BarChart3, title: 'Risk Analytics Dashboard', description: 'Predict pass probability, identify at-risk students, track engagement', color: 'feature-icon-purple' },
-    { icon: FolderOpen, title: 'Institution Library', description: 'Upload materials, create flashcards, audio summaries, video classes', color: 'feature-icon-orange' },
-    { icon: Video, title: 'Live Video Classes', description: 'Stream and record classes directly in the platform', color: 'feature-icon-yellow' },
-    { icon: Headphones, title: 'Offline Access', description: 'Students can practice anywhere with downloaded content', color: 'feature-icon-green' }
+    { icon: Brain, title: 'AI Tutoring Agents', description: 'Personal AI tutor for each exam with voice conversations', color: 'feature-icon-green' },
+    { icon: Volume2, title: 'Voice-Enabled Practice', description: 'Speaking tests with real-time AI feedback', color: 'feature-icon-blue' },
+    { icon: BarChart3, title: 'Risk Analytics', description: 'Predict pass probability, identify at-risk students', color: 'feature-icon-purple' },
+    { icon: FolderOpen, title: 'Institution Library', description: 'Upload materials, flashcards, audio, video', color: 'feature-icon-orange' },
+    { icon: Video, title: 'Video Classes', description: 'Stream and record classes in the platform', color: 'feature-icon-yellow' },
+    { icon: Headphones, title: 'Offline Access', description: 'Students practice anywhere with downloads', color: 'feature-icon-green' }
   ];
 
   const examTypes = [
-    { id: 'toefl', name: 'TOEFL', color: 'bg-blue-500', students: '50K+' },
-    { id: 'ielts', name: 'IELTS', color: 'bg-red-500', students: '80K+' },
-    { id: 'cambridge', name: 'Cambridge', color: 'bg-purple-500', students: '30K+' },
-    { id: 'pte', name: 'PTE', color: 'bg-orange-500', students: '25K+' },
-    { id: 'oet', name: 'OET', color: 'bg-green-500', students: '15K+' }
+    { id: 'toefl', name: 'TOEFL', color: 'bg-blue-500' },
+    { id: 'ielts', name: 'IELTS', color: 'bg-red-500' },
+    { id: 'cambridge', name: 'Cambridge', color: 'bg-purple-500' },
+    { id: 'pte', name: 'PTE', color: 'bg-orange-500' },
+    { id: 'oet', name: 'OET', color: 'bg-green-500' }
   ];
 
-  // Pricing tiers with unit prices
-  const pricingTiers = [
-    { id: 'tier_1', range: '1-10', price: selectedExams === 1 ? 39 : selectedExams === 2 ? 55 : 70, margin: 92 },
-    { id: 'tier_2', range: '11-50', price: selectedExams === 1 ? 29 : selectedExams === 2 ? 41 : 52, margin: 90 },
-    { id: 'tier_3', range: '51-100', price: selectedExams === 1 ? 24 : selectedExams === 2 ? 34 : 43, margin: 87 },
-    { id: 'tier_4', range: '101-200', price: selectedExams === 1 ? 20 : selectedExams === 2 ? 28 : 36, margin: 85 },
-    { id: 'tier_5', range: '201-500', price: selectedExams === 1 ? 18 : selectedExams === 2 ? 25 : 32, margin: 83 }
-  ];
+  // Pricing tiers with correct examples per tier
+  const getPricingTiers = () => {
+    const examMult = selectedExams === 1 ? 1 : selectedExams === 2 ? 1.4 : 1.8;
+    const creditMult = selectedCreditTier === 'basic' ? 1 : selectedCreditTier === 'medium' ? 1.7 : 2.8;
+    const credits = creditTiers[selectedCreditTier].credits;
+    
+    return [
+      { id: 'tier_1', range: '1-10', basePrice: 39, exampleStudents: 5, extraCreditPrice: 0.90 },
+      { id: 'tier_2', range: '11-50', basePrice: 29, exampleStudents: 30, extraCreditPrice: 0.80, popular: true },
+      { id: 'tier_3', range: '51-100', basePrice: 24, exampleStudents: 75, extraCreditPrice: 0.70 },
+      { id: 'tier_4', range: '101-200', basePrice: 20, exampleStudents: 150, extraCreditPrice: 0.60 },
+      { id: 'tier_5', range: '201-500', basePrice: 18, exampleStudents: 300, extraCreditPrice: 0.50 }
+    ].map(tier => ({
+      ...tier,
+      price: Math.round(tier.basePrice * examMult * creditMult * 100) / 100,
+      credits: credits
+    }));
+  };
+
+  const pricingTiers = getPricingTiers();
 
   const getTierFeatures = (tierId) => {
     const examText = selectedExams === 1 ? '1 exam' : selectedExams === 2 ? '2 exams' : 'All 5 exams';
+    const credits = creditTiers[selectedCreditTier].credits;
     
-    const base = [examText, 'AI Tutoring', '50 credits/student'];
+    const base = [examText, 'AI Tutoring', `${credits} credits/student`];
+    
+    if (selectedCreditTier !== 'basic') base.push('Writing Feedback');
+    if (selectedCreditTier === 'intensive') base.push('Priority AI');
     
     if (['tier_2', 'tier_3', 'tier_4', 'tier_5'].includes(tierId)) {
-      base.push('Voice AI', 'Speaking Practice');
+      base.push('Voice AI');
     }
     if (['tier_3', 'tier_4', 'tier_5'].includes(tierId)) {
-      base.push('Premium Analytics', 'Library 25GB');
+      base.push('Risk Analytics');
     }
     if (['tier_4', 'tier_5'].includes(tierId)) {
-      base.push('Video Classes', 'Custom Branding');
-    }
-    if (tierId === 'tier_5') {
-      base.push('White-label', 'API Access');
+      base.push('Video Classes');
     }
     
     return base;
@@ -157,26 +178,17 @@ export default function Landing() {
             </div>
             
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">Features</a>
-              <a href="#exams" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">Exams</a>
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">Pricing</a>
-              <a href="#calculator" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">ROI Calculator</a>
+              <a href="#features" className="text-gray-600 hover:text-gray-900 font-semibold">Features</a>
+              <a href="#exams" className="text-gray-600 hover:text-gray-900 font-semibold">Exams</a>
+              <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-semibold">Pricing</a>
+              <a href="#calculator" className="text-gray-600 hover:text-gray-900 font-semibold">ROI Calculator</a>
             </div>
             
             <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                className="text-gray-600 hover:text-gray-900 font-semibold"
-                onClick={() => navigate('/login')}
-                data-testid="nav-login-btn"
-              >
+              <Button variant="ghost" className="text-gray-600 font-semibold" onClick={() => navigate('/login')} data-testid="nav-login-btn">
                 Log In
               </Button>
-              <button 
-                className="btn-duo px-6 py-2.5 text-sm"
-                onClick={() => navigate('/register')}
-                data-testid="nav-get-started-btn"
-              >
+              <button className="btn-duo px-6 py-2.5 text-sm" onClick={() => navigate('/register')} data-testid="nav-get-started-btn">
                 Get Started
               </button>
             </div>
@@ -203,24 +215,16 @@ export default function Landing() {
             </h1>
             
             <p className="text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto mb-8">
-              Enable your teachers to handle 10x more students with AI tutors, instant feedback, and premium analytics. 
-              Prepare students for TOEFL, IELTS, Cambridge, PTE, and OET with real exam simulations.
+              Your current teachers can handle 10x more students with AI tutors, instant feedback, and premium analytics. 
+              No new hires needed. Prepare students for TOEFL, IELTS, Cambridge, PTE, and OET.
             </p>
             
             <div className="flex flex-wrap justify-center gap-4 mb-12">
-              <button 
-                className="btn-duo px-8 py-4 text-lg flex items-center gap-2"
-                onClick={() => navigate('/register')}
-                data-testid="hero-cta-btn"
-              >
+              <button className="btn-duo px-8 py-4 text-lg flex items-center gap-2" onClick={() => navigate('/register')} data-testid="hero-cta-btn">
                 Start Free Trial
                 <ArrowRight className="w-5 h-5" />
               </button>
-              <button 
-                className="btn-duo-outline px-8 py-4 text-lg"
-                onClick={() => document.getElementById('calculator').scrollIntoView({ behavior: 'smooth' })}
-                data-testid="hero-calculator-btn"
-              >
+              <button className="btn-duo-outline px-8 py-4 text-lg" onClick={() => document.getElementById('calculator').scrollIntoView({ behavior: 'smooth' })}>
                 Calculate Your ROI
               </button>
             </div>
@@ -257,7 +261,7 @@ export default function Landing() {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
-              <Card key={index} className="card-duo border-2 p-6" data-testid={`feature-card-${index}`}>
+              <Card key={index} className="card-duo border-2 p-6">
                 <div className={`feature-icon ${feature.color} mb-4`}>
                   <feature.icon className="w-7 h-7" />
                 </div>
@@ -279,38 +283,54 @@ export default function Landing() {
           
           <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6">
             {examTypes.map((exam) => (
-              <Card key={exam.id} className="card-duo text-center p-6" data-testid={`exam-card-${exam.id}`}>
+              <Card key={exam.id} className="card-duo text-center p-6">
                 <div className={`w-16 h-16 mx-auto rounded-2xl ${exam.color} flex items-center justify-center mb-4`}>
                   <GraduationCap className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">{exam.name}</h3>
-                <p className="text-gray-500 text-sm mt-1">{exam.students} students trained</p>
               </Card>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing Section - Dynamic Unit Pricing */}
+      {/* Pricing Section */}
       <section id="pricing" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Transparent Per-Student Pricing</h2>
             <p className="text-xl text-gray-600 mb-8">Pay only for what you need. Volume discounts applied automatically.</p>
             
-            {/* Exam selector */}
+            {/* Selectors Row */}
             <div className="flex flex-col items-center gap-6 mb-8">
+              {/* Exam selector */}
               <div className="flex items-center gap-4">
-                <Label className="text-gray-600 font-semibold">Exam types:</Label>
+                <Label className="text-gray-600 font-semibold">Exams:</Label>
                 <div className="inline-flex bg-white border-2 border-gray-200 rounded-xl p-1">
                   {[1, 2, 3].map((num) => (
                     <button
                       key={num}
-                      className={`px-6 py-2 rounded-lg font-bold transition-all ${selectedExams === num ? 'bg-[#58CC02] text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                      className={`px-5 py-2 rounded-lg font-bold transition-all ${selectedExams === num ? 'bg-[#58CC02] text-white' : 'text-gray-500 hover:bg-gray-100'}`}
                       onClick={() => setSelectedExams(num)}
-                      data-testid={`exam-count-${num}`}
                     >
-                      {num === 3 ? 'All 5 Exams' : `${num} Exam${num > 1 ? 's' : ''}`}
+                      {num === 3 ? 'All 5' : num}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Credit tier selector */}
+              <div className="flex items-center gap-4">
+                <Label className="text-gray-600 font-semibold">AI Usage:</Label>
+                <div className="inline-flex bg-white border-2 border-gray-200 rounded-xl p-1">
+                  {Object.entries(creditTiers).map(([key, tier]) => (
+                    <button
+                      key={key}
+                      className={`px-5 py-2 rounded-lg font-bold transition-all ${selectedCreditTier === key ? 'bg-[#58CC02] text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                      onClick={() => setSelectedCreditTier(key)}
+                      title={tier.description}
+                    >
+                      {tier.label} ({tier.credits})
                     </button>
                   ))}
                 </div>
@@ -321,14 +341,12 @@ export default function Landing() {
                 <button
                   className={`px-6 py-2 rounded-lg font-bold transition-all ${billingCycle === 'monthly' ? 'bg-gray-800 text-white' : 'text-gray-500'}`}
                   onClick={() => setBillingCycle('monthly')}
-                  data-testid="billing-monthly-btn"
                 >
                   Monthly
                 </button>
                 <button
                   className={`px-6 py-2 rounded-lg font-bold transition-all ${billingCycle === 'yearly' ? 'bg-gray-800 text-white' : 'text-gray-500'}`}
                   onClick={() => setBillingCycle('yearly')}
-                  data-testid="billing-yearly-btn"
                 >
                   Yearly
                   <Badge className="ml-2 bg-green-100 text-green-700 border-0">Save 17%</Badge>
@@ -337,30 +355,14 @@ export default function Landing() {
             </div>
           </div>
           
-          {/* Cost breakdown */}
+          {/* Credit tier description */}
           <div className="bg-white rounded-2xl border-2 border-gray-200 p-6 mb-8 max-w-2xl mx-auto">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-3">
               <Coins className="w-6 h-6 text-[#58CC02]" />
-              <h3 className="text-lg font-bold text-gray-900">Credit System</h3>
+              <h3 className="text-lg font-bold text-gray-900">{creditTiers[selectedCreditTier].label} Plan - {creditTiers[selectedCreditTier].credits} Credits/Student</h3>
             </div>
-            <p className="text-gray-600 mb-4">Each student receives <strong>50 AI credits/month</strong> including:</p>
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div className="bg-gray-50 rounded-xl p-3 text-center">
-                <Brain className="w-5 h-5 mx-auto mb-1 text-blue-500" />
-                <div className="font-bold text-gray-900">50</div>
-                <div className="text-gray-500">AI Conversations</div>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-3 text-center">
-                <Volume2 className="w-5 h-5 mx-auto mb-1 text-purple-500" />
-                <div className="font-bold text-gray-900">20 min</div>
-                <div className="text-gray-500">Voice Practice</div>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-3 text-center">
-                <Mic className="w-5 h-5 mx-auto mb-1 text-orange-500" />
-                <div className="font-bold text-gray-900">20 min</div>
-                <div className="text-gray-500">Speaking Tests</div>
-              </div>
-            </div>
+            <p className="text-gray-600">{creditTiers[selectedCreditTier].description}</p>
+            <p className="text-sm text-gray-500 mt-2">Each credit = 1 AI interaction (tutoring, feedback, or voice practice)</p>
           </div>
           
           {/* Pricing Calculator */}
@@ -382,7 +384,6 @@ export default function Landing() {
                 min={1}
                 step={1}
                 className="w-full"
-                data-testid="student-count-slider"
               />
               <div className="flex justify-between text-xs text-gray-400 mt-1">
                 <span>1</span>
@@ -390,13 +391,13 @@ export default function Landing() {
               </div>
             </div>
             
-            {pricingResult && pricingResult.final_price_per_student && (
+            {pricingResult && pricingResult.price_per_student && (
               <div className="bg-green-50 rounded-xl p-4 mt-4" data-testid="pricing-result">
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
                     <div className="text-gray-500 text-sm">Price per Student</div>
                     <div className="text-2xl font-extrabold text-gray-900">
-                      ${pricingResult.final_price_per_student}
+                      ${pricingResult.price_per_student}
                       <span className="text-sm text-gray-500 font-normal">/mo</span>
                     </div>
                   </div>
@@ -423,30 +424,39 @@ export default function Landing() {
                   )}
                 </div>
                 
-                <div className="mt-4 text-xs text-gray-500">
-                  Credits: {pricingResult.credits_per_student}/student • AI cost: ${pricingResult.ai_cost_per_student}/student • Margin: {pricingResult.margin_percentage}%
+                <div className="mt-4 pt-3 border-t border-green-200">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600 flex items-center gap-1">
+                      <Plus className="w-4 h-4" />
+                      Need more credits?
+                    </span>
+                    <span className="font-bold text-gray-800">
+                      ${pricingResult.extra_credit_price}/credit
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
           </div>
           
-          {/* Pricing Tiers */}
+          {/* Pricing Tiers Table */}
           <div className="overflow-x-auto">
             <table className="w-full bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
               <thead>
                 <tr className="bg-gray-50 border-b-2 border-gray-200">
                   <th className="px-6 py-4 text-left text-sm font-bold text-gray-500 uppercase">Students</th>
                   <th className="px-6 py-4 text-center text-sm font-bold text-gray-500 uppercase">Price/Student</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-500 uppercase">Included Features</th>
-                  <th className="px-6 py-4 text-center text-sm font-bold text-gray-500 uppercase">Example (25 students)</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-500 uppercase">Features</th>
+                  <th className="px-6 py-4 text-center text-sm font-bold text-gray-500 uppercase">Extra Credits</th>
+                  <th className="px-6 py-4 text-center text-sm font-bold text-gray-500 uppercase">Example</th>
                 </tr>
               </thead>
               <tbody>
                 {pricingTiers.map((tier, index) => (
-                  <tr key={tier.id} className={`border-b border-gray-100 ${index === 1 ? 'bg-green-50' : ''}`}>
+                  <tr key={tier.id} className={`border-b border-gray-100 ${tier.popular ? 'bg-green-50' : ''}`}>
                     <td className="px-6 py-4">
                       <div className="font-bold text-gray-900">{tier.range}</div>
-                      {index === 1 && <Badge className="bg-[#58CC02] text-white border-0 mt-1">Popular</Badge>}
+                      {tier.popular && <Badge className="bg-[#58CC02] text-white border-0 mt-1">Popular</Badge>}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="text-2xl font-extrabold text-gray-900">${tier.price}</div>
@@ -454,21 +464,25 @@ export default function Landing() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
-                        {getTierFeatures(tier.id).slice(0, 4).map((feature, i) => (
+                        {getTierFeatures(tier.id).slice(0, 3).map((feature, i) => (
                           <Badge key={i} className="bg-gray-100 text-gray-600 border-gray-200 text-xs">
                             {feature}
                           </Badge>
                         ))}
-                        {getTierFeatures(tier.id).length > 4 && (
+                        {getTierFeatures(tier.id).length > 3 && (
                           <Badge className="bg-green-100 text-green-600 border-green-200 text-xs">
-                            +{getTierFeatures(tier.id).length - 4} more
+                            +{getTierFeatures(tier.id).length - 3} more
                           </Badge>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <div className="font-bold text-gray-900">${tier.price * 25}/mo</div>
-                      <div className="text-xs text-gray-500">${Math.round(tier.price * 25 * 10)}/yr</div>
+                      <div className="font-bold text-gray-900">${tier.extraCreditPrice}</div>
+                      <div className="text-xs text-gray-500">/credit</div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="font-bold text-gray-900">${Math.round(tier.price * tier.exampleStudents)}/mo</div>
+                      <div className="text-xs text-gray-500">{tier.exampleStudents} students</div>
                     </td>
                   </tr>
                 ))}
@@ -487,7 +501,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Calculate Your ROI</h2>
-            <p className="text-xl text-gray-600">See how AI can transform your institution's capacity and revenue</p>
+            <p className="text-xl text-gray-600">See how AI can multiply your capacity without hiring more teachers</p>
           </div>
           
           <Card className="bg-white border-2 border-gray-200 rounded-3xl overflow-hidden" data-testid="roi-calculator">
@@ -512,13 +526,12 @@ export default function Landing() {
                       min={10}
                       step={10}
                       className="w-full"
-                      data-testid="calculator-students-slider"
                     />
                   </div>
                   
                   <div>
                     <div className="flex justify-between mb-3">
-                      <Label className="text-gray-700 font-semibold">Number of Teachers</Label>
+                      <Label className="text-gray-700 font-semibold">Current Teachers</Label>
                       <span className="text-[#58CC02] font-bold text-lg">{calculatorValues.teachers}</span>
                     </div>
                     <Slider
@@ -528,7 +541,6 @@ export default function Landing() {
                       min={1}
                       step={1}
                       className="w-full"
-                      data-testid="calculator-teachers-slider"
                     />
                   </div>
                   
@@ -570,17 +582,11 @@ export default function Landing() {
                       onChange={(e) => setCalculatorValues(prev => ({ ...prev, teacherSalary: parseInt(e.target.value) || 0 }))}
                       className="input-duo"
                       placeholder="3000"
-                      data-testid="calculator-salary-input"
                     />
                   </div>
                 </div>
                 
-                <button 
-                  className="btn-duo w-full py-4 mt-8 text-lg"
-                  onClick={calculateROI}
-                  disabled={calculating}
-                  data-testid="calculate-roi-btn"
-                >
+                <button className="btn-duo w-full py-4 mt-8 text-lg" onClick={calculateROI} disabled={calculating} data-testid="calculate-roi-btn">
                   {calculating ? 'Calculating...' : 'Calculate My ROI'}
                 </button>
               </div>
@@ -632,18 +638,29 @@ export default function Landing() {
                       </div>
                     </div>
                     
+                    {/* Key insight - No hiring needed */}
+                    <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                      <div className="flex items-start gap-3">
+                        <Users className="w-5 h-5 text-blue-600 mt-0.5" />
+                        <div>
+                          <div className="font-bold text-blue-800">No New Hires Needed</div>
+                          <div className="text-sm text-blue-600">
+                            Your {calculatorValues.teachers} teachers can handle {roiResults.potentialStudents} students with AI support.
+                            Without AI, you'd need to hire <strong>{roiResults.teachersYouWouldNeedToHire} additional teachers</strong>.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
                     <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-6 text-white">
                       <div className="text-green-100 text-sm font-semibold mb-2">Total Annual Benefit</div>
                       <div className="text-4xl font-extrabold">${roiResults.totalAnnualBenefit.toLocaleString()}</div>
                       <div className="text-green-100 text-sm mt-2">
-                        Revenue: ${roiResults.revenueIncrease.toLocaleString()} + Savings: ${roiResults.teacherCostSavings.toLocaleString()}
+                        Revenue increase: ${roiResults.revenueIncrease.toLocaleString()} + Hiring cost avoided: ${roiResults.hiringCostAvoided.toLocaleString()}
                       </div>
                     </div>
                     
-                    <button 
-                      className="btn-duo w-full py-4 text-lg"
-                      onClick={() => navigate('/register')}
-                    >
+                    <button className="btn-duo w-full py-4 text-lg" onClick={() => navigate('/register')}>
                       Start Your Free Trial
                     </button>
                   </div>
@@ -666,11 +683,7 @@ export default function Landing() {
           <h2 className="text-4xl font-extrabold text-white mb-6">Ready to Transform Your Institution?</h2>
           <p className="text-xl text-green-100 mb-8">Join 500+ institutions already scaling with AI-powered learning</p>
           <div className="flex justify-center gap-4">
-            <button 
-              className="bg-white text-[#58CC02] px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all shadow-lg"
-              onClick={() => navigate('/register')}
-              data-testid="cta-get-started-btn"
-            >
+            <button className="bg-white text-[#58CC02] px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all shadow-lg" onClick={() => navigate('/register')}>
               Start Free Trial
               <ArrowRight className="w-5 h-5 ml-2 inline" />
             </button>
@@ -698,26 +711,26 @@ export default function Landing() {
             <div>
               <h4 className="font-bold mb-4">Product</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#exams" className="hover:text-white transition-colors">Exams</a></li>
-                <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="#features" className="hover:text-white">Features</a></li>
+                <li><a href="#exams" className="hover:text-white">Exams</a></li>
+                <li><a href="#pricing" className="hover:text-white">Pricing</a></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-bold mb-4">Company</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+                <li><a href="#" className="hover:text-white">About</a></li>
+                <li><a href="#" className="hover:text-white">Careers</a></li>
+                <li><a href="#" className="hover:text-white">Contact</a></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-bold mb-4">Legal</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-white">Terms of Service</a></li>
               </ul>
             </div>
           </div>
