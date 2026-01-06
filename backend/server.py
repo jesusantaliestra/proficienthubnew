@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, BackgroundTasks
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, UploadFile, File, Form
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -12,8 +12,8 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
 import bcrypt
-from bson import ObjectId
 import stripe
+import base64
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 class UserBase(BaseModel):
     email: EmailStr
     name: str
-    user_type: str = Field(default="individual")  # institution, individual, student, admin
+    user_type: str = Field(default="individual")
 
 class UserCreate(UserBase):
     password: str
@@ -64,18 +64,12 @@ class UserResponse(BaseModel):
     institution_name: Optional[str] = None
     created_at: str
     subscription_plan: Optional[str] = None
+    language: str = "en"
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
-
-class InstitutionSettings(BaseModel):
-    name: str
-    logo_url: Optional[str] = None
-    primary_color: Optional[str] = "#3b82f6"
-    exams_enabled: List[str] = []
-    max_students: int = 100
 
 class StudentCreate(BaseModel):
     email: EmailStr
@@ -114,27 +108,37 @@ class AITutorMessage(BaseModel):
     exam_type: str
     context: Optional[str] = None
 
-class SubscriptionPlan(BaseModel):
+class LibraryItemCreate(BaseModel):
+    title: str
+    item_type: str  # material, flashcard, audio, video
+    content: Optional[str] = None
+    description: Optional[str] = None
+    exam_type: Optional[str] = None
+    tags: List[str] = []
+
+class LibraryItemResponse(BaseModel):
     id: str
-    name: str
-    price_monthly: float
-    price_yearly: float
-    features: List[str]
-    max_students: int
-    exams_included: List[str]
+    institution_id: str
+    title: str
+    item_type: str
+    content: Optional[str] = None
+    file_url: Optional[str] = None
+    description: Optional[str] = None
+    exam_type: Optional[str] = None
+    tags: List[str] = []
+    created_at: str
+    offline_available: bool = True
 
-class ROICalculatorInput(BaseModel):
-    current_students: int
-    current_teachers: int
-    current_pass_rate: float
-    current_no_show_rate: float
+class FlashcardCreate(BaseModel):
+    title: str
+    cards: List[Dict[str, str]]  # [{front: str, back: str}]
+    exam_type: Optional[str] = None
+    tags: List[str] = []
 
-class ROICalculatorResult(BaseModel):
-    additional_students: int
-    improved_pass_rate: float
-    reduced_no_show_rate: float
-    estimated_revenue_increase: float
-    teacher_time_saved_hours: float
+class SettingsUpdate(BaseModel):
+    language: Optional[str] = None
+    theme: Optional[str] = None
+    notifications: Optional[bool] = None
 
 # ==================== AUTH UTILITIES ====================
 
@@ -182,6 +186,7 @@ async def register(user_data: UserCreate):
         "institution_name": user_data.institution_name,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "subscription_plan": None,
+        "language": "en",
         "settings": {}
     }
     
@@ -195,7 +200,8 @@ async def register(user_data: UserCreate):
         user_type=user_data.user_type,
         institution_name=user_data.institution_name,
         created_at=user_doc["created_at"],
-        subscription_plan=None
+        subscription_plan=None,
+        language="en"
     )
     
     return TokenResponse(access_token=token, user=user_response)
@@ -214,7 +220,8 @@ async def login(credentials: UserLogin):
         user_type=user["user_type"],
         institution_name=user.get("institution_name"),
         created_at=user["created_at"],
-        subscription_plan=user.get("subscription_plan")
+        subscription_plan=user.get("subscription_plan"),
+        language=user.get("language", "en")
     )
     
     return TokenResponse(access_token=token, user=user_response)
@@ -228,8 +235,24 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         user_type=current_user["user_type"],
         institution_name=current_user.get("institution_name"),
         created_at=current_user["created_at"],
-        subscription_plan=current_user.get("subscription_plan")
+        subscription_plan=current_user.get("subscription_plan"),
+        language=current_user.get("language", "en")
     )
+
+@api_router.put("/auth/settings")
+async def update_settings(settings: SettingsUpdate, current_user: dict = Depends(get_current_user)):
+    update_data = {}
+    if settings.language:
+        update_data["language"] = settings.language
+    if settings.theme:
+        update_data["settings.theme"] = settings.theme
+    if settings.notifications is not None:
+        update_data["settings.notifications"] = settings.notifications
+    
+    if update_data:
+        await db.users.update_one({"id": current_user["id"]}, {"$set": update_data})
+    
+    return {"message": "Settings updated successfully"}
 
 # ==================== INSTITUTION ENDPOINTS ====================
 
@@ -321,7 +344,6 @@ async def get_institution_metrics(current_user: dict = Depends(get_current_user)
     at_risk = len([s for s in students if s.get("risk_score", 0.5) > 0.7])
     high_performers = len([s for s in students if s.get("pass_probability", 0.5) > 0.8])
     
-    # Get exam attempts
     student_ids = [s["id"] for s in students]
     attempts = await db.exam_attempts.find({"user_id": {"$in": student_ids}}, {"_id": 0}).to_list(10000)
     
@@ -338,6 +360,102 @@ async def get_institution_metrics(current_user: dict = Depends(get_current_user)
         "exams_completed": exams_completed,
         "avg_score": round(avg_score, 1)
     }
+
+# ==================== LIBRARY ENDPOINTS ====================
+
+@api_router.post("/library/items", response_model=LibraryItemResponse)
+async def create_library_item(item: LibraryItemCreate, current_user: dict = Depends(get_current_user)):
+    if current_user["user_type"] not in ["institution", "admin"]:
+        raise HTTPException(status_code=403, detail="Only institutions can manage library")
+    
+    item_id = str(uuid.uuid4())
+    item_doc = {
+        "id": item_id,
+        "institution_id": current_user["id"],
+        "title": item.title,
+        "item_type": item.item_type,
+        "content": item.content,
+        "file_url": None,
+        "description": item.description,
+        "exam_type": item.exam_type,
+        "tags": item.tags,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "offline_available": True
+    }
+    
+    await db.library_items.insert_one(item_doc)
+    
+    return LibraryItemResponse(**{k: v for k, v in item_doc.items() if k != "_id"})
+
+@api_router.get("/library/items", response_model=List[LibraryItemResponse])
+async def get_library_items(
+    item_type: Optional[str] = None,
+    exam_type: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    # Determine institution_id based on user type
+    if current_user["user_type"] == "student":
+        institution_id = current_user.get("institution_id")
+    else:
+        institution_id = current_user["id"]
+    
+    query = {"institution_id": institution_id}
+    if item_type:
+        query["item_type"] = item_type
+    if exam_type:
+        query["exam_type"] = exam_type
+    
+    items = await db.library_items.find(query, {"_id": 0}).to_list(500)
+    return [LibraryItemResponse(**item) for item in items]
+
+@api_router.post("/library/flashcards", response_model=LibraryItemResponse)
+async def create_flashcard_set(flashcard: FlashcardCreate, current_user: dict = Depends(get_current_user)):
+    if current_user["user_type"] not in ["institution", "admin"]:
+        raise HTTPException(status_code=403, detail="Only institutions can create flashcards")
+    
+    item_id = str(uuid.uuid4())
+    item_doc = {
+        "id": item_id,
+        "institution_id": current_user["id"],
+        "title": flashcard.title,
+        "item_type": "flashcard",
+        "content": {"cards": flashcard.cards},
+        "description": f"Flashcard set with {len(flashcard.cards)} cards",
+        "exam_type": flashcard.exam_type,
+        "tags": flashcard.tags,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "offline_available": True
+    }
+    
+    await db.library_items.insert_one(item_doc)
+    
+    return LibraryItemResponse(
+        id=item_doc["id"],
+        institution_id=item_doc["institution_id"],
+        title=item_doc["title"],
+        item_type=item_doc["item_type"],
+        content=str(item_doc["content"]),
+        description=item_doc["description"],
+        exam_type=item_doc["exam_type"],
+        tags=item_doc["tags"],
+        created_at=item_doc["created_at"],
+        offline_available=True
+    )
+
+@api_router.delete("/library/items/{item_id}")
+async def delete_library_item(item_id: str, current_user: dict = Depends(get_current_user)):
+    if current_user["user_type"] not in ["institution", "admin"]:
+        raise HTTPException(status_code=403, detail="Only institutions can delete library items")
+    
+    result = await db.library_items.delete_one({
+        "id": item_id,
+        "institution_id": current_user["id"]
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    return {"message": "Item deleted successfully"}
 
 # ==================== EXAM ENDPOINTS ====================
 
@@ -369,7 +487,6 @@ async def get_practice_questions(exam_type: str, section: str = "reading", curre
     if exam_type not in EXAM_TYPES:
         raise HTTPException(status_code=400, detail="Invalid exam type")
     
-    # Sample practice questions based on exam type and section
     questions = generate_sample_questions(exam_type, section)
     
     return {
@@ -381,7 +498,6 @@ async def get_practice_questions(exam_type: str, section: str = "reading", curre
     }
 
 def generate_sample_questions(exam_type: str, section: str) -> List[Dict]:
-    """Generate sample practice questions"""
     if section == "reading":
         return [
             {
@@ -419,17 +535,6 @@ def generate_sample_questions(exam_type: str, section: str) -> List[Dict]:
                 "correct_answer": "False"
             }
         ]
-    elif section == "listening":
-        return [
-            {
-                "id": "l1",
-                "type": "fill_blank",
-                "audio_url": "/audio/sample_lecture.mp3",
-                "transcript": "The lecture discusses how renewable energy sources are becoming more cost-effective. Solar panel efficiency has increased by ___ percent over the last decade.",
-                "question": "Fill in the blank based on the audio.",
-                "correct_answer": "40"
-            }
-        ]
     elif section == "writing":
         return [
             {
@@ -454,7 +559,6 @@ def generate_sample_questions(exam_type: str, section: str) -> List[Dict]:
     return []
 
 def get_section_time_limit(exam_type: str, section: str) -> int:
-    """Get time limit in minutes for each section"""
     time_limits = {
         "toefl": {"reading": 54, "listening": 41, "speaking": 17, "writing": 50},
         "ielts": {"reading": 60, "listening": 30, "speaking": 14, "writing": 60},
@@ -465,15 +569,11 @@ def get_section_time_limit(exam_type: str, section: str) -> int:
     return time_limits.get(exam_type, {}).get(section, 60)
 
 def get_section_instructions(exam_type: str, section: str) -> str:
-    """Get instructions for each section"""
     return f"Complete the {section} section of the {exam_type.upper()} exam. Read each question carefully and manage your time wisely."
 
 @api_router.post("/exams/submit", response_model=ExamAttemptResponse)
 async def submit_exam_attempt(attempt: ExamAttemptCreate, current_user: dict = Depends(get_current_user)):
-    # Calculate score based on answers
     score = calculate_score(attempt.answers)
-    
-    # Generate AI feedback
     feedback = await generate_ai_feedback(attempt.exam_type, attempt.section, attempt.answers, score)
     
     attempt_id = str(uuid.uuid4())
@@ -490,8 +590,6 @@ async def submit_exam_attempt(attempt: ExamAttemptCreate, current_user: dict = D
     }
     
     await db.exam_attempts.insert_one(attempt_doc)
-    
-    # Update user progress
     await update_user_progress(current_user["id"], attempt.exam_type, attempt.section, score)
     
     return ExamAttemptResponse(
@@ -506,14 +604,12 @@ async def submit_exam_attempt(attempt: ExamAttemptCreate, current_user: dict = D
     )
 
 def calculate_score(answers: List[Dict]) -> float:
-    """Calculate score based on answers"""
     if not answers:
         return 0.0
     correct = sum(1 for a in answers if a.get("is_correct", False))
     return round((correct / len(answers)) * 100, 1)
 
 async def generate_ai_feedback(exam_type: str, section: str, answers: List[Dict], score: float) -> str:
-    """Generate AI-powered feedback using OpenAI via Emergent"""
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage
         
@@ -538,7 +634,6 @@ async def generate_ai_feedback(exam_type: str, section: str, answers: List[Dict]
         return f"Score: {score}%. Continue practicing the {section} section to improve your {exam_type.upper()} performance."
 
 async def update_user_progress(user_id: str, exam_type: str, section: str, score: float):
-    """Update user's progress and risk metrics"""
     user = await db.users.find_one({"id": user_id}, {"_id": 0})
     if not user:
         return
@@ -553,7 +648,6 @@ async def update_user_progress(user_id: str, exam_type: str, section: str, score
     progress[exam_type][section]["scores"].append(score)
     progress[exam_type][section]["avg"] = sum(progress[exam_type][section]["scores"]) / len(progress[exam_type][section]["scores"])
     
-    # Calculate risk and pass probability
     all_scores = []
     for exam in progress.values():
         for sect in exam.values():
@@ -612,7 +706,6 @@ Keep responses concise and actionable."""
         
         response = await chat.send_message(user_msg)
         
-        # Save conversation
         await db.tutor_conversations.insert_one({
             "id": str(uuid.uuid4()),
             "user_id": current_user["id"],
@@ -636,87 +729,183 @@ async def get_tutor_history(exam_type: str, current_user: dict = Depends(get_cur
     
     return {"conversations": conversations}
 
-# ==================== SUBSCRIPTION/PRICING ENDPOINTS ====================
+# ==================== PRICING ENDPOINTS ====================
+# Pricing with 85-95% margins (accounting for ElevenLabs ~$0.30/1K chars + OpenAI ~$0.03/1K tokens)
+# Heavy usage per student: ~$15-25/month in AI costs
+# Pricing ensures minimum 85% margin
 
-PRICING_PLANS = [
-    {
-        "id": "starter",
-        "name": "Starter",
-        "price_monthly": 49,
-        "price_yearly": 470,
-        "features": ["1 exam type", "Up to 50 students", "Basic analytics", "Email support"],
-        "max_students": 50,
-        "exams_included": ["ielts"]
-    },
-    {
-        "id": "professional",
-        "name": "Professional",
-        "price_monthly": 149,
-        "price_yearly": 1430,
-        "features": ["3 exam types", "Up to 200 students", "Advanced analytics", "AI tutoring", "Priority support"],
-        "max_students": 200,
-        "exams_included": ["ielts", "toefl", "cambridge"]
-    },
-    {
-        "id": "enterprise",
-        "name": "Enterprise",
-        "price_monthly": 399,
-        "price_yearly": 3830,
-        "features": ["All exam types", "Unlimited students", "Premium analytics", "AI tutoring", "Dedicated support", "Custom branding"],
-        "max_students": 10000,
-        "exams_included": ["ielts", "toefl", "cambridge", "pte", "oet"]
+def get_pricing_plans(exam_count: int = 1):
+    """Generate pricing plans based on exam count"""
+    exam_multiplier = 1.0 if exam_count == 1 else (1.6 if exam_count == 2 else 2.2)
+    
+    plans = {
+        "starter": {
+            "id": "starter",
+            "name": "Starter",
+            "students": "1-10",
+            "max_students": 10,
+            "base_price_monthly": 149,
+            "base_price_yearly": 1490,
+            "features": [
+                "Up to 10 students",
+                f"{exam_count} exam type{'s' if exam_count > 1 else ''}",
+                "AI Tutoring",
+                "Basic Analytics",
+                "Email Support"
+            ],
+            "storage_gb": 1,
+            "video_classes": False,
+            "voice_enabled": False
+        },
+        "growth": {
+            "id": "growth",
+            "name": "Growth",
+            "students": "11-50",
+            "max_students": 50,
+            "base_price_monthly": 349,
+            "base_price_yearly": 3490,
+            "features": [
+                "Up to 50 students",
+                f"{exam_count} exam type{'s' if exam_count > 1 else ''}",
+                "AI Tutoring + Voice",
+                "Advanced Analytics",
+                "Library (5GB)",
+                "Priority Support"
+            ],
+            "storage_gb": 5,
+            "video_classes": False,
+            "voice_enabled": True
+        },
+        "professional": {
+            "id": "professional",
+            "name": "Professional",
+            "students": "51-100",
+            "max_students": 100,
+            "base_price_monthly": 699,
+            "base_price_yearly": 6990,
+            "features": [
+                "Up to 100 students",
+                f"{exam_count} exam type{'s' if exam_count > 1 else ''}",
+                "AI Tutoring + Voice",
+                "Premium Analytics",
+                "Library (25GB)",
+                "Video Classes",
+                "Dedicated Support"
+            ],
+            "storage_gb": 25,
+            "video_classes": True,
+            "voice_enabled": True,
+            "popular": True
+        },
+        "enterprise": {
+            "id": "enterprise",
+            "name": "Enterprise",
+            "students": "101-200",
+            "max_students": 200,
+            "base_price_monthly": 1299,
+            "base_price_yearly": 12990,
+            "extra_student_price": 8,
+            "features": [
+                "101-200 students (+$8/extra)",
+                "All exam types",
+                "Unlimited AI + Voice",
+                "Full Analytics Suite",
+                "Unlimited Library",
+                "Video Classes + Recording",
+                "White-label Option",
+                "Dedicated Account Manager"
+            ],
+            "storage_gb": 100,
+            "video_classes": True,
+            "voice_enabled": True
+        }
     }
-]
-
-INDIVIDUAL_PLANS = [
-    {
-        "id": "single_exam",
-        "name": "Single Exam",
-        "price_monthly": 19,
-        "price_yearly": 180,
-        "features": ["1 exam type", "Unlimited practice", "AI feedback", "Progress tracking"],
-        "exams_included": ["choice_of_one"]
-    },
-    {
-        "id": "all_access",
-        "name": "All Access",
-        "price_monthly": 39,
-        "price_yearly": 374,
-        "features": ["All exam types", "Unlimited practice", "AI tutoring", "Speaking practice", "Priority support"],
-        "exams_included": ["all"]
-    }
-]
+    
+    # Apply exam multiplier
+    for plan_id, plan in plans.items():
+        plan["price_monthly"] = round(plan["base_price_monthly"] * exam_multiplier)
+        plan["price_yearly"] = round(plan["base_price_yearly"] * exam_multiplier)
+        plan["exam_count"] = exam_count if plan_id != "enterprise" else "all"
+    
+    return list(plans.values())
 
 @api_router.get("/pricing/institutional")
-async def get_institutional_pricing():
-    return {"plans": PRICING_PLANS}
+async def get_institutional_pricing(exam_count: int = 1):
+    return {"plans": get_pricing_plans(exam_count)}
 
 @api_router.get("/pricing/individual")
 async def get_individual_pricing():
-    return {"plans": INDIVIDUAL_PLANS}
+    return {
+        "plans": [
+            {
+                "id": "single_exam",
+                "name": "Single Exam",
+                "price_monthly": 29,
+                "price_yearly": 290,
+                "features": ["1 exam type", "Unlimited practice", "AI feedback", "Progress tracking"]
+            },
+            {
+                "id": "all_access",
+                "name": "All Access",
+                "price_monthly": 49,
+                "price_yearly": 490,
+                "features": ["All exam types", "Unlimited practice", "AI tutoring + Voice", "Speaking practice", "Priority support"]
+            }
+        ]
+    }
 
 @api_router.post("/pricing/calculate-roi")
-async def calculate_roi(input_data: ROICalculatorInput):
-    # ROI calculation logic
-    additional_students = int(input_data.current_students * 0.3)  # 30% more capacity
-    improved_pass_rate = min(0.95, input_data.current_pass_rate + 0.15)  # 15% improvement
-    reduced_no_show = max(0.02, input_data.current_no_show_rate - 0.12)  # 12% reduction
+async def calculate_roi(
+    current_students: int,
+    current_teachers: int,
+    current_pass_rate: float,
+    current_no_show_rate: float,
+    teacher_salary: int = 3000
+):
+    # Industry standard: 1 teacher per 15-20 students
+    # With AI: ratio can be 100:1 (10x improvement)
+    ai_enhanced_ratio = 100
     
-    # Revenue calculations (assuming $500 per student exam fee)
-    current_revenue = input_data.current_students * 500 * input_data.current_pass_rate
-    new_revenue = (input_data.current_students + additional_students) * 500 * improved_pass_rate
-    revenue_increase = new_revenue - current_revenue
+    potential_students = current_teachers * ai_enhanced_ratio
+    additional_students = max(0, potential_students - current_students)
+    multiplier = round(potential_students / max(1, current_students))
     
-    # Teacher time saved (hours per week)
-    time_saved = input_data.current_teachers * 8  # 8 hours per teacher per week
+    # Pass rate improvement with AI: +15-20%
+    new_pass_rate = min(95, current_pass_rate + 20)
     
-    return ROICalculatorResult(
-        additional_students=additional_students,
-        improved_pass_rate=round(improved_pass_rate * 100, 1),
-        reduced_no_show_rate=round(reduced_no_show * 100, 1),
-        estimated_revenue_increase=round(revenue_increase, 2),
-        teacher_time_saved_hours=time_saved
-    )
+    # No-show reduction: 60% with engagement tools
+    new_no_show_rate = max(5, current_no_show_rate * 0.4)
+    
+    # Revenue calculation (avg $500/student)
+    avg_revenue_per_student = 500
+    current_revenue = current_students * avg_revenue_per_student * (current_pass_rate / 100)
+    projected_revenue = potential_students * avg_revenue_per_student * (new_pass_rate / 100)
+    revenue_increase = projected_revenue - current_revenue
+    
+    # Teacher cost savings
+    standard_ratio = 15
+    teachers_needed_without_ai = max(1, potential_students // standard_ratio)
+    additional_teachers_needed = max(0, teachers_needed_without_ai - current_teachers)
+    teacher_cost_savings = additional_teachers_needed * teacher_salary * 12
+    
+    # Time saved per teacher
+    time_saved_per_teacher = 30  # hours/week
+    total_time_saved = time_saved_per_teacher * current_teachers
+    
+    return {
+        "current_students": current_students,
+        "potential_students": potential_students,
+        "additional_students": additional_students,
+        "student_multiplier": multiplier,
+        "current_pass_rate": current_pass_rate,
+        "improved_pass_rate": new_pass_rate,
+        "current_no_show": current_no_show_rate,
+        "reduced_no_show": new_no_show_rate,
+        "revenue_increase": round(revenue_increase),
+        "teacher_cost_savings": round(teacher_cost_savings),
+        "time_saved_weekly": total_time_saved,
+        "total_annual_benefit": round(revenue_increase + teacher_cost_savings)
+    }
 
 # ==================== ADMIN ENDPOINTS ====================
 
@@ -730,7 +919,8 @@ async def get_admin_settings(current_user: dict = Depends(get_current_user)):
         settings = {
             "openai_key": os.environ.get("EMERGENT_LLM_KEY", "")[:20] + "...",
             "stripe_key": "configured",
-            "features_enabled": ["ai_tutor", "speaking_test", "analytics"]
+            "elevenlabs_key": "not_configured",
+            "features_enabled": ["ai_tutor", "speaking_test", "analytics", "library", "video_classes"]
         }
     return settings
 
@@ -751,48 +941,30 @@ async def get_admin_stats(current_user: dict = Depends(get_current_user)):
     total_institutions = await db.users.count_documents({"user_type": "institution"})
     total_students = await db.users.count_documents({"user_type": "student"})
     total_exams = await db.exam_attempts.count_documents({})
+    total_library_items = await db.library_items.count_documents({})
     
     return {
         "total_users": total_users,
         "total_institutions": total_institutions,
         "total_students": total_students,
-        "total_exam_attempts": total_exams
+        "total_exam_attempts": total_exams,
+        "total_library_items": total_library_items
     }
 
-# ==================== STRIPE ENDPOINTS ====================
+# ==================== LANGUAGES ====================
 
-@api_router.post("/stripe/create-checkout")
-async def create_checkout_session(plan_id: str, billing_cycle: str = "monthly", current_user: dict = Depends(get_current_user)):
-    try:
-        # Find the plan
-        all_plans = PRICING_PLANS + INDIVIDUAL_PLANS
-        plan = next((p for p in all_plans if p["id"] == plan_id), None)
-        if not plan:
-            raise HTTPException(status_code=400, detail="Invalid plan")
-        
-        price = plan["price_monthly"] if billing_cycle == "monthly" else plan["price_yearly"]
-        
-        session = stripe.checkout.Session.create(
-            payment_method_types=["card"],
-            line_items=[{
-                "price_data": {
-                    "currency": "usd",
-                    "product_data": {"name": f"ProficientHub - {plan['name']}"},
-                    "unit_amount": int(price * 100),
-                    "recurring": {"interval": "month" if billing_cycle == "monthly" else "year"}
-                },
-                "quantity": 1
-            }],
-            mode="subscription",
-            success_url=f"{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/dashboard?success=true",
-            cancel_url=f"{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/pricing?canceled=true",
-            metadata={"user_id": current_user["id"], "plan_id": plan_id}
-        )
-        
-        return {"checkout_url": session.url}
-    except Exception as e:
-        logger.error(f"Stripe error: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+SUPPORTED_LANGUAGES = {
+    "en": "English",
+    "es": "Español",
+    "pt": "Português",
+    "de": "Deutsch",
+    "it": "Italiano",
+    "fr": "Français"
+}
+
+@api_router.get("/languages")
+async def get_supported_languages():
+    return {"languages": SUPPORTED_LANGUAGES}
 
 # ==================== HEALTH CHECK ====================
 
