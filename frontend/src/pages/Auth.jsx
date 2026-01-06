@@ -32,6 +32,14 @@ export default function Auth() {
     try {
       if (isLogin) {
         const user = await login(formData.email, formData.password);
+        
+        // Check if password change is required (first login)
+        if (user.requires_password_change) {
+          toast.info('Please change your password');
+          navigate('/change-password', { state: { firstLogin: true } });
+          return;
+        }
+        
         toast.success('Welcome back!');
         navigateByUserType(user.user_type);
       } else {
@@ -128,7 +136,7 @@ export default function Auth() {
           </div>
           
           <div className="text-green-100 text-sm">
-            © 2024 ProficientHub. All rights reserved.
+            © 2025 ProficientHub. All rights reserved.
           </div>
         </div>
       </div>
@@ -175,7 +183,7 @@ export default function Auth() {
                         onValueChange={(value) => setFormData(prev => ({ ...prev, userType: value }))}
                       >
                         <SelectTrigger 
-                          className="input-duo"
+                          className="h-12 rounded-xl border-2 border-gray-200 focus:border-[#58CC02]"
                           data-testid="user-type-select"
                         >
                           <SelectValue placeholder="Select account type" />
@@ -190,13 +198,15 @@ export default function Auth() {
                     <div className="space-y-2">
                       <Label className="text-gray-700 font-semibold">Full Name</Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center pointer-events-none border-r border-gray-200 bg-gray-50 rounded-l-xl">
+                          <User className="w-5 h-5 text-gray-400" />
+                        </div>
                         <Input
                           type="text"
                           placeholder="John Smith"
                           value={formData.name}
                           onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                          className="input-duo pl-10"
+                          className="h-12 pl-14 rounded-xl border-2 border-gray-200 focus:border-[#58CC02] placeholder:text-gray-400"
                           required
                           data-testid="name-input"
                         />
@@ -207,13 +217,15 @@ export default function Auth() {
                       <div className="space-y-2">
                         <Label className="text-gray-700 font-semibold">Institution Name</Label>
                         <div className="relative">
-                          <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center pointer-events-none border-r border-gray-200 bg-gray-50 rounded-l-xl">
+                            <Building className="w-5 h-5 text-gray-400" />
+                          </div>
                           <Input
                             type="text"
                             placeholder="Cambridge Academy"
                             value={formData.institutionName}
                             onChange={(e) => setFormData(prev => ({ ...prev, institutionName: e.target.value }))}
-                            className="input-duo pl-10"
+                            className="h-12 pl-14 rounded-xl border-2 border-gray-200 focus:border-[#58CC02] placeholder:text-gray-400"
                             data-testid="institution-name-input"
                           />
                         </div>
@@ -225,13 +237,15 @@ export default function Auth() {
                 <div className="space-y-2">
                   <Label className="text-gray-700 font-semibold">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center pointer-events-none border-r border-gray-200 bg-gray-50 rounded-l-xl">
+                      <Mail className="w-5 h-5 text-gray-400" />
+                    </div>
                     <Input
                       type="email"
                       placeholder="you@example.com"
                       value={formData.email}
                       onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                      className="input-duo pl-10"
+                      className="h-12 pl-14 rounded-xl border-2 border-gray-200 focus:border-[#58CC02] placeholder:text-gray-400"
                       required
                       data-testid="email-input"
                     />
@@ -241,34 +255,36 @@ export default function Auth() {
                 <div className="space-y-2">
                   <Label className="text-gray-700 font-semibold">Password</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center pointer-events-none border-r border-gray-200 bg-gray-50 rounded-l-xl">
+                      <Lock className="w-5 h-5 text-gray-400" />
+                    </div>
                     <Input
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
+                      placeholder="Enter your password"
                       value={formData.password}
                       onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                      className="input-duo pl-10 pr-10"
+                      className="h-12 pl-14 pr-12 rounded-xl border-2 border-gray-200 focus:border-[#58CC02] placeholder:text-gray-400"
                       required
                       data-testid="password-input"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-0 top-0 bottom-0 w-12 flex items-center justify-center text-gray-400 hover:text-gray-600"
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
                 
-                <button
+                <Button
                   type="submit"
-                  className="btn-duo w-full py-4 text-lg"
+                  className="w-full h-12 bg-[#58CC02] hover:bg-[#46A302] text-white font-bold text-lg rounded-xl"
                   disabled={loading}
                   data-testid="auth-submit-btn"
                 >
                   {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
-                </button>
+                </Button>
               </form>
               
               <div className="mt-6 text-center">
@@ -283,6 +299,17 @@ export default function Auth() {
                   </button>
                 </p>
               </div>
+              
+              {isLogin && (
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={() => navigate('/student-portal')}
+                    className="text-gray-500 hover:text-gray-700 text-sm underline"
+                  >
+                    Are you a student? Access student portal
+                  </button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
