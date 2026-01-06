@@ -1762,10 +1762,10 @@ async def calculate_monetization(
                 best_pkg = (pkg["price"], pkg["price_per_test"], pkg_id)
                 break
         if not best_pkg:
-            # Use largest package, may need multiple
-            largest = WRITING_TEST_PACKAGES["writing_1000"]
-            num_packs = (tests + 999) // 1000
-            return largest["price"] * num_packs, largest["price_per_test"], "writing_1000"
+            # Use largest package
+            largest = WRITING_TEST_PACKAGES["writing_100"]
+            num_packs = (tests + 99) // 100
+            return largest["price"] * num_packs, largest["price_per_test"], "writing_100"
         return best_pkg
     
     def get_best_speaking_price(tests: int) -> tuple:
@@ -1777,9 +1777,9 @@ async def calculate_monetization(
                 best_pkg = (pkg["price"], pkg["price_per_test"], pkg_id)
                 break
         if not best_pkg:
-            largest = SPEAKING_TEST_PACKAGES["speaking_1000"]
-            num_packs = (tests + 999) // 1000
-            return largest["price"] * num_packs, largest["price_per_test"], "speaking_1000"
+            largest = SPEAKING_TEST_PACKAGES["speaking_100"]
+            num_packs = (tests + 99) // 100
+            return largest["price"] * num_packs, largest["price_per_test"], "speaking_100"
         return best_pkg
     
     # Calculate writing
