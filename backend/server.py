@@ -1446,97 +1446,140 @@ from emergentintegrations.payments.stripe.checkout import StripeCheckout, Checko
 stripe_api_key = os.environ.get('STRIPE_API_KEY', 'sk_test_emergent')
 
 # ==================== PRICING ENDPOINTS ====================
-# Credit tiers with detailed breakdown (internal costs hidden from clients)
-CREDIT_TIERS = {
-    "basic": {
-        "credits": 50,
-        "label": "Basic",
-        "description": "Essential AI support for exam prep",
-        "includes": {
-            "ai_teacher_conversations": 50,
-            "writing_essays_graded": 5,
-            "voice_practice_minutes": 20
-        },
-        "internal_cost": 5.50  # INTERNAL ONLY
+# COSTOS INTERNOS REALES (basados en OpenAI/ElevenLabs pricing 2025)
+# NO EXPONER ESTOS COSTOS AL CLIENTE
+
+# Costos por tipo de examen (Mock Test completo: Speaking + Writing + Corrección)
+EXAM_COSTS = {
+    "toefl": {
+        "speaking_minutes": 17,
+        "writing_tasks": 1,
+        "internal_cost": 1.70,  # $1.39 speaking + $0.26 writing + $0.05 correction
+        "description": "TOEFL iBT - Academic English"
     },
-    "medium": {
-        "credits": 100,
-        "label": "Medium",
-        "description": "Enhanced AI with writing feedback focus",
-        "includes": {
-            "ai_teacher_conversations": 100,
-            "writing_essays_graded": 15,
-            "voice_practice_minutes": 40
-        },
-        "internal_cost": 12.50  # INTERNAL ONLY
+    "ielts": {
+        "speaking_minutes": 14,
+        "writing_tasks": 1,
+        "internal_cost": 1.56,  # $1.25 speaking + $0.26 writing + $0.05 correction
+        "description": "IELTS Academic/General"
     },
-    "intensive": {
-        "credits": 200,
-        "label": "Intensive",
-        "description": "Full AI immersion for maximum results",
-        "includes": {
-            "ai_teacher_conversations": 200,
-            "writing_essays_graded": 30,
-            "voice_practice_minutes": 80
-        },
-        "internal_cost": 25.00  # INTERNAL ONLY
+    "cambridge": {
+        "speaking_minutes": 15,
+        "writing_tasks": 2,
+        "internal_cost": 1.90,  # $1.30 speaking + $0.52 writing + $0.08 correction
+        "description": "Cambridge C1/C2 Advanced"
+    },
+    "pte": {
+        "speaking_minutes": 20,  # combined speaking-writing
+        "writing_tasks": 1,
+        "internal_cost": 1.76,  # $1.45 speaking + $0.26 writing + $0.05 correction
+        "description": "PTE Academic"
+    },
+    "oet": {
+        "speaking_minutes": 20,
+        "writing_tasks": 1,
+        "internal_cost": 1.91,  # $1.50 speaking (medical) + $0.35 writing + $0.06 correction
+        "description": "OET - Healthcare Professionals"
     }
 }
 
-# ==================== WRITING & SPEAKING TEST PACKAGES ====================
-# Institutions can purchase these separately and monetize them with their clients
-# Internal AI cost per test: Writing = $0.30, Speaking = $0.40
+# Costo promedio por Mock Test = $1.77
+AVG_MOCK_TEST_COST = 1.77
+
+# Costos individuales de tests
+INDIVIDUAL_TEST_COSTS = {
+    "writing": 0.26,    # AI grading + basic feedback
+    "speaking": 1.39,   # STT ($0.90) + AI eval ($0.01) + TTS feedback ($0.48)
+    "ai_tutor_per_min_voice": 0.18,    # STT + GPT + TTS
+    "ai_tutor_per_min_text": 0.004,    # Solo GPT
+    "ai_tutor_per_min_mixed": 0.10     # Promedio mixto
+}
+
+# ==================== PAQUETES DE EXÁMENES ====================
+# Estructura: paquetes de mock tests con/sin AI tutor
+
+EXAM_PACKAGES = {
+    # STARTER - 20 exámenes (70% margen)
+    "starter_20": {
+        "mock_tests": 20,
+        "ai_tutor_minutes": 0,
+        "internal_cost": 35.40,  # 20 × $1.77
+        "price": 118.00,
+        "margin": 0.70,
+        "description": "20 Mock Tests - Sin AI Tutor",
+        "features": ["20 mock tests completos", "Speaking con AI grading", "Writing con feedback", "Reading & Listening"]
+    },
+    "starter_20_ai": {
+        "mock_tests": 20,
+        "ai_tutor_minutes": 60,
+        "internal_cost": 41.40,  # 35.40 + (60 × $0.10)
+        "price": 138.00,
+        "margin": 0.70,
+        "description": "20 Mock Tests + 60 min AI Tutor",
+        "features": ["20 mock tests completos", "60 min AI Tutor con voz", "Speaking con AI grading", "Writing con feedback"]
+    },
+    
+    # GROWTH - 40 exámenes (80% margen)
+    "growth_40": {
+        "mock_tests": 40,
+        "ai_tutor_minutes": 0,
+        "internal_cost": 70.80,  # 40 × $1.77
+        "price": 354.00,
+        "margin": 0.80,
+        "description": "40 Mock Tests - Sin AI Tutor",
+        "features": ["40 mock tests completos", "Speaking con AI grading", "Writing con feedback", "Analytics básico"]
+    },
+    "growth_40_ai": {
+        "mock_tests": 40,
+        "ai_tutor_minutes": 150,
+        "internal_cost": 85.80,  # 70.80 + (150 × $0.10)
+        "price": 429.00,
+        "margin": 0.80,
+        "description": "40 Mock Tests + 150 min AI Tutor",
+        "features": ["40 mock tests completos", "150 min AI Tutor con voz", "Analytics avanzado", "Soporte prioritario"]
+    },
+    
+    # SCALE - 100 exámenes (90% margen)
+    "scale_100": {
+        "mock_tests": 100,
+        "ai_tutor_minutes": 0,
+        "internal_cost": 177.00,  # 100 × $1.77
+        "price": 1770.00,
+        "margin": 0.90,
+        "description": "100 Mock Tests - Sin AI Tutor",
+        "features": ["100 mock tests completos", "White-label portal", "Analytics completo", "API access"]
+    },
+    "scale_100_ai": {
+        "mock_tests": 100,
+        "ai_tutor_minutes": 500,
+        "internal_cost": 227.00,  # 177 + (500 × $0.10)
+        "price": 2270.00,
+        "margin": 0.90,
+        "description": "100 Mock Tests + 500 min AI Tutor",
+        "features": ["100 mock tests completos", "500 min AI Tutor con voz", "White-label completo", "API + Webhooks"]
+    }
+}
+
+# ==================== PAQUETES SEPARADOS WRITING & SPEAKING ====================
+# Para instituciones que quieren comprar tests individuales para reventa
 
 WRITING_TEST_PACKAGES = {
-    "writing_10": {"tests": 10, "price": 15.00, "price_per_test": 1.50, "internal_cost": 3.00},
-    "writing_50": {"tests": 50, "price": 60.00, "price_per_test": 1.20, "internal_cost": 15.00},
-    "writing_100": {"tests": 100, "price": 100.00, "price_per_test": 1.00, "internal_cost": 30.00},
-    "writing_250": {"tests": 250, "price": 200.00, "price_per_test": 0.80, "internal_cost": 75.00},
-    "writing_500": {"tests": 500, "price": 350.00, "price_per_test": 0.70, "internal_cost": 150.00},
-    "writing_1000": {"tests": 1000, "price": 600.00, "price_per_test": 0.60, "internal_cost": 300.00},
+    "writing_20": {"tests": 20, "price": 21.00, "price_per_test": 1.05, "internal_cost": 5.20, "margin": 0.75},
+    "writing_50": {"tests": 50, "price": 65.00, "price_per_test": 1.30, "internal_cost": 13.00, "margin": 0.80},
+    "writing_100": {"tests": 100, "price": 173.00, "price_per_test": 1.73, "internal_cost": 26.00, "margin": 0.85},
 }
 
 SPEAKING_TEST_PACKAGES = {
-    "speaking_10": {"tests": 10, "price": 20.00, "price_per_test": 2.00, "internal_cost": 4.00},
-    "speaking_50": {"tests": 50, "price": 85.00, "price_per_test": 1.70, "internal_cost": 20.00},
-    "speaking_100": {"tests": 100, "price": 150.00, "price_per_test": 1.50, "internal_cost": 40.00},
-    "speaking_250": {"tests": 250, "price": 325.00, "price_per_test": 1.30, "internal_cost": 100.00},
-    "speaking_500": {"tests": 500, "price": 550.00, "price_per_test": 1.10, "internal_cost": 200.00},
-    "speaking_1000": {"tests": 1000, "price": 900.00, "price_per_test": 0.90, "internal_cost": 400.00},
+    "speaking_20": {"tests": 20, "price": 111.00, "price_per_test": 5.55, "internal_cost": 27.80, "margin": 0.75},
+    "speaking_50": {"tests": 50, "price": 348.00, "price_per_test": 6.96, "internal_cost": 69.50, "margin": 0.80},
+    "speaking_100": {"tests": 100, "price": 927.00, "price_per_test": 9.27, "internal_cost": 139.00, "margin": 0.85},
 }
 
-# Dynamic unit pricing per student (price per student/month) - Basic tier base prices
-# Calculated to maintain target margins after AI costs
-UNIT_PRICING = {
-    "tier_1": {"min": 1, "max": 10, "price_per_student": 49, "example_students": 5},
-    "tier_2": {"min": 11, "max": 50, "price_per_student": 39, "example_students": 30},
-    "tier_3": {"min": 51, "max": 100, "price_per_student": 32, "example_students": 75},
-    "tier_4": {"min": 101, "max": 200, "price_per_student": 28, "example_students": 150},
-    "tier_5": {"min": 201, "max": 500, "price_per_student": 25, "example_students": 300},
-}
-
-# Exam multipliers
-EXAM_MULTIPLIERS = {
-    1: 1.0,
-    2: 1.4,
-    3: 1.8
-}
-
-# Credit tier multipliers (for medium and intensive plans)
-# Intensive has higher multiplier due to significant AI cost increase
-CREDIT_TIER_MULTIPLIERS = {
-    "basic": 1.0,      # 50 credits - base price
-    "medium": 1.8,     # 100 credits - 80% more (covers $12.50 cost)
-    "intensive": 3.2   # 200 credits - 220% more (covers $25 cost)
-}
-
-# Extra credits pricing (per credit) - varies by tier
-EXTRA_CREDIT_PRICING = {
-    "tier_1": 1.20,  # $1.20 per extra credit
-    "tier_2": 1.00,  # $1.00 per extra credit
-    "tier_3": 0.85,  # $0.85 per extra credit
-    "tier_4": 0.70,  # $0.70 per extra credit
-    "tier_5": 0.60,  # $0.60 per extra credit
+# ==================== ADD-ONS ====================
+AI_TUTOR_ADDONS = {
+    "tutor_30min": {"minutes": 30, "price": 15.00, "internal_cost": 3.00},
+    "tutor_100min": {"minutes": 100, "price": 45.00, "internal_cost": 10.00},
+    "tutor_300min": {"minutes": 300, "price": 120.00, "internal_cost": 30.00},
 }
 
 def get_unit_price(num_students: int, num_exams: int = 1, credit_tier: str = "basic") -> dict:
