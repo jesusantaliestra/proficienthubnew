@@ -365,7 +365,7 @@ export default function AdminPanel() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <TrendingUp className="w-5 h-5 text-green-600" />
-                      Análisis de Paquetes - Costes vs Precios vs Márgenes
+                      4 Planes B2B - Costes vs Precios vs Márgenes
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -373,11 +373,98 @@ export default function AdminPanel() {
                       <table className="w-full">
                         <thead>
                           <tr className="border-b-2 border-gray-200 bg-gray-50">
-                            <th className="text-left py-3 px-4 font-bold text-gray-700">Paquete</th>
-                            <th className="text-center py-3 px-4 font-bold text-gray-700">Mock Tests</th>
-                            <th className="text-center py-3 px-4 font-bold text-gray-700">AI Tutor</th>
+                            <th className="text-left py-3 px-4 font-bold text-gray-700">Plan</th>
+                            <th className="text-center py-3 px-4 font-bold text-gray-700">Tests</th>
+                            <th className="text-center py-3 px-4 font-bold text-gray-700">€/Test</th>
+                            <th className="text-center py-3 px-4 font-bold text-gray-700">Descuento</th>
                             <th className="text-right py-3 px-4 font-bold text-red-600">TU COSTE</th>
-                            <th className="text-right py-3 px-4 font-bold text-blue-600">PRECIO VENTA</th>
+                            <th className="text-right py-3 px-4 font-bold text-blue-600">PRECIO</th>
+                            <th className="text-right py-3 px-4 font-bold text-green-600">GANANCIA</th>
+                            <th className="text-center py-3 px-4 font-bold text-gray-700">MARGEN</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pricingAnalysis.package_analysis.map((pkg, index) => (
+                            <tr key={pkg.package_id} className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                              <td className="py-4 px-4">
+                                <span className="font-semibold text-gray-900">{pkg.mock_tests} Tests</span>
+                              </td>
+                              <td className="text-center py-4 px-4 font-bold">{pkg.mock_tests}</td>
+                              <td className="text-center py-4 px-4 text-[#58CC02] font-bold">${pkg.price_per_exam}</td>
+                              <td className="text-center py-4 px-4">
+                                <Badge className="bg-orange-100 text-orange-700 border-0">{pkg.volume_discount}</Badge>
+                              </td>
+                              <td className="text-right py-4 px-4">
+                                <span className="font-bold text-red-600 bg-red-50 px-3 py-1 rounded-lg">
+                                  ${pkg.internal_cost.toFixed(2)}
+                                </span>
+                              </td>
+                              <td className="text-right py-4 px-4">
+                                <span className="font-bold text-blue-600">${pkg.price.toFixed(2)}</span>
+                              </td>
+                              <td className="text-right py-4 px-4">
+                                <span className="font-bold text-green-600 bg-green-50 px-3 py-1 rounded-lg">
+                                  ${pkg.profit.toFixed(2)}
+                                </span>
+                              </td>
+                              <td className="text-center py-4 px-4">
+                                <Badge className="bg-gray-100 text-gray-700">{pkg.margin_percentage}</Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* AI Tutor Add-on Analysis */}
+                {pricingAnalysis.ai_tutor_addon_analysis && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Brain className="w-5 h-5 text-purple-600" />
+                        AI Tutor Add-on - Análisis de Costes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b-2 border-gray-200 bg-gray-50">
+                              <th className="text-left py-3 px-4 font-bold text-gray-700">Add-on</th>
+                              <th className="text-center py-3 px-4 font-bold text-gray-700">Minutos</th>
+                              <th className="text-right py-3 px-4 font-bold text-red-600">TU COSTE</th>
+                              <th className="text-right py-3 px-4 font-bold text-blue-600">PRECIO</th>
+                              <th className="text-right py-3 px-4 font-bold text-green-600">GANANCIA</th>
+                              <th className="text-center py-3 px-4 font-bold text-gray-700">MARGEN</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {pricingAnalysis.ai_tutor_addon_analysis.map((addon, index) => (
+                              <tr key={addon.addon_id} className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                                <td className="py-3 px-4 font-semibold text-gray-900">{addon.minutes} min AI Tutor</td>
+                                <td className="text-center py-3 px-4">{addon.minutes}</td>
+                                <td className="text-right py-3 px-4">
+                                  <span className="font-bold text-red-600">${addon.internal_cost.toFixed(2)}</span>
+                                </td>
+                                <td className="text-right py-3 px-4">
+                                  <span className="font-bold text-blue-600">${addon.price.toFixed(2)}</span>
+                                </td>
+                                <td className="text-right py-3 px-4">
+                                  <span className="font-bold text-green-600">${addon.profit.toFixed(2)}</span>
+                                </td>
+                                <td className="text-center py-3 px-4">
+                                  <Badge className="bg-purple-100 text-purple-700">{addon.margin}</Badge>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
                             <th className="text-right py-3 px-4 font-bold text-green-600">GANANCIA</th>
                             <th className="text-center py-3 px-4 font-bold text-gray-700">MARGEN</th>
                           </tr>
