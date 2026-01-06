@@ -2140,6 +2140,7 @@ async def get_pricing_analysis(current_user: dict = Depends(get_current_user)):
     if current_user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     
+    # 4 planes base
     analysis = []
     for pkg_id, pkg in EXAM_PACKAGES.items():
         margin = pkg["margin"]
@@ -2150,18 +2151,32 @@ async def get_pricing_analysis(current_user: dict = Depends(get_current_user)):
         analysis.append({
             "package_id": pkg_id,
             "mock_tests": pkg["mock_tests"],
-            "ai_tutor_minutes": pkg["ai_tutor_minutes"],
+            "price_per_exam": pkg["price_per_exam"],
+            "volume_discount": pkg["volume_discount"],
             "internal_cost": internal_cost,
             "price": price,
             "profit": round(profit, 2),
             "margin_percentage": f"{int(margin * 100)}%"
         })
     
+    # AI Tutor add-on analysis
+    tutor_analysis = []
+    for addon_id, addon in AI_TUTOR_ADDON["packages"].items():
+        tutor_analysis.append({
+            "addon_id": addon_id,
+            "minutes": addon["minutes"],
+            "internal_cost": addon["internal_cost"],
+            "price": addon["price"],
+            "profit": round(addon["price"] - addon["internal_cost"], 2),
+            "margin": f"{int((1 - addon['internal_cost']/addon['price']) * 100)}%"
+        })
+    
     return {
-        "exam_costs": EXAM_COSTS,
+        "exam_costs": {k: {"description": v["description"], "internal_cost": v["internal_cost"]} for k, v in EXAM_COSTS.items()},
         "individual_test_costs": INDIVIDUAL_TEST_COSTS,
         "avg_mock_test_cost": AVG_MOCK_TEST_COST,
         "package_analysis": analysis,
+        "ai_tutor_addon_analysis": tutor_analysis,
         "note": "This data is internal only - never expose to clients"
     }
 
