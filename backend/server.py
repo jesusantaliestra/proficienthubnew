@@ -1666,33 +1666,49 @@ async def get_test_packages():
 async def calculate_roi(
     package_id: str,
     num_students: int,
-    price_per_student: float = 60.0
+    price_per_student: float = 30.0,
+    ai_tutor_minutes: int = 0
 ):
-    """Calculate ROI for institutions"""
+    """Calculate ROI for institutions with optional AI Tutor add-on"""
     if package_id not in EXAM_PACKAGES:
         raise HTTPException(status_code=400, detail="Invalid package")
     
     pkg = EXAM_PACKAGES[package_id]
     
-    # Institution costs
+    # Base package cost
     package_cost = pkg["price"]
-    cost_per_student = package_cost / num_students
+    
+    # Add AI Tutor cost if selected
+    ai_tutor_cost = 0
+    if ai_tutor_minutes > 0:
+        ai_tutor_cost = ai_tutor_minutes * AI_TUTOR_ADDON["price_per_minute"]
+    
+    total_cost = package_cost + ai_tutor_cost
+    
+    # Per student calculations
+    cost_per_student = total_cost / num_students
     tests_per_student = pkg["mock_tests"] / num_students
-    tutor_mins_per_student = pkg["ai_tutor_minutes"] / num_students
+    tutor_mins_per_student = ai_tutor_minutes / num_students if ai_tutor_minutes > 0 else 0
     
     # Institution revenue
     revenue = price_per_student * num_students
-    profit = revenue - package_cost
-    roi_percentage = (profit / package_cost) * 100 if package_cost > 0 else 0
+    profit = revenue - total_cost
+    roi_percentage = (profit / total_cost) * 100 if total_cost > 0 else 0
     
     return {
         "package": {
             "id": package_id,
             "description": pkg["description"],
             "mock_tests": pkg["mock_tests"],
-            "ai_tutor_minutes": pkg["ai_tutor_minutes"],
-            "price": package_cost
+            "price": package_cost,
+            "price_per_exam": pkg["price_per_exam"],
+            "volume_discount": pkg["volume_discount"]
         },
+        "ai_tutor_addon": {
+            "minutes": ai_tutor_minutes,
+            "cost": ai_tutor_cost
+        },
+        "total_investment": total_cost,
         "students": num_students,
         "per_student": {
             "your_cost": round(cost_per_student, 2),
@@ -1702,7 +1718,7 @@ async def calculate_roi(
             "ai_tutor_minutes": round(tutor_mins_per_student, 1)
         },
         "totals": {
-            "your_investment": package_cost,
+            "your_investment": total_cost,
             "your_revenue": revenue,
             "your_profit": round(profit, 2),
             "roi_percentage": round(roi_percentage, 1)
