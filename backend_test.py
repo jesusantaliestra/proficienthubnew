@@ -388,9 +388,11 @@ class ProficientHubAPITester:
         
         if auth_success:
             self.test_institution_features()
+            self.test_library_features()
             self.test_exam_practice_protected()
             self.test_ai_tutor()
         
+        self.test_language_support()
         self.test_unauthorized_access()
         
         # Print summary
