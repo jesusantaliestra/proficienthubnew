@@ -312,51 +312,17 @@ export default function Landing() {
       <section id="pricing" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Transparent Per-Student Pricing</h2>
-            <p className="text-xl text-gray-600 mb-8">Pay only for what you need. Volume discounts applied automatically.</p>
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Exam Package Pricing</h2>
+            <p className="text-xl text-gray-600 mb-8">Buy mock test packages. All exams include Speaking + Writing with AI grading.</p>
             
-            {/* Selectors Row */}
-            <div className="flex flex-col items-center gap-6 mb-8">
-              {/* Exam selector */}
-              <div className="flex items-center gap-4">
-                <Label className="text-gray-600 font-semibold">Exams:</Label>
-                <div className="inline-flex bg-white border-2 border-gray-200 rounded-xl p-1">
-                  {[1, 2, 3].map((num) => (
-                    <button
-                      key={num}
-                      className={`px-5 py-2 rounded-lg font-bold transition-all ${selectedExams === num ? 'bg-[#58CC02] text-white' : 'text-gray-500 hover:bg-gray-100'}`}
-                      onClick={() => setSelectedExams(num)}
-                    >
-                      {num === 3 ? 'All 5' : num}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Credit tier selector */}
-              <div className="flex items-center gap-4">
-                <Label className="text-gray-600 font-semibold">AI Usage:</Label>
-                <div className="inline-flex bg-white border-2 border-gray-200 rounded-xl p-1">
-                  {Object.entries(creditTiers).map(([key, tier]) => (
-                    <button
-                      key={key}
-                      className={`px-5 py-2 rounded-lg font-bold transition-all ${selectedCreditTier === key ? 'bg-[#58CC02] text-white' : 'text-gray-500 hover:bg-gray-100'}`}
-                      onClick={() => setSelectedCreditTier(key)}
-                      title={tier.description}
-                    >
-                      {tier.label} ({tier.credits})
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Billing toggle */}
+            {/* Billing toggle */}
+            <div className="flex justify-center mb-8">
               <div className="inline-flex bg-white border-2 border-gray-200 rounded-xl p-1">
                 <button
                   className={`px-6 py-2 rounded-lg font-bold transition-all ${billingCycle === 'monthly' ? 'bg-gray-800 text-white' : 'text-gray-500'}`}
                   onClick={() => setBillingCycle('monthly')}
                 >
-                  Monthly
+                  One-time
                 </button>
                 <button
                   className={`px-6 py-2 rounded-lg font-bold transition-all ${billingCycle === 'yearly' ? 'bg-gray-800 text-white' : 'text-gray-500'}`}
@@ -369,144 +335,80 @@ export default function Landing() {
             </div>
           </div>
           
-          {/* Credit tier description */}
-          <div className="bg-white rounded-2xl border-2 border-gray-200 p-6 mb-8 max-w-2xl mx-auto">
-            <div className="flex items-center gap-3 mb-3">
-              <Coins className="w-6 h-6 text-[#58CC02]" />
-              <h3 className="text-lg font-bold text-gray-900">{creditTiers[selectedCreditTier].label} Plan - {creditTiers[selectedCreditTier].credits} Credits/Student</h3>
-            </div>
-            <p className="text-gray-600">{creditTiers[selectedCreditTier].description}</p>
-            <p className="text-sm text-gray-500 mt-2">Each credit = 1 AI interaction (tutoring, feedback, or voice practice)</p>
-          </div>
-          
-          {/* Pricing Calculator */}
-          <div className="bg-white rounded-2xl border-2 border-[#58CC02] p-6 mb-8 max-w-2xl mx-auto">
-            <div className="flex items-center gap-3 mb-4">
-              <Calculator className="w-6 h-6 text-[#58CC02]" />
-              <h3 className="text-lg font-bold text-gray-900">Calculate Your Price</h3>
-            </div>
-            
-            <div className="mb-4">
-              <div className="flex justify-between mb-2">
-                <Label className="text-gray-700 font-semibold">Number of Students</Label>
-                <span className="text-[#58CC02] font-bold text-xl">{studentCount}</span>
-              </div>
-              <Slider
-                value={[studentCount]}
-                onValueChange={([v]) => setStudentCount(v)}
-                max={500}
-                min={1}
-                step={1}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>1</span>
-                <span>500</span>
-              </div>
-            </div>
-            
-            {pricingResult && pricingResult.price_per_student && (
-              <div className="bg-green-50 rounded-xl p-4 mt-4" data-testid="pricing-result">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <div className="text-gray-500 text-sm">Price per Student</div>
-                    <div className="text-2xl font-extrabold text-gray-900">
-                      ${pricingResult.price_per_student}
-                      <span className="text-sm text-gray-500 font-normal">/mo</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500 text-sm">Your Tier</div>
-                    <div className="text-lg font-bold text-[#58CC02]">
-                      {pricingResult.students_range} students
-                    </div>
-                  </div>
+          {/* Package Cards */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {examPackages.map((pkg, index) => (
+              <div 
+                key={pkg.id} 
+                className={`bg-white rounded-2xl border-2 p-6 ${pkg.id === 'growth_40_ai' ? 'border-[#58CC02] ring-4 ring-green-100' : 'border-gray-200'}`}
+                data-testid={`package-${pkg.id}`}
+              >
+                {pkg.id === 'growth_40_ai' && (
+                  <Badge className="bg-[#58CC02] text-white border-0 mb-4">Most Popular</Badge>
+                )}
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{pkg.description}</h3>
+                <div className="mb-4">
+                  <span className="text-4xl font-extrabold text-gray-900">${pkg.price}</span>
+                  <span className="text-gray-500 ml-1">{billingCycle === 'yearly' ? '/year' : ''}</span>
                 </div>
                 
-                <div className="border-t border-green-200 pt-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">Monthly Total</span>
-                    <span className="text-2xl font-extrabold text-gray-900">
-                      ${billingCycle === 'monthly' ? pricingResult.monthly_total.toLocaleString() : Math.round(pricingResult.yearly_total / 12).toLocaleString()}
-                    </span>
+                <div className="space-y-2 mb-6">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Check className="w-5 h-5 text-[#58CC02]" />
+                    <span><strong>{pkg.mock_tests}</strong> mock tests completos</span>
                   </div>
-                  {billingCycle === 'yearly' && (
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">Yearly Total (save 17%)</span>
-                      <span className="font-bold text-[#58CC02]">${pricingResult.yearly_total.toLocaleString()}</span>
+                  {pkg.has_ai_tutor && (
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Check className="w-5 h-5 text-[#58CC02]" />
+                      <span><strong>{pkg.ai_tutor_minutes}</strong> min AI Tutor con voz</span>
                     </div>
                   )}
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Check className="w-5 h-5 text-[#58CC02]" />
+                    <span>${pkg.price_per_test}/test</span>
+                  </div>
+                  {pkg.features.slice(0, 2).map((feature, i) => (
+                    <div key={i} className="flex items-center gap-2 text-gray-600">
+                      <Check className="w-5 h-5 text-[#58CC02]" />
+                      <span>{feature}</span>
+                    </div>
+                  ))}
                 </div>
                 
-                <div className="mt-4 pt-3 border-t border-green-200">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 flex items-center gap-1">
-                      <Plus className="w-4 h-4" />
-                      Need more credits?
-                    </span>
-                    <span className="font-bold text-gray-800">
-                      ${pricingResult.extra_credit_price}/credit
-                    </span>
-                  </div>
-                </div>
+                <button 
+                  className={`w-full py-3 rounded-xl font-bold transition-all ${pkg.id === 'growth_40_ai' ? 'btn-duo' : 'btn-duo-outline'}`}
+                  onClick={() => {
+                    setSelectedPackage(pkg.id);
+                    document.getElementById('calculator').scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  Calculate ROI
+                </button>
               </div>
-            )}
+            ))}
           </div>
           
-          {/* Pricing Tiers Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
-              <thead>
-                <tr className="bg-gray-50 border-b-2 border-gray-200">
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-500 uppercase">Students</th>
-                  <th className="px-6 py-4 text-center text-sm font-bold text-gray-500 uppercase">Price/Student</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-500 uppercase">Features</th>
-                  <th className="px-6 py-4 text-center text-sm font-bold text-gray-500 uppercase">Extra Credits</th>
-                  <th className="px-6 py-4 text-center text-sm font-bold text-gray-500 uppercase">Example</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pricingTiers.map((tier, index) => (
-                  <tr key={tier.id} className={`border-b border-gray-100 ${tier.popular ? 'bg-green-50' : ''}`}>
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-gray-900">{tier.range}</div>
-                      {tier.popular && <Badge className="bg-[#58CC02] text-white border-0 mt-1">Popular</Badge>}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="text-2xl font-extrabold text-gray-900">${tier.price}</div>
-                      <div className="text-xs text-gray-500">/student/mo</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-1">
-                        {getTierFeatures(tier.id).slice(0, 3).map((feature, i) => (
-                          <Badge key={i} className="bg-gray-100 text-gray-600 border-gray-200 text-xs">
-                            {feature}
-                          </Badge>
-                        ))}
-                        {getTierFeatures(tier.id).length > 3 && (
-                          <Badge className="bg-green-100 text-green-600 border-green-200 text-xs">
-                            +{getTierFeatures(tier.id).length - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="font-bold text-gray-900">${tier.extraCreditPrice}</div>
-                      <div className="text-xs text-gray-500">/credit</div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="font-bold text-gray-900">${Math.round(tier.price * tier.exampleStudents)}/mo</div>
-                      <div className="text-xs text-gray-500">{tier.exampleStudents} students</div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Cost breakdown */}
+          <div className="bg-gray-50 rounded-2xl p-6 max-w-4xl mx-auto">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Calculator className="w-5 h-5 text-[#58CC02]" />
+              Costo interno por tipo de examen
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {examTypes.map((exam) => (
+                <div key={exam.id} className="text-center">
+                  <div className={`w-12 h-12 ${exam.color} rounded-xl mx-auto mb-2 flex items-center justify-center`}>
+                    <GraduationCap className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="font-bold text-gray-900">{exam.name}</div>
+                  <div className="text-sm text-[#58CC02] font-semibold">{exam.cost}</div>
+                </div>
+              ))}
+            </div>
+            <p className="text-center text-gray-500 mt-4 text-sm">
+              Promedio: <strong>$1.77</strong> por mock test (Speaking AI + Writing AI + Corrección)
+            </p>
           </div>
-          
-          <p className="text-center text-gray-500 mt-8">
-            Need 500+ students? <a href="#" className="text-[#58CC02] font-semibold hover:underline">Contact us for custom enterprise pricing</a>
-          </p>
         </div>
       </section>
 
