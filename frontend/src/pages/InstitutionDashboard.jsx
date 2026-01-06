@@ -8,11 +8,13 @@ import { Label } from '../components/ui/label';
 import { Progress } from '../components/ui/progress';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Textarea } from '../components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import {
   Users, GraduationCap, BarChart3, TrendingUp, TrendingDown, AlertTriangle,
   Plus, Search, LogOut, Settings, BookOpen, Brain, ChevronRight, Award,
-  Clock, Target, Activity, UserPlus, Download, Filter
+  Clock, Target, Activity, UserPlus, Download, Filter, FolderOpen, 
+  FileText, Video, Headphones, Layers, Trash2, Globe
 } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import axios from 'axios';
@@ -20,15 +22,35 @@ import { toast, Toaster } from 'sonner';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+const SUPPORTED_LANGUAGES = {
+  en: 'English',
+  es: 'Español',
+  pt: 'Português',
+  de: 'Deutsch',
+  it: 'Italiano',
+  fr: 'Français'
+};
+
 export default function InstitutionDashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [metrics, setMetrics] = useState(null);
   const [students, setStudents] = useState([]);
+  const [libraryItems, setLibraryItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addStudentOpen, setAddStudentOpen] = useState(false);
+  const [addLibraryOpen, setAddLibraryOpen] = useState(false);
   const [newStudent, setNewStudent] = useState({ name: '', email: '', password: '' });
+  const [newLibraryItem, setNewLibraryItem] = useState({ 
+    title: '', 
+    item_type: 'material', 
+    content: '', 
+    description: '', 
+    exam_type: '',
+    tags: []
+  });
+  const [selectedLanguage, setSelectedLanguage] = useState(user?.language || 'en');
 
   useEffect(() => {
     fetchData();
@@ -36,12 +58,14 @@ export default function InstitutionDashboard() {
 
   const fetchData = async () => {
     try {
-      const [metricsRes, studentsRes] = await Promise.all([
+      const [metricsRes, studentsRes, libraryRes] = await Promise.all([
         axios.get(`${API_URL}/institution/metrics`),
-        axios.get(`${API_URL}/institution/students`)
+        axios.get(`${API_URL}/institution/students`),
+        axios.get(`${API_URL}/library/items`)
       ]);
       setMetrics(metricsRes.data);
       setStudents(studentsRes.data);
+      setLibraryItems(libraryRes.data);
     } catch (error) {
       console.error('Failed to fetch data:', error);
       toast.error('Failed to load dashboard data');
@@ -63,24 +87,56 @@ export default function InstitutionDashboard() {
     }
   };
 
+  const handleAddLibraryItem = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API_URL}/library/items`, newLibraryItem);
+      toast.success('Library item added!');
+      setAddLibraryOpen(false);
+      setNewLibraryItem({ title: '', item_type: 'material', content: '', description: '', exam_type: '', tags: [] });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to add item');
+    }
+  };
+
+  const handleDeleteLibraryItem = async (itemId) => {
+    try {
+      await axios.delete(`${API_URL}/library/items/${itemId}`);
+      toast.success('Item deleted');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to delete item');
+    }
+  };
+
+  const handleLanguageChange = async (lang) => {
+    setSelectedLanguage(lang);
+    try {
+      await axios.put(`${API_URL}/auth/settings`, { language: lang });
+      toast.success(`Language changed to ${SUPPORTED_LANGUAGES[lang]}`);
+    } catch (error) {
+      console.error('Failed to update language:', error);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/', { replace: true });
   };
 
   const getRiskColor = (risk) => {
-    if (risk < 0.3) return 'text-emerald-400';
-    if (risk < 0.6) return 'text-amber-400';
-    return 'text-red-400';
+    if (risk < 0.3) return 'text-green-600';
+    if (risk < 0.6) return 'text-orange-500';
+    return 'text-red-500';
   };
 
   const getRiskBadge = (risk) => {
-    if (risk < 0.3) return { label: 'Low Risk', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
-    if (risk < 0.6) return { label: 'Medium Risk', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' };
-    return { label: 'High Risk', color: 'bg-red-500/10 text-red-400 border-red-500/20' };
+    if (risk < 0.3) return { label: 'Low Risk', color: 'bg-green-100 text-green-700 border-green-200' };
+    if (risk < 0.6) return { label: 'Medium Risk', color: 'bg-orange-100 text-orange-700 border-orange-200' };
+    return { label: 'High Risk', color: 'bg-red-100 text-red-700 border-red-200' };
   };
 
-  // Chart data
   const progressData = [
     { month: 'Jan', score: 65 },
     { month: 'Feb', score: 68 },
@@ -91,91 +147,94 @@ export default function InstitutionDashboard() {
   ];
 
   const examDistribution = [
-    { name: 'IELTS', value: 35, color: '#ef4444' },
-    { name: 'TOEFL', value: 30, color: '#3b82f6' },
-    { name: 'Cambridge', value: 20, color: '#8b5cf6' },
-    { name: 'PTE', value: 10, color: '#f59e0b' },
-    { name: 'OET', value: 5, color: '#10b981' }
+    { name: 'IELTS', value: 35, color: '#FF4B4B' },
+    { name: 'TOEFL', value: 30, color: '#1CB0F6' },
+    { name: 'Cambridge', value: 20, color: '#CE82FF' },
+    { name: 'PTE', value: 10, color: '#FF9600' },
+    { name: 'OET', value: 5, color: '#58CC02' }
   ];
 
-  const riskDistribution = [
-    { range: '0-30%', students: 45, color: '#10b981' },
-    { range: '31-60%', students: 30, color: '#f59e0b' },
-    { range: '61-100%', students: 25, color: '#ef4444' }
-  ];
+  const getItemIcon = (type) => {
+    switch (type) {
+      case 'material': return FileText;
+      case 'flashcard': return Layers;
+      case 'audio': return Headphones;
+      case 'video': return Video;
+      default: return FileText;
+    }
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-slate-400">Loading dashboard...</p>
+          <div className="w-16 h-16 border-4 border-[#58CC02] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-500 font-semibold">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex" data-testid="institution-dashboard">
+    <div className="min-h-screen bg-gray-50 flex" data-testid="institution-dashboard">
       <Toaster position="top-right" richColors />
       
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-900/50 border-r border-slate-800 flex flex-col">
-        <div className="p-6 border-b border-slate-800">
+      <aside className="w-64 bg-white border-r-2 border-gray-100 flex flex-col">
+        <div className="p-6 border-b-2 border-gray-100">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-[#58CC02] flex items-center justify-center">
               <GraduationCap className="w-6 h-6 text-white" />
             </div>
             <div>
-              <span className="text-lg font-bold text-white font-outfit">ProficientHub</span>
-              <p className="text-xs text-slate-500">Institution Portal</p>
+              <span className="text-lg font-extrabold text-gray-800">ProficientHub</span>
+              <p className="text-xs text-gray-400 font-semibold">Institution Portal</p>
             </div>
           </div>
         </div>
         
         <nav className="flex-1 p-4 space-y-2">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`sidebar-item w-full ${activeTab === 'overview' ? 'active' : ''}`}
-            data-testid="nav-overview"
-          >
-            <BarChart3 className="w-5 h-5" />
-            <span>Overview</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('students')}
-            className={`sidebar-item w-full ${activeTab === 'students' ? 'active' : ''}`}
-            data-testid="nav-students"
-          >
-            <Users className="w-5 h-5" />
-            <span>Students</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('analytics')}
-            className={`sidebar-item w-full ${activeTab === 'analytics' ? 'active' : ''}`}
-            data-testid="nav-analytics"
-          >
-            <Activity className="w-5 h-5" />
-            <span>Analytics</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('exams')}
-            className={`sidebar-item w-full ${activeTab === 'exams' ? 'active' : ''}`}
-            data-testid="nav-exams"
-          >
-            <BookOpen className="w-5 h-5" />
-            <span>Exams</span>
-          </button>
+          {[
+            { id: 'overview', icon: BarChart3, label: 'Overview' },
+            { id: 'students', icon: Users, label: 'Students' },
+            { id: 'library', icon: FolderOpen, label: 'Library' },
+            { id: 'analytics', icon: Activity, label: 'Analytics' },
+            { id: 'exams', icon: BookOpen, label: 'Exams' }
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`sidebar-item w-full ${activeTab === item.id ? 'active' : ''}`}
+              data-testid={`nav-${item.id}`}
+            >
+              <item.icon className="w-5 h-5" />
+              <span>{item.label}</span>
+            </button>
+          ))}
         </nav>
         
-        <div className="p-4 border-t border-slate-800 space-y-2">
+        <div className="p-4 border-t-2 border-gray-100 space-y-2">
+          <div className="px-4 py-2">
+            <Label className="text-xs text-gray-400 font-semibold mb-2 block">Language</Label>
+            <Select value={selectedLanguage} onValueChange={handleLanguageChange}>
+              <SelectTrigger className="w-full text-sm">
+                <Globe className="w-4 h-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(SUPPORTED_LANGUAGES).map(([code, name]) => (
+                  <SelectItem key={code} value={code}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <button className="sidebar-item w-full" data-testid="nav-settings">
             <Settings className="w-5 h-5" />
             <span>Settings</span>
           </button>
           <button 
             onClick={handleLogout}
-            className="sidebar-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/10"
+            className="sidebar-item w-full text-red-500 hover:text-red-600 hover:bg-red-50"
             data-testid="logout-btn"
           >
             <LogOut className="w-5 h-5" />
@@ -186,65 +245,64 @@ export default function InstitutionDashboard() {
       
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
-        {/* Header */}
-        <header className="sticky top-0 z-10 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800 px-8 py-4">
+        <header className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b-2 border-gray-100 px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-white font-outfit">
+              <h1 className="text-2xl font-extrabold text-gray-900">
                 Welcome back, {user?.name || 'Institution'}
               </h1>
-              <p className="text-slate-400">{user?.institution_name || 'Your Institution'}</p>
+              <p className="text-gray-500 font-semibold">{user?.institution_name || 'Your Institution'}</p>
             </div>
             <div className="flex items-center gap-4">
               <Dialog open={addStudentOpen} onOpenChange={setAddStudentOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-blue-500 hover:bg-blue-600 rounded-full" data-testid="add-student-btn">
-                    <UserPlus className="w-4 h-4 mr-2" />
+                  <button className="btn-duo px-4 py-2.5 text-sm flex items-center gap-2" data-testid="add-student-btn">
+                    <UserPlus className="w-4 h-4" />
                     Add Student
-                  </Button>
+                  </button>
                 </DialogTrigger>
-                <DialogContent className="bg-slate-900 border-slate-800">
+                <DialogContent className="bg-white border-2 border-gray-200 rounded-2xl">
                   <DialogHeader>
-                    <DialogTitle className="text-white">Add New Student</DialogTitle>
+                    <DialogTitle className="text-gray-900 font-extrabold">Add New Student</DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handleAddStudent} className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-slate-300">Full Name</Label>
+                      <Label className="text-gray-700 font-semibold">Full Name</Label>
                       <Input
                         value={newStudent.name}
                         onChange={(e) => setNewStudent(prev => ({ ...prev, name: e.target.value }))}
-                        className="bg-slate-800 border-slate-700 text-white"
+                        className="input-duo"
                         placeholder="John Doe"
                         required
                         data-testid="new-student-name"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-slate-300">Email</Label>
+                      <Label className="text-gray-700 font-semibold">Email</Label>
                       <Input
                         type="email"
                         value={newStudent.email}
                         onChange={(e) => setNewStudent(prev => ({ ...prev, email: e.target.value }))}
-                        className="bg-slate-800 border-slate-700 text-white"
+                        className="input-duo"
                         placeholder="student@example.com"
                         required
                         data-testid="new-student-email"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-slate-300">Password (optional)</Label>
+                      <Label className="text-gray-700 font-semibold">Password (optional)</Label>
                       <Input
                         type="password"
                         value={newStudent.password}
                         onChange={(e) => setNewStudent(prev => ({ ...prev, password: e.target.value }))}
-                        className="bg-slate-800 border-slate-700 text-white"
+                        className="input-duo"
                         placeholder="Leave blank for auto-generated"
                         data-testid="new-student-password"
                       />
                     </div>
-                    <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600" data-testid="submit-new-student">
+                    <button type="submit" className="btn-duo w-full py-3" data-testid="submit-new-student">
                       Add Student
-                    </Button>
+                    </button>
                   </form>
                 </DialogContent>
               </Dialog>
@@ -261,17 +319,17 @@ export default function InstitutionDashboard() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-slate-400 text-sm">Total Students</p>
-                        <p className="text-3xl font-bold text-white font-outfit mt-1">{metrics?.total_students || 0}</p>
+                        <p className="text-gray-500 text-sm font-semibold">Total Students</p>
+                        <p className="text-3xl font-extrabold text-gray-900 mt-1">{metrics?.total_students || 0}</p>
                       </div>
-                      <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                        <Users className="w-6 h-6 text-blue-400" />
+                      <div className="feature-icon feature-icon-blue">
+                        <Users className="w-6 h-6" />
                       </div>
                     </div>
                     <div className="mt-4 flex items-center gap-2 text-sm">
-                      <TrendingUp className="w-4 h-4 text-emerald-400" />
-                      <span className="text-emerald-400">+12%</span>
-                      <span className="text-slate-500">from last month</span>
+                      <TrendingUp className="w-4 h-4 text-green-500" />
+                      <span className="text-green-600 font-semibold">+12%</span>
+                      <span className="text-gray-400">from last month</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -280,11 +338,11 @@ export default function InstitutionDashboard() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-slate-400 text-sm">Avg Pass Probability</p>
-                        <p className="text-3xl font-bold text-emerald-400 font-outfit mt-1">{metrics?.avg_pass_probability || 0}%</p>
+                        <p className="text-gray-500 text-sm font-semibold">Avg Pass Probability</p>
+                        <p className="text-3xl font-extrabold text-[#58CC02] mt-1">{metrics?.avg_pass_probability || 0}%</p>
                       </div>
-                      <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                        <Target className="w-6 h-6 text-emerald-400" />
+                      <div className="feature-icon feature-icon-green">
+                        <Target className="w-6 h-6" />
                       </div>
                     </div>
                     <Progress value={metrics?.avg_pass_probability || 0} className="mt-4 h-2" />
@@ -295,17 +353,17 @@ export default function InstitutionDashboard() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-slate-400 text-sm">At Risk Students</p>
-                        <p className="text-3xl font-bold text-amber-400 font-outfit mt-1">{metrics?.at_risk_students || 0}</p>
+                        <p className="text-gray-500 text-sm font-semibold">At Risk Students</p>
+                        <p className="text-3xl font-extrabold text-orange-500 mt-1">{metrics?.at_risk_students || 0}</p>
                       </div>
-                      <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                        <AlertTriangle className="w-6 h-6 text-amber-400" />
+                      <div className="feature-icon feature-icon-orange">
+                        <AlertTriangle className="w-6 h-6" />
                       </div>
                     </div>
                     <div className="mt-4 flex items-center gap-2 text-sm">
-                      <TrendingDown className="w-4 h-4 text-emerald-400" />
-                      <span className="text-emerald-400">-3</span>
-                      <span className="text-slate-500">from last week</span>
+                      <TrendingDown className="w-4 h-4 text-green-500" />
+                      <span className="text-green-600 font-semibold">-3</span>
+                      <span className="text-gray-400">from last week</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -314,102 +372,65 @@ export default function InstitutionDashboard() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-slate-400 text-sm">Exams Completed</p>
-                        <p className="text-3xl font-bold text-purple-400 font-outfit mt-1">{metrics?.exams_completed || 0}</p>
+                        <p className="text-gray-500 text-sm font-semibold">Exams Completed</p>
+                        <p className="text-3xl font-extrabold text-purple-500 mt-1">{metrics?.exams_completed || 0}</p>
                       </div>
-                      <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                        <BookOpen className="w-6 h-6 text-purple-400" />
+                      <div className="feature-icon feature-icon-purple">
+                        <BookOpen className="w-6 h-6" />
                       </div>
                     </div>
                     <div className="mt-4 flex items-center gap-2 text-sm">
-                      <span className="text-slate-400">Avg Score:</span>
-                      <span className="text-white font-medium">{metrics?.avg_score || 0}%</span>
+                      <span className="text-gray-400">Avg Score:</span>
+                      <span className="text-gray-900 font-bold">{metrics?.avg_score || 0}%</span>
                     </div>
                   </CardContent>
                 </Card>
               </div>
               
-              {/* Charts Row */}
+              {/* Charts */}
               <div className="grid lg:grid-cols-2 gap-6">
-                <Card className="bg-slate-900/50 border-slate-800">
+                <Card className="bg-white border-2 border-gray-100 rounded-2xl">
                   <CardHeader>
-                    <CardTitle className="text-white font-outfit">Performance Trend</CardTitle>
+                    <CardTitle className="text-gray-900 font-extrabold">Performance Trend</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
                       <AreaChart data={progressData}>
                         <defs>
                           <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="#58CC02" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#58CC02" stopOpacity={0}/>
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                        <XAxis dataKey="month" stroke="#64748b" />
-                        <YAxis stroke="#64748b" />
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                          labelStyle={{ color: '#f8fafc' }}
-                        />
-                        <Area type="monotone" dataKey="score" stroke="#3b82f6" fill="url(#scoreGradient)" strokeWidth={2} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
+                        <XAxis dataKey="month" stroke="#AFAFAF" />
+                        <YAxis stroke="#AFAFAF" />
+                        <Tooltip contentStyle={{ backgroundColor: '#fff', border: '2px solid #E5E5E5', borderRadius: '12px' }} />
+                        <Area type="monotone" dataKey="score" stroke="#58CC02" fill="url(#scoreGradient)" strokeWidth={3} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
                 
-                <Card className="bg-slate-900/50 border-slate-800">
+                <Card className="bg-white border-2 border-gray-100 rounded-2xl">
                   <CardHeader>
-                    <CardTitle className="text-white font-outfit">Exam Distribution</CardTitle>
+                    <CardTitle className="text-gray-900 font-extrabold">Exam Distribution</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
                       <PieChart>
-                        <Pie
-                          data={examDistribution}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={100}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
+                        <Pie data={examDistribution} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
                           {examDistribution.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                        />
+                        <Tooltip contentStyle={{ backgroundColor: '#fff', border: '2px solid #E5E5E5', borderRadius: '12px' }} />
                         <Legend />
                       </PieChart>
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
               </div>
-              
-              {/* Risk Distribution */}
-              <Card className="bg-slate-900/50 border-slate-800">
-                <CardHeader>
-                  <CardTitle className="text-white font-outfit">Risk Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={riskDistribution} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                      <XAxis type="number" stroke="#64748b" />
-                      <YAxis dataKey="range" type="category" stroke="#64748b" width={80} />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                      />
-                      <Bar dataKey="students" radius={[0, 4, 4, 0]}>
-                        {riskDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
             </div>
           )}
           
@@ -417,26 +438,22 @@ export default function InstitutionDashboard() {
             <div className="space-y-6 animate-fade-in" data-testid="students-tab">
               <div className="flex items-center justify-between">
                 <div className="relative w-80">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <Input
-                    placeholder="Search students..."
-                    className="pl-10 bg-slate-900 border-slate-800 text-white"
-                    data-testid="search-students"
-                  />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input placeholder="Search students..." className="input-duo pl-10" data-testid="search-students" />
                 </div>
                 <div className="flex gap-3">
-                  <Button variant="outline" className="border-slate-700 text-slate-300">
+                  <Button variant="outline" className="border-2 border-gray-200 text-gray-600 font-semibold">
                     <Filter className="w-4 h-4 mr-2" />
                     Filter
                   </Button>
-                  <Button variant="outline" className="border-slate-700 text-slate-300">
+                  <Button variant="outline" className="border-2 border-gray-200 text-gray-600 font-semibold">
                     <Download className="w-4 h-4 mr-2" />
                     Export
                   </Button>
                 </div>
               </div>
               
-              <Card className="bg-slate-900/50 border-slate-800 overflow-hidden">
+              <Card className="bg-white border-2 border-gray-100 rounded-2xl overflow-hidden">
                 <table className="data-table">
                   <thead>
                     <tr>
@@ -453,15 +470,12 @@ export default function InstitutionDashboard() {
                       <tr>
                         <td colSpan={6} className="text-center py-12">
                           <div className="space-y-3">
-                            <Users className="w-12 h-12 text-slate-600 mx-auto" />
-                            <p className="text-slate-500">No students yet. Add your first student to get started.</p>
-                            <Button 
-                              onClick={() => setAddStudentOpen(true)}
-                              className="bg-blue-500 hover:bg-blue-600"
-                            >
+                            <Users className="w-12 h-12 text-gray-300 mx-auto" />
+                            <p className="text-gray-500 font-semibold">No students yet. Add your first student to get started.</p>
+                            <button onClick={() => setAddStudentOpen(true)} className="btn-duo px-4 py-2">
                               <UserPlus className="w-4 h-4 mr-2" />
                               Add Student
-                            </Button>
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -472,43 +486,37 @@ export default function InstitutionDashboard() {
                           <tr key={student.id} data-testid={`student-row-${student.id}`}>
                             <td>
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center">
-                                  <span className="text-white font-medium">
-                                    {student.name.charAt(0).toUpperCase()}
-                                  </span>
+                                <div className="w-10 h-10 rounded-full bg-[#58CC02] flex items-center justify-center">
+                                  <span className="text-white font-bold">{student.name.charAt(0).toUpperCase()}</span>
                                 </div>
                                 <div>
-                                  <p className="text-white font-medium">{student.name}</p>
-                                  <p className="text-slate-500 text-xs">{student.email}</p>
+                                  <p className="text-gray-900 font-semibold">{student.name}</p>
+                                  <p className="text-gray-400 text-xs">{student.email}</p>
                                 </div>
                               </div>
                             </td>
                             <td>
                               <div className="flex items-center gap-2">
                                 <Progress value={student.pass_probability * 100} className="w-20 h-2" />
-                                <span className="text-emerald-400 font-medium">
-                                  {Math.round(student.pass_probability * 100)}%
-                                </span>
+                                <span className="text-[#58CC02] font-bold">{Math.round(student.pass_probability * 100)}%</span>
                               </div>
                             </td>
                             <td>
-                              <span className={`font-medium ${getRiskColor(student.risk_score)}`}>
+                              <span className={`font-bold ${getRiskColor(student.risk_score)}`}>
                                 {Math.round(student.risk_score * 100)}%
                               </span>
                             </td>
                             <td>
                               <div className="flex items-center gap-2">
-                                <Activity className="w-4 h-4 text-purple-400" />
-                                <span className="text-white">{Math.round(student.engagement_score * 100)}%</span>
+                                <Activity className="w-4 h-4 text-purple-500" />
+                                <span className="text-gray-900 font-semibold">{Math.round(student.engagement_score * 100)}%</span>
                               </div>
                             </td>
                             <td>
-                              <Badge className={riskBadge.color}>
-                                {riskBadge.label}
-                              </Badge>
+                              <Badge className={`${riskBadge.color} font-semibold border`}>{riskBadge.label}</Badge>
                             </td>
                             <td>
-                              <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
+                              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-900 font-semibold">
                                 View Details
                                 <ChevronRight className="w-4 h-4 ml-1" />
                               </Button>
@@ -523,67 +531,215 @@ export default function InstitutionDashboard() {
             </div>
           )}
           
+          {activeTab === 'library' && (
+            <div className="space-y-6 animate-fade-in" data-testid="library-tab">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-extrabold text-gray-900">Institution Library</h2>
+                  <p className="text-gray-500">Upload materials, create flashcards, audio summaries, and videos</p>
+                </div>
+                <Dialog open={addLibraryOpen} onOpenChange={setAddLibraryOpen}>
+                  <DialogTrigger asChild>
+                    <button className="btn-duo px-4 py-2.5 text-sm flex items-center gap-2" data-testid="add-library-btn">
+                      <Plus className="w-4 h-4" />
+                      Add Item
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-white border-2 border-gray-200 rounded-2xl max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle className="text-gray-900 font-extrabold">Add Library Item</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleAddLibraryItem} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-gray-700 font-semibold">Title</Label>
+                        <Input
+                          value={newLibraryItem.title}
+                          onChange={(e) => setNewLibraryItem(prev => ({ ...prev, title: e.target.value }))}
+                          className="input-duo"
+                          placeholder="e.g., IELTS Reading Tips"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-gray-700 font-semibold">Type</Label>
+                        <Select
+                          value={newLibraryItem.item_type}
+                          onValueChange={(value) => setNewLibraryItem(prev => ({ ...prev, item_type: value }))}
+                        >
+                          <SelectTrigger className="input-duo">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="material">Study Material</SelectItem>
+                            <SelectItem value="flashcard">Flashcards</SelectItem>
+                            <SelectItem value="audio">Audio Summary</SelectItem>
+                            <SelectItem value="video">Video Class</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-gray-700 font-semibold">Exam Type (optional)</Label>
+                        <Select
+                          value={newLibraryItem.exam_type}
+                          onValueChange={(value) => setNewLibraryItem(prev => ({ ...prev, exam_type: value }))}
+                        >
+                          <SelectTrigger className="input-duo">
+                            <SelectValue placeholder="Select exam" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="toefl">TOEFL</SelectItem>
+                            <SelectItem value="ielts">IELTS</SelectItem>
+                            <SelectItem value="cambridge">Cambridge</SelectItem>
+                            <SelectItem value="pte">PTE</SelectItem>
+                            <SelectItem value="oet">OET</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-gray-700 font-semibold">Description</Label>
+                        <Textarea
+                          value={newLibraryItem.description}
+                          onChange={(e) => setNewLibraryItem(prev => ({ ...prev, description: e.target.value }))}
+                          className="input-duo min-h-[100px]"
+                          placeholder="Brief description of this content..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-gray-700 font-semibold">Content</Label>
+                        <Textarea
+                          value={newLibraryItem.content}
+                          onChange={(e) => setNewLibraryItem(prev => ({ ...prev, content: e.target.value }))}
+                          className="input-duo min-h-[150px]"
+                          placeholder="Paste your content here or add URL for video/audio..."
+                        />
+                      </div>
+                      <button type="submit" className="btn-duo w-full py-3">
+                        Add to Library
+                      </button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              
+              {/* Library Items Grid */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {libraryItems.length === 0 ? (
+                  <Card className="col-span-full bg-white border-2 border-gray-100 rounded-2xl p-12 text-center">
+                    <FolderOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Library is Empty</h3>
+                    <p className="text-gray-500 mb-6">Start adding materials, flashcards, and videos for your students</p>
+                    <button onClick={() => setAddLibraryOpen(true)} className="btn-duo px-6 py-3">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add First Item
+                    </button>
+                  </Card>
+                ) : (
+                  libraryItems.map((item) => {
+                    const ItemIcon = getItemIcon(item.item_type);
+                    return (
+                      <Card key={item.id} className="card-duo" data-testid={`library-item-${item.id}`}>
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className={`feature-icon ${
+                              item.item_type === 'material' ? 'feature-icon-blue' :
+                              item.item_type === 'flashcard' ? 'feature-icon-purple' :
+                              item.item_type === 'audio' ? 'feature-icon-orange' :
+                              'feature-icon-green'
+                            }`}>
+                              <ItemIcon className="w-6 h-6" />
+                            </div>
+                            <button
+                              onClick={() => handleDeleteLibraryItem(item.id)}
+                              className="text-gray-400 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                          <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+                          <p className="text-gray-500 text-sm mb-4 line-clamp-2">{item.description || 'No description'}</p>
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-gray-100 text-gray-600 border-gray-200 capitalize font-semibold">
+                              {item.item_type}
+                            </Badge>
+                            {item.exam_type && (
+                              <Badge className={`badge-${item.exam_type} font-semibold`}>
+                                {item.exam_type.toUpperCase()}
+                              </Badge>
+                            )}
+                            {item.offline_available && (
+                              <Badge className="bg-green-100 text-green-600 border-green-200 font-semibold">
+                                Offline
+                              </Badge>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+          
           {activeTab === 'analytics' && (
             <div className="space-y-6 animate-fade-in" data-testid="analytics-tab">
-              <h2 className="text-2xl font-bold text-white font-outfit">Advanced Analytics</h2>
+              <h2 className="text-2xl font-extrabold text-gray-900">Premium Analytics</h2>
               <div className="grid lg:grid-cols-3 gap-6">
-                <Card className="bg-slate-900/50 border-slate-800 col-span-2">
+                <Card className="bg-white border-2 border-gray-100 rounded-2xl col-span-2">
                   <CardHeader>
-                    <CardTitle className="text-white">Weekly Progress</CardTitle>
+                    <CardTitle className="text-gray-900 font-extrabold">Weekly Progress</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={400}>
                       <LineChart data={progressData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                        <XAxis dataKey="month" stroke="#64748b" />
-                        <YAxis stroke="#64748b" />
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                        />
-                        <Line type="monotone" dataKey="score" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#3b82f6' }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
+                        <XAxis dataKey="month" stroke="#AFAFAF" />
+                        <YAxis stroke="#AFAFAF" />
+                        <Tooltip contentStyle={{ backgroundColor: '#fff', border: '2px solid #E5E5E5', borderRadius: '12px' }} />
+                        <Line type="monotone" dataKey="score" stroke="#58CC02" strokeWidth={3} dot={{ fill: '#58CC02' }} />
                       </LineChart>
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
                 
                 <div className="space-y-6">
-                  <Card className="bg-slate-900/50 border-slate-800">
+                  <Card className="metric-card">
                     <CardContent className="p-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
-                          <Award className="w-8 h-8 text-emerald-400" />
+                        <div className="feature-icon feature-icon-green">
+                          <Award className="w-8 h-8" />
                         </div>
                         <div>
-                          <p className="text-slate-400 text-sm">High Performers</p>
-                          <p className="text-3xl font-bold text-white">{metrics?.high_performers || 0}</p>
+                          <p className="text-gray-500 text-sm font-semibold">High Performers</p>
+                          <p className="text-3xl font-extrabold text-gray-900">{metrics?.high_performers || 0}</p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                   
-                  <Card className="bg-slate-900/50 border-slate-800">
+                  <Card className="metric-card">
                     <CardContent className="p-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center">
-                          <Clock className="w-8 h-8 text-blue-400" />
+                        <div className="feature-icon feature-icon-blue">
+                          <Clock className="w-8 h-8" />
                         </div>
                         <div>
-                          <p className="text-slate-400 text-sm">Avg Study Time</p>
-                          <p className="text-3xl font-bold text-white">4.2h</p>
+                          <p className="text-gray-500 text-sm font-semibold">Avg Study Time</p>
+                          <p className="text-3xl font-extrabold text-gray-900">4.2h</p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                   
-                  <Card className="bg-slate-900/50 border-slate-800">
+                  <Card className="metric-card">
                     <CardContent className="p-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center">
-                          <Brain className="w-8 h-8 text-purple-400" />
+                        <div className="feature-icon feature-icon-purple">
+                          <Brain className="w-8 h-8" />
                         </div>
                         <div>
-                          <p className="text-slate-400 text-sm">AI Tutoring Sessions</p>
-                          <p className="text-3xl font-bold text-white">1,240</p>
+                          <p className="text-gray-500 text-sm font-semibold">AI Tutoring Sessions</p>
+                          <p className="text-3xl font-extrabold text-gray-900">1,240</p>
                         </div>
                       </div>
                     </CardContent>
@@ -595,26 +751,28 @@ export default function InstitutionDashboard() {
           
           {activeTab === 'exams' && (
             <div className="space-y-6 animate-fade-in" data-testid="exams-tab">
-              <h2 className="text-2xl font-bold text-white font-outfit">Exam Management</h2>
+              <h2 className="text-2xl font-extrabold text-gray-900">Exam Management</h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {['TOEFL', 'IELTS', 'Cambridge', 'PTE', 'OET'].map((exam) => (
-                  <Card 
-                    key={exam}
-                    className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-all cursor-pointer card-hover"
-                    data-testid={`exam-manage-${exam.toLowerCase()}`}
-                  >
+                {[
+                  { id: 'toefl', name: 'TOEFL', color: 'bg-blue-500' },
+                  { id: 'ielts', name: 'IELTS', color: 'bg-red-500' },
+                  { id: 'cambridge', name: 'Cambridge', color: 'bg-purple-500' },
+                  { id: 'pte', name: 'PTE', color: 'bg-orange-500' },
+                  { id: 'oet', name: 'OET', color: 'bg-green-500' }
+                ].map((exam) => (
+                  <Card key={exam.id} className="card-duo" data-testid={`exam-manage-${exam.id}`}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-4">
-                        <div className={`w-12 h-12 rounded-xl badge-${exam.toLowerCase()} flex items-center justify-center`}>
+                        <div className={`w-12 h-12 rounded-xl ${exam.color} flex items-center justify-center`}>
                           <BookOpen className="w-6 h-6 text-white" />
                         </div>
-                        <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Active</Badge>
+                        <Badge className="bg-green-100 text-green-700 border-green-200 font-semibold">Active</Badge>
                       </div>
-                      <h3 className="text-xl font-bold text-white mb-2">{exam}</h3>
-                      <p className="text-slate-400 text-sm mb-4">Full exam simulation with AI feedback</p>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">{exam.name}</h3>
+                      <p className="text-gray-500 text-sm mb-4">Full exam simulation with AI feedback</p>
                       <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">Students enrolled</span>
-                        <span className="text-white font-medium">{Math.floor(Math.random() * 50) + 10}</span>
+                        <span className="text-gray-400">Students enrolled</span>
+                        <span className="text-gray-900 font-bold">{Math.floor(Math.random() * 50) + 10}</span>
                       </div>
                     </CardContent>
                   </Card>
