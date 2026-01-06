@@ -1855,18 +1855,24 @@ class SubscriptionCheckoutRequest(BaseModel):
 async def create_subscription_checkout(request: SubscriptionCheckoutRequest, http_request: Request):
     """Create Stripe checkout session for subscription"""
     try:
-        # Calculate price server-side
-        pricing = get_unit_price(request.students, request.exams, request.credit_tier)
+        # Use package-based pricing instead of per-student
+        # Map old parameters to new package system
+        if request.students <= 20:
+            package_id = "starter_20_ai" if request.exams > 1 else "starter_20"
+        elif request.students <= 40:
+            package_id = "growth_40_ai" if request.exams > 1 else "growth_40"
+        else:
+            package_id = "scale_100_ai" if request.exams > 1 else "scale_100"
         
-        if "message" in pricing:  # Enterprise custom
-            raise HTTPException(status_code=400, detail="Contact sales for enterprise pricing")
+        if package_id not in EXAM_PACKAGES:
+            raise HTTPException(status_code=400, detail="Invalid package configuration")
         
-        price = pricing["price_per_student"]
+        package = EXAM_PACKAGES[package_id]
+        amount = package["price"]
+        
         if request.billing_cycle == "yearly":
             # 10 months for the price of 12 (17% discount)
-            amount = price * request.students * 10
-        else:
-            amount = price * request.students
+            amount = amount * 10
         
         # Initialize Stripe checkout
         webhook_url = f"{str(http_request.base_url).rstrip('/')}api/webhook/stripe"
@@ -1879,11 +1885,11 @@ async def create_subscription_checkout(request: SubscriptionCheckoutRequest, htt
         # Metadata for tracking
         metadata = {
             "type": "subscription",
-            "students": str(request.students),
-            "exams": str(request.exams),
-            "credit_tier": request.credit_tier,
+            "package_id": package_id,
+            "mock_tests": str(package["mock_tests"]),
+            "ai_tutor_minutes": str(package["ai_tutor_minutes"]),
             "billing_cycle": request.billing_cycle,
-            "price_per_student": str(price)
+            "price": str(amount)
         }
         
         # Create checkout session
