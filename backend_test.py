@@ -101,14 +101,8 @@ class ProficientHubAPITester:
         self.run_test("Individual Pricing", "GET", "pricing/individual", 200)
         
         # Test ROI calculator
-        roi_data = {
-            "current_students": 100,
-            "current_teachers": 5,
-            "current_pass_rate": 65,
-            "current_no_show_rate": 20,
-            "teacher_salary": 3000
-        }
-        response = self.run_test("ROI Calculator", "POST", "pricing/calculate-roi", 200, roi_data)
+        roi_params = "current_students=100&current_teachers=5&current_pass_rate=65&current_no_show_rate=20&teacher_salary=3000"
+        response = self.run_test("ROI Calculator", "POST", f"pricing/calculate-roi?{roi_params}", 200)
         if response:
             required_fields = ['additional_students', 'improved_pass_rate', 'total_annual_benefit']
             missing_fields = [field for field in required_fields if field not in response]
