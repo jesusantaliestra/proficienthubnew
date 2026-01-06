@@ -496,6 +496,233 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Writing & Speaking Test Packages Section */}
+      <section id="test-packages" className="py-20">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <Badge className="bg-orange-100 text-orange-700 border-orange-200 px-4 py-2 mb-6 text-sm font-semibold">
+              <Coins className="w-4 h-4 mr-2" />
+              Additional Revenue Stream
+            </Badge>
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Writing & Speaking Test Packages</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Buy test packages at wholesale prices and resell them to your students. 
+              <strong className="text-[#58CC02]"> Recover your subscription cost and generate extra profit.</strong>
+            </p>
+          </div>
+          
+          {/* Package Tables */}
+          <div className="grid lg:grid-cols-2 gap-8 mb-12">
+            {/* Writing Tests */}
+            <Card className="border-2 border-blue-200 rounded-2xl overflow-hidden">
+              <div className="bg-blue-50 p-4 border-b border-blue-200">
+                <h3 className="text-xl font-bold text-blue-800 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  Writing Test Packages
+                </h3>
+                <p className="text-sm text-blue-600">AI-graded essays with detailed feedback</p>
+              </div>
+              <div className="p-4">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-sm text-gray-500 border-b">
+                      <th className="pb-2">Tests</th>
+                      <th className="pb-2 text-center">Price</th>
+                      <th className="pb-2 text-center">Per Test</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm">
+                    {[
+                      { tests: 10, price: 15, perTest: 1.50 },
+                      { tests: 50, price: 60, perTest: 1.20 },
+                      { tests: 100, price: 100, perTest: 1.00, popular: true },
+                      { tests: 250, price: 200, perTest: 0.80 },
+                      { tests: 500, price: 350, perTest: 0.70 },
+                      { tests: 1000, price: 600, perTest: 0.60 }
+                    ].map((pkg) => (
+                      <tr key={pkg.tests} className={`border-b ${pkg.popular ? 'bg-blue-50' : ''}`}>
+                        <td className="py-3 font-semibold">{pkg.tests} tests {pkg.popular && <Badge className="ml-2 bg-blue-500 text-white border-0 text-xs">Best Value</Badge>}</td>
+                        <td className="py-3 text-center font-bold">${pkg.price}</td>
+                        <td className="py-3 text-center text-blue-600 font-bold">${pkg.perTest}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+            
+            {/* Speaking Tests */}
+            <Card className="border-2 border-purple-200 rounded-2xl overflow-hidden">
+              <div className="bg-purple-50 p-4 border-b border-purple-200">
+                <h3 className="text-xl font-bold text-purple-800 flex items-center gap-2">
+                  <Mic className="w-5 h-5" />
+                  Speaking Test Packages
+                </h3>
+                <p className="text-sm text-purple-600">AI-powered with pronunciation feedback</p>
+              </div>
+              <div className="p-4">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-sm text-gray-500 border-b">
+                      <th className="pb-2">Tests</th>
+                      <th className="pb-2 text-center">Price</th>
+                      <th className="pb-2 text-center">Per Test</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm">
+                    {[
+                      { tests: 10, price: 20, perTest: 2.00 },
+                      { tests: 50, price: 85, perTest: 1.70 },
+                      { tests: 100, price: 150, perTest: 1.50, popular: true },
+                      { tests: 250, price: 325, perTest: 1.30 },
+                      { tests: 500, price: 550, perTest: 1.10 },
+                      { tests: 1000, price: 900, perTest: 0.90 }
+                    ].map((pkg) => (
+                      <tr key={pkg.tests} className={`border-b ${pkg.popular ? 'bg-purple-50' : ''}`}>
+                        <td className="py-3 font-semibold">{pkg.tests} tests {pkg.popular && <Badge className="ml-2 bg-purple-500 text-white border-0 text-xs">Best Value</Badge>}</td>
+                        <td className="py-3 text-center font-bold">${pkg.price}</td>
+                        <td className="py-3 text-center text-purple-600 font-bold">${pkg.perTest}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </div>
+          
+          {/* Monetization Calculator */}
+          <Card className="border-2 border-[#58CC02] rounded-2xl overflow-hidden" data-testid="monetization-calculator">
+            <div className="bg-green-50 p-6 border-b border-green-200">
+              <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <TrendingUp className="w-7 h-7 text-[#58CC02]" />
+                Monetization Calculator
+              </h3>
+              <p className="text-gray-600 mt-1">See how much you can earn by reselling tests to your students</p>
+            </div>
+            
+            <div className="grid lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
+              {/* Inputs */}
+              <div className="p-6 space-y-6">
+                <div>
+                  <Label className="text-gray-700 font-semibold block mb-2">Writing Tests to Sell Monthly</Label>
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      value={[monetizationValues.writingTests]}
+                      onValueChange={([v]) => setMonetizationValues(prev => ({ ...prev, writingTests: v }))}
+                      max={500}
+                      min={0}
+                      step={10}
+                      className="flex-1"
+                    />
+                    <span className="text-lg font-bold text-blue-600 w-16 text-right">{monetizationValues.writingTests}</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label className="text-gray-700 font-semibold block mb-2">Speaking Tests to Sell Monthly</Label>
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      value={[monetizationValues.speakingTests]}
+                      onValueChange={([v]) => setMonetizationValues(prev => ({ ...prev, speakingTests: v }))}
+                      max={500}
+                      min={0}
+                      step={10}
+                      className="flex-1"
+                    />
+                    <span className="text-lg font-bold text-purple-600 w-16 text-right">{monetizationValues.speakingTests}</span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-700 font-semibold block mb-2">Your Writing Price ($)</Label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      value={monetizationValues.writingSellPrice}
+                      onChange={(e) => setMonetizationValues(prev => ({ ...prev, writingSellPrice: parseFloat(e.target.value) || 0 }))}
+                      className="input-duo"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-gray-700 font-semibold block mb-2">Your Speaking Price ($)</Label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      value={monetizationValues.speakingSellPrice}
+                      onChange={(e) => setMonetizationValues(prev => ({ ...prev, speakingSellPrice: parseFloat(e.target.value) || 0 }))}
+                      className="input-duo"
+                    />
+                  </div>
+                </div>
+                
+                <button 
+                  className="btn-duo w-full py-3" 
+                  onClick={calculateMonetization}
+                  data-testid="calculate-monetization-btn"
+                >
+                  Calculate Profit
+                </button>
+              </div>
+              
+              {/* Results */}
+              <div className="p-6 bg-gradient-to-br from-green-50 to-white">
+                {monetizationResult ? (
+                  <div className="space-y-4" data-testid="monetization-results">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-white rounded-xl p-4 border border-blue-200">
+                        <div className="text-sm text-gray-500 mb-1">Writing Profit</div>
+                        <div className="text-2xl font-extrabold text-blue-600">${monetizationResult.writing.profit}</div>
+                        <div className="text-xs text-gray-400">
+                          Cost: ${monetizationResult.writing.cost} | Revenue: ${monetizationResult.writing.revenue}
+                        </div>
+                      </div>
+                      <div className="bg-white rounded-xl p-4 border border-purple-200">
+                        <div className="text-sm text-gray-500 mb-1">Speaking Profit</div>
+                        <div className="text-2xl font-extrabold text-purple-600">${monetizationResult.speaking.profit}</div>
+                        <div className="text-xs text-gray-400">
+                          Cost: ${monetizationResult.speaking.cost} | Revenue: ${monetizationResult.speaking.revenue}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-5 text-white">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-green-100">Total Monthly Profit</span>
+                        <span className="text-3xl font-extrabold">${monetizationResult.totals.profit}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-green-100">
+                        <span>Investment: ${monetizationResult.totals.investment}</span>
+                        <span>ROI: {monetizationResult.totals.roi_percent}%</span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+                      <div className="flex items-start gap-3">
+                        <Coins className="w-5 h-5 text-orange-600 mt-0.5" />
+                        <div>
+                          <div className="font-bold text-orange-800">Subscription Recovery</div>
+                          <div className="text-sm text-orange-600">
+                            Sell just <strong>{monetizationResult.subscription_recovery.writing_tests_needed} writing tests</strong> or{' '}
+                            <strong>{monetizationResult.subscription_recovery.speaking_tests_needed} speaking tests</strong> to recover a $500/mo subscription!
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-gray-400 py-8">
+                    <TrendingUp className="w-12 h-12 mb-3 opacity-30" />
+                    <p className="font-semibold">Adjust values and calculate</p>
+                    <p className="text-sm">to see your potential profits</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+        </div>
+      </section>
+
       {/* ROI Calculator Section */}
       <section id="calculator" className="py-20">
         <div className="max-w-6xl mx-auto px-6">
