@@ -33,12 +33,13 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await axios.post(`${API_URL}/auth/login`, { email, password });
-    const { access_token, user: userData } = response.data;
+    const { access_token, user: userData, requires_password_change } = response.data;
     localStorage.setItem('token', access_token);
     axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
     setToken(access_token);
     setUser(userData);
-    return userData;
+    // Return user data with password change flag for first login flow
+    return { ...userData, requires_password_change };
   };
 
   const register = async (data) => {
