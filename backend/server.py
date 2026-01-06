@@ -1498,71 +1498,82 @@ INDIVIDUAL_TEST_COSTS = {
 }
 
 # ==================== PAQUETES DE EXÁMENES B2B ====================
-# 4 PLANES BASE por número de exámenes
-# AI Tutor es ADD-ON opcional, no plan separado
-# MÁS VOLUMEN = MENOS PRECIO POR EXAMEN
+# PRECIOS BASADOS EN NÚMERO DE LICENCIAS/CLIENTES CONTRATADOS
+# Más licencias = Mejor precio, PERO siempre con márgenes saludables (30-50%)
+
+# Coste base por mock test: $0.94
+# Margen mínimo saludable: 30%
 
 EXAM_PACKAGES = {
-    # PLAN 1: 10 exámenes - Para probar / pequeños grupos
-    "plan_10": {
-        "mock_tests": 10,
-        "internal_cost": 9.40,  # 10 × $0.94
-        "price": 19.00,
+    # TIER 1: 1-20 clientes (pequeños grupos, profesores individuales)
+    "tier_1_20": {
+        "min_licenses": 1,
+        "max_licenses": 20,
+        "mock_tests_per_license": 10,
+        "internal_cost_per_license": 9.40,  # 10 × $0.94
+        "price_per_license": 19.00,
         "price_per_exam": 1.90,
-        "margin": 0.51,
-        "description": "10 Mock Tests",
-        "volume_discount": "0%",
-        "features": ["10 mock tests completos", "5 tipos de examen", "AI Speaking grading", "AI Writing feedback", "Dashboard básico"]
+        "margin": 0.51,  # 51% margen
+        "discount": "0%",
+        "description": "1-20 Licencias",
+        "features": ["10 mock tests por licencia", "5 tipos de examen", "AI Speaking + Writing", "Dashboard básico"]
     },
     
-    # PLAN 2: 20 exámenes - Pequeñas academias
-    "plan_20": {
-        "mock_tests": 20,
-        "internal_cost": 18.80,  # 20 × $0.94
-        "price": 29.00,
-        "price_per_exam": 1.45,
-        "margin": 0.35,
-        "description": "20 Mock Tests",
-        "volume_discount": "24%",
-        "features": ["20 mock tests completos", "5 tipos de examen", "AI Speaking grading", "AI Writing feedback", "Exportar resultados"]
+    # TIER 2: 21-100 clientes (academias pequeñas)
+    "tier_21_100": {
+        "min_licenses": 21,
+        "max_licenses": 100,
+        "mock_tests_per_license": 10,
+        "internal_cost_per_license": 9.40,
+        "price_per_license": 16.00,
+        "price_per_exam": 1.60,
+        "margin": 0.41,  # 41% margen
+        "discount": "16%",
+        "description": "21-100 Licencias",
+        "features": ["10 mock tests por licencia", "Analytics avanzado", "Exportar resultados", "Soporte email"]
     },
     
-    # PLAN 3: 40 exámenes - Academias medianas
-    "plan_40": {
-        "mock_tests": 40,
-        "internal_cost": 37.60,  # 40 × $0.94
-        "price": 49.00,
-        "price_per_exam": 1.23,
-        "margin": 0.23,
-        "description": "40 Mock Tests",
-        "volume_discount": "35%",
-        "features": ["40 mock tests completos", "5 tipos de examen", "Analytics avanzado", "Multi-estudiante", "Soporte email"]
+    # TIER 3: 101-500 clientes (academias medianas)
+    "tier_101_500": {
+        "min_licenses": 101,
+        "max_licenses": 500,
+        "mock_tests_per_license": 10,
+        "internal_cost_per_license": 9.40,
+        "price_per_license": 14.00,
+        "price_per_exam": 1.40,
+        "margin": 0.33,  # 33% margen
+        "discount": "26%",
+        "description": "101-500 Licencias",
+        "features": ["10 mock tests por licencia", "White-label básico", "API access", "Soporte prioritario"]
     },
     
-    # PLAN 4: 100 exámenes - Instituciones grandes
-    "plan_100": {
-        "mock_tests": 100,
-        "internal_cost": 94.00,  # 100 × $0.94
-        "price": 99.00,
-        "price_per_exam": 0.99,
-        "margin": 0.05,
-        "description": "100 Mock Tests",
-        "volume_discount": "48%",
-        "features": ["100 mock tests completos", "5 tipos de examen", "White-label", "API access", "Account manager"]
+    # TIER 4: 500+ clientes (instituciones grandes)
+    "tier_500_plus": {
+        "min_licenses": 501,
+        "max_licenses": 10000,
+        "mock_tests_per_license": 10,
+        "internal_cost_per_license": 9.40,
+        "price_per_license": 12.50,
+        "price_per_exam": 1.25,
+        "margin": 0.25,  # 25% margen (mínimo para enterprise)
+        "discount": "34%",
+        "description": "500+ Licencias",
+        "features": ["10 mock tests por licencia", "White-label completo", "API + Webhooks", "Account manager dedicado"]
     }
 }
 
 # ==================== AI TUTOR ADD-ON ====================
-# Se añade a cualquier plan, precio por minutos
+# Se añade a cualquier tier, precio por minutos
+# Márgenes saludables 40-60%
 AI_TUTOR_ADDON = {
-    "price_per_minute": 0.15,  # Precio venta por minuto
+    "price_per_minute": 0.20,  # Precio venta por minuto
     "internal_cost_per_minute": 0.06,  # Coste interno
-    "margin": 0.60,
+    "margin": 0.70,  # 70% margen en AI Tutor
     "packages": {
-        "tutor_30": {"minutes": 30, "price": 4.50, "internal_cost": 1.80},
-        "tutor_60": {"minutes": 60, "price": 8.00, "internal_cost": 3.60},
-        "tutor_120": {"minutes": 120, "price": 14.00, "internal_cost": 7.20},
-        "tutor_300": {"minutes": 300, "price": 30.00, "internal_cost": 18.00},
+        "tutor_30": {"minutes": 30, "price": 6.00, "internal_cost": 1.80, "margin": 0.70},
+        "tutor_60": {"minutes": 60, "price": 12.00, "internal_cost": 3.60, "margin": 0.70},
+        "tutor_120": {"minutes": 120, "price": 22.00, "internal_cost": 7.20, "margin": 0.67},
+        "tutor_300": {"minutes": 300, "price": 50.00, "internal_cost": 18.00, "margin": 0.64},
     }
 }
 
