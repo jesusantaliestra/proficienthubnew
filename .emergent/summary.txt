@@ -2,101 +2,91 @@
 
 **PRODUCT REQUIREMENTS:**
 - **Core Functionality:** Real-time mock exams, instant premium AI feedback, and AI teacher agents for each exam.
-- **B2B Focus:** An institutional dashboard with advanced student metrics (risk of failure, probability of passing, engagement) and a library for institutions to upload their own materials (videos, audio, documents) for offline student access.
-- **Homepage:** Must be B2B-centric and include an ROI calculator demonstrating value (e.g., increased student capacity with the same number of teachers, reduced no-show rates).
-- **Pricing:** A dynamic, per-student pricing model that scales with volume. Must have different tiers based on credit usage (e.g., Basic, Medium, Intensive) and the number of exams purchased. Profit margins should be 70-90%.
-- **AI Integrations:** Use ElevenLabs for voice, and OpenAI/Claude/Gemini for AI tutors and feedback.
-- **Admin Panel:** A dashboard for administrators to input API keys and view internal metrics like profit margins.
+- **B2B Focus:** An institutional dashboard with advanced student metrics, a library for institutions to upload their own materials, and a separate student portal.
+- **Homepage:** Must be B2B-centric and include an ROI calculator.
+- **Pricing:** A dynamic, per-student pricing model with credit-based tiers and separate packages for tests.
+- **White-Labeling:** Institutions must be able to use the platform with their own branding.
+- **Authentication:** Provisional credentials for new students with a forced password change on the first login.
+- **AI Integrations:** Use OpenAI for AI tutors, feedback, TTS, and STT. ElevenLabs to be integrated later.
+- **Admin Panel:** A dashboard for administrators to manage users, view metrics, and configure API keys.
 - **Payments:** Stripe integration.
-- **Localization:** The platform should be in English but support translation into ~200 languages.
-- **Design:** Duolingo-like aesthetic (bright green, light backgrounds, friendly but professional) with a different logo.
+- **Localization:** The platform should support ~200 languages.
+- **Design:** Duolingo-like aesthetic (bright green, light backgrounds).
 
 **User's preferred language**: Español
 
 **what currently exists?**
-A full-stack application foundation using FastAPI, React, and MongoDB has been established. The frontend features a Duolingo-inspired design theme. The landing page is the most developed part, including:
-- A B2B-focused messaging.
-- A dynamic ROI calculator that estimates benefits based on the number of teachers and students.
-- A dynamic pricing calculator with a slider to select the number of students, which then displays the per-student price based on volume tiers.
-
-Backend endpoints exist for health checks and to serve the dynamic pricing calculations. Placeholder pages for authentication, dashboards, and the exam simulator have been created but lack full functionality.
+A full-stack application (FastAPI, React, MongoDB) with a significant number of features implemented.
+- **Frontend:** A Duolingo-inspired landing page with a dynamic ROI and pricing calculator. A functional Admin Panel, AI Tutor with voice (OpenAI TTS/STT), and full Exam Simulators for 5 different exam types. Placeholders and initial structures for a separate student portal and white-labeling have been created.
+- **Backend:** Robust API with endpoints for Stripe payments (test mode), user management, admin statistics, OpenAI TTS/STT, and serving a massive bank of 100 complete exams (20 for each of the 5 types).
+- **Authentication:** The auth system is currently being refactored to support a new B2B flow with provisional credentials for students.
 
 **Last working item**:
-- **Last item agent was working:** The agent was in the process of refining the pricing model based on detailed user feedback. The task was to implement a three-tiered credit system (e.g., Basic - 50 credits, Medium - 100, Intensive - 200) that accounts for AI writing feedback and AI teacher usage. This required updating both the backend logic and the frontend UI to allow users to select a plan.
+- **Last item agent was working:** Implementing a major user request for premium SaaS features. This includes: fixing the login page UI, creating a separate student portal with white-labeling capabilities, and implementing a system for provisional student credentials with a mandatory password change on the first login. The agent was in the middle of adding the required backend endpoints to  to support this new authentication and user management flow.
 - **Status:** IN PROGRESS
 - **Agent Testing Done:** N
 - **Which testing method agent to use?** both
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: Refine Credit & Pricing System (P0)**
-  - **Description:** The current pricing model needs to be updated to a three-tier credit system (e.g., Basic, Medium, Intensive) with clear options for purchasing additional credits. The public-facing UI must not display internal financial data like AI costs or profit margins.
-  - **Attempted fixes:** The agent has iterated on the pricing model three times, moving from static plans to a dynamic per-student calculation. The last change began incorporating credit tiers.
+- **Issue 1: Implement Premium B2B Auth & Portal (P0)**
+  - **Description:** The user wants a complete B2B workflow: institutions should be able to create students, who receive temporary credentials, are forced to change their password on first login, and access a separate, white-labeled student portal. This also involves fixing a UI overlap issue on the login page.
+  - **Attempted fixes:** The agent has already created new frontend pages (, ), updated the  page, and started adding new models and endpoints to .
   - **Next debug checklist:**
     1.  **Backend ():**
-        -   Modify the  endpoint to define and return three distinct credit plans (e.g., 50, 100, 200 credits) with different price points and features.
-        -   Update the AI cost calculation to be more detailed, factoring in writing feedback and AI teacher usage as requested.
+        -   Finalize the  endpoint to return a  flag.
+        -   Implement the  logic for first-time users.
+        -   Complete the  endpoint for creating students with provisional passwords.
+        -   Implement the  endpoint to manage white-label configuration (logo, name).
+        -   Add logic to manage student credits.
     2.  **Frontend ():**
-        -   Add a UI selector for the user to choose between the 'Basic', 'Medium', and 'Intensive' credit plans.
-        -   Remove the text displaying AI cost and Margin from the pricing calculator's public view.
-        -   Add a visible call-to-action or text indicating that more credits can be purchased.
-        -   Correct the text in the ROI calculator to clarify it increases teacher capacity, not replaces them.
-        -   Ensure pricing examples shown in tables are for student counts that are valid for that tier.
-  - **Why fix this issue and what will be achieved with the fix?** This is a critical business requirement from the user to finalize the platform's core monetization strategy before implementing other features.
+        -   Add routes for , , and protect them.
+        -   Add logic to redirect users to  if  is true after login.
+    3.  **Frontend (Component Logic):**
+        -   Implement the logic in  to fetch and display institution-specific branding and assigned exams.
+        -   Ensure the UI fix in  is correctly rendered.
+  - **Why fix this issue and what will be achieved with the fix?** This is a core requirement for the B2B SaaS model and is essential for the product's market viability.
   - **Status:** IN PROGRESS
-  - **Is recurring issue?** Y
+  - **Is recurring issue?** N
   - **Should Test frontend/backend/both after fix?** both
   - **Blocked on other issue:** None
 
-- **Issue 2: Made with Emergent Badge Removal (P1)**
-  - **Description:** The user wants to remove the Made with Emergent badge visible in the preview. The agent has correctly identified this as a feature of the preview environment, not part of the application's code.
-  - **Attempted fixes:** None, as it's outside the codebase.
-  - **Next debug checklist:** Communicate clearly to the user that this badge is part of the preview system and will not be present in a final deployment. No further coding action is possible.
-  - **Why fix this issue and what will be achieved with the fix?** To manage user expectations regarding branding in the final product.
-  - **Status:** BLOCKED
-  - **Is recurring issue?** Y
-  - **Should Test frontend/backend/both after fix?** NA
-  - **Blocked on other issue:** None
-
 **In progress Task List**:
-- **Task 1: Implement Final Pricing & Credit System (P0)**
-  - **Description:** This task is the implementation of Issue 1.
-  - **Where to resume:** The agent was creating a new plan to implement the detailed, multi-tier credit system. The next step is to execute this plan by modifying  and .
-  - **What will be achieved with this?** A finalized, user-approved pricing model that will serve as the foundation for the payment and subscription system.
+- **Task 1: Complete Premium B2B Feature Implementation (P0)**
+  - **Description:** This is the implementation of Issue 1.
+  - **Where to resume:** The agent has just added new endpoints to . The next step is to finalize the implementation of these backend endpoints, connect the new frontend pages in , restart services, and begin end-to-end testing of the new flow.
+  - **What will be achieved with this?** A fully functional, multi-tenant B2B authentication system with white-labeling capabilities.
   - **Status:** IN PROGRESS
   - **Should Test frontend/backend/both after fix?** both
   - **Blocked on something:** None
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-  - **P0: Implement ElevenLabs & Voice Features:** Integrate the ElevenLabs API for text-to-speech in AI agent interactions and speaking tests. The agent has the playbook but is pending an API key from the user.
-  - **P1: Build Institutional Dashboard Features:** Implement the media library where institutions can upload/manage their own content (videos, audio, flashcards) for students. Add offline access functionality.
-  - **P1: Build Admin Panel:** Create a new section/page for administrators to manage API keys and view internal business metrics (like the cost/margin data that was removed from the landing page).
+  - **P0: UI for Exam Selection:** Add a dropdown or selector in the UI () to allow users to choose a specific exam number (e.g., IELTS Exam #1 through #20), as currently only the first one is accessible.
+  - **P1: Full Admin Panel Functionality:** Build out the Users, Revenue, and API Keys sections in the  to be fully interactive, allowing admins to manage users, view financial reports, and update API keys.
+  - **P1: Whitelabel Management UI:** Create a UI for institution admins to upload their logo and set their brand name/colors.
 - **Future Tasks:**
-  - **P2: Build Core Exam Simulators:** Develop the full functionality for taking mock exams for TOEFL, IELTS, etc., in real-time conditions.
-  - **P2: Full AI Tutor and Feedback Integration:** Integrate OpenAI/Claude/Gemini to provide conversational tutoring and instant feedback on writing assignments.
-  - **P2: Stripe Payment Integration:** Implement the full payment and subscription workflow using Stripe.
-  - **P3: Multi-language Support:** Implement the i18n framework across the entire application to support translations.
-  - **P3: Mobile App Development:** Address the user's initial request for a mobile version of the application.
+  - **P2: Institutional Media Library & Offline Content:** Implement the feature allowing institutions to upload their own materials (video, audio, docs) and make them available to their students offline.
+  - **P2: ElevenLabs Integration:** Switch from OpenAI TTS to ElevenLabs once the user provides the API key.
+  - **P2: Gamification:** Implement a system of badges, points, and leaderboards to increase student engagement.
+  - **P3: Full Multi-language Implementation:** Integrate the  file across all frontend components to enable dynamic language switching.
 
 **Completed work in this session**
-- **Project Scaffolding:** Set up the initial full-stack application with FastAPI and React.
-- **UI/UX Design:** Implemented a Duolingo-style theme with a light background and bright green accents.
-- **Landing Page Development:** Created and iteratively refined the landing page, including:
-  - B2B-focused messaging.
-  - A dynamic ROI calculator.
-  - A dynamic, per-student, volume-based pricing calculator.
-- **Backend Foundation:** Created basic API endpoints for health checks and pricing calculations in .
-- **Component Placeholders:** Created placeholder files for all major features (Auth, Dashboards, Exam Simulator, AI Tutor).
-- **Documentation:** Created and updated a  file in the  directory.
+- **Stripe & Pricing Model:** Implemented a full pricing model with separate test packages, a monetization calculator for institutions, and integrated Stripe (test mode) for checkout.
+- **Admin Panel:** Created a functional admin panel at  displaying key metrics and promoted a user () to admin.
+- **AI Voice Integration:** Integrated OpenAI TTS (text-to-speech) and STT (speech-to-text) into the AI Tutor, enabling voice conversations.
+- **Full Exam Simulators:** Built and populated functional, timed exam simulators for TOEFL, IELTS, Cambridge, PTE, and OET.
+- **Massive Content Generation:** Created a bank of 100 complete exams (20 for each of the 5 types), including reading passages, questions, and writing/speaking prompts.
+- **Core Feature Scaffolding:** Implemented the basic structure for multi-language support (, ) and offline mode ().
+- **Testing:** Successfully ran comprehensive test suites using the testing agent, achieving 100% pass rates on implemented features.
 
 **Earlier issues found/mentioned but not fixed**
-The main issues are large, pending features from the original request that have not been implemented yet. These are covered in the **Upcoming and Future Tasks** section. There are no known bugs from the last test run that were left unfixed.
+- **Made with Emergent Badge:** The user has previously asked to remove this. This is a feature of the preview environment and is outside the application's codebase. It will not appear in a production deployment.
 
 **Known issue recurrence from previous fork**
-- **Issue recurrence in previous fork:** None.
-- **Recurrence count:** 0
-- **Status:** NA
+- **Issue recurrence in previous fork:** The Made with Emergent badge was also mentioned in the previous handoff summary.
+- **Recurrence count:** 1
+- **Status:** BLOCKED
 
 **Code Architecture**
 
@@ -106,79 +96,87 @@ The main issues are large, pending features from the original request that have 
 - **Frontend:** React, Tailwind CSS
 - **UI Components:** Shadcn/UI
 - **Database:** MongoDB
-- **Authentication:** JWT (planned, basic structure exists)
+- **Payments:** Stripe API
+- **AI/Voice:** OpenAI TTS & STT via 
 
 **key DB schema**
-No database models have been formally coded yet. The planned models are:
-- **User:** (institution, student, admin types)
-- **Exam:** (type, sections, questions)
-- **ExamAttempt:** (user_id, exam_id, scores, answers)
-- **Subscription:** (institution_id, plan_type, status)
+- **users:** 
+- **institutions:** 
+- **subscriptions:** 
+- **exam_attempts:** 
 
 **changes in tech stack**
-None.
+-  library has been installed and is used for Stripe and OpenAI integrations.
 
 **All files of reference**
-- **/app/backend/server.py:** The single source for all backend logic, including API endpoints for pricing, which has been heavily modified.
-- **/app/frontend/src/pages/Landing.jsx:** The most modified frontend file, containing the ROI calculator, pricing slider, and plan display.
-- **/app/frontend/src/index.css:** Defines the global styles and theme (e.g., Duolingo-style colors).
-- **/app/frontend/src/pages/InstitutionDashboard.jsx:** Placeholder for the institutional user, updated with a placeholder for the media library.
-- **/app/memory/PRD.md:** Project requirements document, updated after major iterations.
-- **/app/frontend/src/contexts/AuthContext.jsx:** Basic structure for handling authentication state.
+- **/app/backend/server.py:** Heavily modified to add Stripe, Admin stats, AI voice, full exam logic, and the new B2B auth endpoints.
+- **/app/frontend/src/pages/Auth.jsx:** Overwritten to fix UI and prepare for the provisional credential flow.
+- **/app/frontend/src/App.js:** Modified to add routes for the admin panel, exam simulators, AI tutor, and the new student portal.
+- **/app/frontend/src/pages/StudentPortal.jsx:** New file for the white-labeled student view.
+- **/app/frontend/src/pages/ChangePassword.jsx:** New file for the mandatory password change flow.
+- **/app/frontend/src/pages/AdminPanel.jsx:** New file for the admin dashboard.
+- **/app/frontend/src/pages/ExamSimulator.jsx:** Overwritten with full exam functionality.
+- **/app/frontend/src/pages/AITutor.jsx:** Overwritten with voice integration.
+- **/app/backend/exam_questions.py & /app/backend/exam_banks/**: New files containing the 100 complete exams.
 
 **key api endpoints**
-- : Health check.
-- : Returns the available pricing plans/tiers. (Heavily modified).
-- : Calculates dynamic pricing based on student count. (Heavily modified).
-- : User registration.
-- : User login.
-- : Placeholder for the institutional media library.
+- , , 
+- , 
+- , 
+- 
+- , 
+- 
+- 
+- 
+- 
 
 **Critical Info for New Agent**
-- The user is very hands-on and provides frequent, detailed feedback. Be prepared to pivot and iterate on features, especially pricing and UI, multiple times.
-- The current, most critical task is to finalize the pricing and credit system as described in **Pending Issue 1**. Do not proceed to other features until this is approved by the user.
-- The agent has already obtained the integration playbook for ElevenLabs and is waiting for the user to provide an API key. This is the next logical task after the pricing model is finalized.
-- The Made with Emergent badge is a known issue that cannot be fixed via code. Inform the user it is part of the preview environment only.
+- **Priority #1 is completing the B2B authentication and student portal flow.** The user has just requested this, and the previous agent left off mid-implementation. Do not start any other task until this is finished and verified.
+- The user is very detail-oriented and expects a premium, top SaaS experience. Pay close attention to details like white-labeling and user experience flows.
+- The user wants to use OpenAI TTS for now but will switch to ElevenLabs later. The necessary playbooks have been acquired.
+- The Made with Emergent badge is a known, non-fixable issue of the preview environment. Inform the user of this if it comes up again.
 
 **documents and test reports created in this job**
 - /app/memory/PRD.md
-- /app/test_reports/iteration_1.json
-- /app/test_reports/iteration_2.json
+- /app/memory/EXAM_BANK_SUMMARY.md
+- /app/test_reports/iteration_3.json
+- /app/test_reports/iteration_4.json
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Msg 122):** Re-iterates the need for an Intensive Use plan and to factor in AI writing feedback and AI teacher usage into the cost calculations. (In Progress)
-2.  **User (Msg 121):** Same as above, initial message.
-3.  **Agent (Msg 120):** Acknowledges restarting services.
-4.  **Agent (Msg 118-119):** Overwrites  with changes.
-5.  **Agent (Msg 117):** States it will now update the frontend.
-6.  **Agent (Msg 116):** Updates  with pricing changes.
-7.  **Agent (Msg 115):** Creates a 5-point plan to address the user's latest feedback. (Completed)
-8.  **User (Msg 114):** Major feedback: requests credit tiers (Basic/Medium/Intensive), wants margin info removed from UI, wants ROI calculator text clarified, points out confusing pricing examples, and asks for a buy more credits option. (In Progress)
-9.  **Agent (Msg 113):** Asks the user for their ElevenLabs API key. (Pending Human Response)
-10. **Agent (Msg 112):** Acknowledges receiving the ElevenLabs playbook. (Completed)
+1.  **User (Msg 200):** Requests a major feature set: fix login UI overlap, implement provisional credentials with forced password change, create a separate student portal with white-labeling, and add a credit system for students. (IN PROGRESS)
+2.  **User (Msg 167):** Requests 20 complete exams for each exam type. (DONE)
+3.  **User (Msg 162):** Confirms the next steps are full exam simulators, AI tutor with voice, offline mode, and multi-language support. (DONE)
+4.  **User (Msg 97):** Instructs agent to use OpenAI TTS with the Emergent Key for now, and ElevenLabs later. (DONE)
+5.  **User (Msg 96):** Asks for access to the Admin Panel. (DONE)
+6.  **User (Msg 71):** Repeats the request for the admin panel URL. (DONE)
+7.  **User (Msg 65):** Asks for the control panel URL and credentials for a specific email. (DONE - user created)
+8.  **User (Msg 62):** Specifies the next major tasks after the pricing implementation. (DONE)
+9.  **User (Msg 5):** Provides detailed requirements for the pricing model, including separate packages for tests, a monetization calculator, and confirms Stripe integration. (DONE)
+10. **Agent (Msg 4):** Sent initial plan to user for approval. (DONE)
 
 **Project Health Check:**
-- **Functional:** The landing page and its calculators are functional.
-- **Mocked:** Authentication, all dashboards (institution, student, admin), exam simulators, and AI tutor features are placeholders or non-functional.
-- **Broken:** No core functionality is broken, as it hasn't been fully built yet.
+- **Functional:** Landing page, pricing calculators, admin panel (stats view), AI Tutor, and Exam Simulators.
+- **Mocked:** The user management and revenue sections of the admin panel are not yet interactive.
+- **Broken:** The authentication flow is currently mid-refactor. Logging in may not work as expected until the new B2B flow is complete.
 
 **3rd Party Integrations**
-- **ElevenLabs (Voice Generation):** Planned. Uses a User API Key. Agent has the playbook and is waiting for the key.
-- **OpenAI (Text Generation):** Planned. Will use the Emergent LLM Key.
-- **Stripe (Payments):** Planned. Requires a User API Key (though a test key may be available).
-- **Claude, Gemini, Perplexity (Text Generation):** Requested by user, not yet planned by the agent. Assumed to use Emergent LLM Key where applicable.
+- **Stripe (Payments):** Implemented (test mode). Requires a User API Key for production.
+- **OpenAI TTS/STT (Voice & AI):** Implemented. Uses Emergent LLM Key via .
+- **ElevenLabs (Voice Generation):** Planned. Will require a User API Key.
+- **OpenAI (Text Generation):** Implemented for AI Tutor. Uses Emergent LLM Key.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES (run twice).
+- **Testing agent used after significant changes:** YES (run multiple times, last for iteration_4).
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** None.
-- **Known regressions:** None.
+- **Known regressions:** The main login flow is intentionally being refactored and is temporarily broken.
 
 **Credentials to test flow:**
-No credentials are required to view the landing page. For testing auth, mock user credentials would need to be created and used against the  and  endpoints.
+- **Admin User:**
+  - **Email:** 
+  - **Password:** 
+  - **URL:** 
 
 **What agent forgot to execute**
-- The agent has not yet addressed the user's request to integrate **Claude, Perplexity, and Gemini**. It has focused only on OpenAI and ElevenLabs.
-- The agent has created a placeholder for multi-language support () but has not implemented the framework or translations anywhere.
-- The agent has not addressed the **offline functionality** requirement for the institutional library.
-- The agent has not started work on the **mobile app** aspect of the original request.</analysis>
+- After creating the bank of 100 exams, the agent correctly identified the need for a UI selector to choose between them but was redirected by the user to the new B2B auth feature before it could be implemented. This is now an upcoming task.
+- The initial requirement for an institutional media library with **offline access for custom content** has not been addressed yet. The current offline implementation only caches the application shell.</analysis>

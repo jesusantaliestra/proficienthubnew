@@ -127,11 +127,11 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - **Admin**: santaliestralimited@gmail.com / Admin123!
 
 ## URLs
-- Landing: https://langprep-2.preview.emergentagent.com
-- Login: https://langprep-2.preview.emergentagent.com/login
-- Admin: https://langprep-2.preview.emergentagent.com/admin
-- AI Tutor: https://langprep-2.preview.emergentagent.com/tutor/ielts
-- Exam: https://langprep-2.preview.emergentagent.com/exam/ielts
+- Landing: https://proficiencypal.preview.emergentagent.com
+- Login: https://proficiencypal.preview.emergentagent.com/login
+- Admin: https://proficiencypal.preview.emergentagent.com/admin
+- AI Tutor: https://proficiencypal.preview.emergentagent.com/tutor/ielts
+- Exam: https://proficiencypal.preview.emergentagent.com/exam/ielts
 
 ## Remaining Backlog
 
