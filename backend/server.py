@@ -224,7 +224,12 @@ async def login(credentials: UserLogin):
         language=user.get("language", "en")
     )
     
-    return TokenResponse(access_token=token, user=user_response)
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": user_response,
+        "requires_password_change": user.get("requires_password_change", False)
+    }
 
 @api_router.get("/auth/me", response_model=UserResponse)
 async def get_me(current_user: dict = Depends(get_current_user)):
