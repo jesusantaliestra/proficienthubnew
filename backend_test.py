@@ -110,12 +110,21 @@ class ProficientHubAPITester:
         }
         response = self.run_test("ROI Calculator", "POST", "pricing/calculate-roi", 200, roi_data)
         if response:
-            required_fields = ['additional_students', 'improved_pass_rate', 'estimated_revenue_increase']
+            required_fields = ['additional_students', 'improved_pass_rate', 'total_annual_benefit']
             missing_fields = [field for field in required_fields if field not in response]
             if not missing_fields:
                 self.log_test("ROI Calculator Response Structure", True, "All required fields present")
             else:
                 self.log_test("ROI Calculator Response Structure", False, f"Missing fields: {missing_fields}")
+        
+        # Test institutional pricing with exam count parameter
+        response = self.run_test("Institutional Pricing with Exam Count", "GET", "pricing/institutional?exam_count=1", 200)
+        if response and 'plans' in response:
+            self.log_test("Pricing with Exam Count", True, f"Found {len(response['plans'])} plans for 1 exam")
+        
+        response = self.run_test("Institutional Pricing 3+ Exams", "GET", "pricing/institutional?exam_count=3", 200)
+        if response and 'plans' in response:
+            self.log_test("Pricing with 3+ Exams", True, f"Found {len(response['plans'])} plans for 3+ exams")
 
     def test_exam_endpoints(self):
         """Test exam-related endpoints"""
