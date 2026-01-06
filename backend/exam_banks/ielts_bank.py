@@ -209,7 +209,7 @@ The deep sea also holds vast mineral resources. Polymetallic nodules containing 
 
 Understanding the deep ocean is increasingly urgent. These waters play crucial roles in regulating climate, cycling carbon, and maintaining global biodiversity. As surface oceans warm and acidify due to climate change, the impacts on deep-sea ecosystems remain largely unknown.""",
         "questions": [
-            {"id": "ielts_4_r1_q1", "type": "multiple_choice", "question": "How deep is the Challenger Deep?", "options": ["A) About 8,000 meters", "B) About 9,000 meters", "C": "About 10,000 meters", "D) About 11,000 meters"], "correct_answer": "D"},
+            {"id": "ielts_4_r1_q1", "type": "multiple_choice", "question": "How deep is the Challenger Deep?", "options": ["A) About 8,000 meters", "B) About 9,000 meters", "C) About 10,000 meters", "D) About 11,000 meters"], "correct_answer": "D"},
             {"id": "ielts_4_r1_q2", "type": "true_false_not_given", "question": "More people have visited the Challenger Deep than have walked on the Moon.", "options": ["True", "False", "Not Given"], "correct_answer": "False"},
             {"id": "ielts_4_r1_q3", "type": "multiple_choice", "question": "When were hydrothermal vents discovered?", "options": ["A) 1957", "B) 1967", "C) 1977", "D) 1987"], "correct_answer": "C"},
             {"id": "ielts_4_r1_q4", "type": "true_false_not_given", "question": "Deep-sea ecosystems rely entirely on photosynthesis.", "options": ["True", "False", "Not Given"], "correct_answer": "False"},
