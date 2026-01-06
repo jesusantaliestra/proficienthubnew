@@ -30,10 +30,11 @@ export default function Landing() {
   const [calculating, setCalculating] = useState(false);
   const [billingCycle, setBillingCycle] = useState('monthly');
   
-  // New exam package pricing state
-  const [selectedPackage, setSelectedPackage] = useState('growth_40_ai');
+  // New exam package pricing state - 4 simple plans
+  const [selectedPackage, setSelectedPackage] = useState('plan_40');
   const [numStudents, setNumStudents] = useState(20);
-  const [pricePerStudent, setPricePerStudent] = useState(60);
+  const [pricePerStudent, setPricePerStudent] = useState(30);
+  const [aiTutorMinutes, setAiTutorMinutes] = useState(0);
   const [examPackages, setExamPackages] = useState([]);
   const [packageRoiResult, setPackageRoiResult] = useState(null);
   
@@ -64,13 +65,13 @@ export default function Landing() {
   const calculatePackageROI = useCallback(async () => {
     try {
       const response = await axios.get(
-        `${API_URL}/pricing/roi-calculator?package_id=${selectedPackage}&num_students=${numStudents}&price_per_student=${pricePerStudent}`
+        `${API_URL}/pricing/roi-calculator?package_id=${selectedPackage}&num_students=${numStudents}&price_per_student=${pricePerStudent}&ai_tutor_minutes=${aiTutorMinutes}`
       );
       setPackageRoiResult(response.data);
     } catch (error) {
       console.error('ROI calculation error:', error);
     }
-  }, [selectedPackage, numStudents, pricePerStudent]);
+  }, [selectedPackage, numStudents, pricePerStudent, aiTutorMinutes]);
 
   useEffect(() => {
     if (selectedPackage && numStudents > 0) {
