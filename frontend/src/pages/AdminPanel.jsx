@@ -465,51 +465,6 @@ export default function AdminPanel() {
                     </CardContent>
                   </Card>
                 )}
-                            <th className="text-right py-3 px-4 font-bold text-green-600">GANANCIA</th>
-                            <th className="text-center py-3 px-4 font-bold text-gray-700">MARGEN</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {pricingAnalysis.package_analysis.map((pkg, index) => (
-                            <tr key={pkg.package_id} className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                              <td className="py-4 px-4">
-                                <span className="font-semibold text-gray-900">{pkg.package_id.replace(/_/g, ' ').toUpperCase()}</span>
-                              </td>
-                              <td className="text-center py-4 px-4">{pkg.mock_tests}</td>
-                              <td className="text-center py-4 px-4">
-                                {pkg.ai_tutor_minutes > 0 ? `${pkg.ai_tutor_minutes} min` : '-'}
-                              </td>
-                              <td className="text-right py-4 px-4">
-                                <span className="font-bold text-red-600 bg-red-50 px-3 py-1 rounded-lg">
-                                  ${pkg.internal_cost.toFixed(2)}
-                                </span>
-                              </td>
-                              <td className="text-right py-4 px-4">
-                                <span className="font-bold text-blue-600">
-                                  ${pkg.price.toFixed(2)}
-                                </span>
-                              </td>
-                              <td className="text-right py-4 px-4">
-                                <span className="font-bold text-green-600 bg-green-50 px-3 py-1 rounded-lg">
-                                  ${pkg.profit.toFixed(2)}
-                                </span>
-                              </td>
-                              <td className="text-center py-4 px-4">
-                                <Badge className={`${
-                                  pkg.margin_percentage === '90%' ? 'bg-green-100 text-green-700' :
-                                  pkg.margin_percentage === '80%' ? 'bg-blue-100 text-blue-700' :
-                                  'bg-orange-100 text-orange-700'
-                                }`}>
-                                  {pkg.margin_percentage}
-                                </Badge>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardContent>
-                </Card>
 
                 {/* Resumen de Fórmulas */}
                 <Card className="bg-yellow-50 border-yellow-200">
