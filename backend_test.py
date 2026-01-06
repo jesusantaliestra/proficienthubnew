@@ -104,8 +104,9 @@ class ProficientHubAPITester:
         roi_data = {
             "current_students": 100,
             "current_teachers": 5,
-            "current_pass_rate": 0.65,
-            "current_no_show_rate": 0.20
+            "current_pass_rate": 65,
+            "current_no_show_rate": 20,
+            "teacher_salary": 3000
         }
         response = self.run_test("ROI Calculator", "POST", "pricing/calculate-roi", 200, roi_data)
         if response:
