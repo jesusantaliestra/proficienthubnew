@@ -459,7 +459,7 @@ async def delete_library_item(item_id: str, current_user: dict = Depends(get_cur
 
 # ==================== EXAM ENDPOINTS ====================
 
-from exam_questions import get_exam_questions, get_mock_test_config, READING_PASSAGES, WRITING_TASKS, SPEAKING_PROMPTS, MOCK_TESTS
+from exam_questions import get_exam_questions, get_mock_test_config, get_full_exam, get_available_exams, SPEAKING_PROMPTS, WRITING_TASKS, MOCK_TESTS
 
 EXAM_TYPES = ["toefl", "ielts", "cambridge", "pte", "oet"]
 EXAM_SECTIONS = {
@@ -475,6 +475,7 @@ async def get_exam_types():
     return {
         "exam_types": EXAM_TYPES,
         "sections": EXAM_SECTIONS,
+        "total_exams_per_type": 20,
         "descriptions": {
             "toefl": "Test of English as a Foreign Language - Academic English proficiency",
             "ielts": "International English Language Testing System - Global recognition",
@@ -485,11 +486,46 @@ async def get_exam_types():
         "mock_tests": {exam: get_mock_test_config(exam) for exam in EXAM_TYPES}
     }
 
-@api_router.get("/exams/{exam_type}/mock-test")
-async def get_full_mock_test(exam_type: str, current_user: dict = Depends(get_current_user)):
-    """Get a complete mock test with all sections"""
+@api_router.get("/exams/{exam_type}/available")
+async def get_available_exam_list(exam_type: str):
+    """Get list of all 20 available exams for an exam type"""
     if exam_type not in EXAM_TYPES:
         raise HTTPException(status_code=400, detail="Invalid exam type")
+    return get_available_exams(exam_type)
+
+@api_router.get("/exams/{exam_type}/full/{exam_number}")
+async def get_complete_exam(exam_type: str, exam_number: int, current_user: dict = Depends(get_current_user)):
+    """Get a complete exam (1-20) with all sections"""
+    if exam_type not in EXAM_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid exam type")
+    if exam_number < 1 or exam_number > 20:
+        raise HTTPException(status_code=400, detail="Exam number must be between 1 and 20")
+    
+    exam_data = get_full_exam(exam_type, exam_number)
+    
+    # Create exam session
+    session_id = str(uuid.uuid4())
+    await db.exam_sessions.insert_one({
+        "id": session_id,
+        "user_id": current_user["id"],
+        "exam_type": exam_type,
+        "exam_number": exam_number,
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "status": "in_progress",
+        "sections_completed": []
+    })
+    
+    exam_data["session_id"] = session_id
+    return exam_data
+
+@api_router.get("/exams/{exam_type}/mock-test")
+async def get_full_mock_test(exam_type: str, exam_number: int = 1, current_user: dict = Depends(get_current_user)):
+    """Get a complete mock test with all sections (default exam 1, can specify 1-20)"""
+    if exam_type not in EXAM_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid exam type")
+    
+    if exam_number < 1 or exam_number > 20:
+        exam_number = 1
     
     config = get_mock_test_config(exam_type)
     sections_data = {}
@@ -501,7 +537,7 @@ async def get_full_mock_test(exam_type: str, current_user: dict = Depends(get_cu
         if simple_section in ["reading", "listening", "writing", "speaking"]:
             sections_data[section_name] = {
                 "info": section_info,
-                "questions": get_exam_questions(exam_type, simple_section, 5)
+                "questions": get_exam_questions(exam_type, simple_section, 5, exam_number)
             }
     
     # Create mock test session
@@ -510,6 +546,7 @@ async def get_full_mock_test(exam_type: str, current_user: dict = Depends(get_cu
         "id": session_id,
         "user_id": current_user["id"],
         "exam_type": exam_type,
+        "exam_number": exam_number,
         "started_at": datetime.now(timezone.utc).isoformat(),
         "status": "in_progress",
         "sections_completed": []
@@ -518,6 +555,8 @@ async def get_full_mock_test(exam_type: str, current_user: dict = Depends(get_cu
     return {
         "session_id": session_id,
         "exam_type": exam_type,
+        "exam_number": exam_number,
+        "total_exams_available": 20,
         "config": config,
         "sections": sections_data
     }
