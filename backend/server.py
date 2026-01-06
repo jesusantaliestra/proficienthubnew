@@ -254,6 +254,349 @@ async def update_settings(settings: SettingsUpdate, current_user: dict = Depends
     
     return {"message": "Settings updated successfully"}
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@api_router.post("/auth/change-password")
+async def change_password(request: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
+    """Change user password - required on first login with provisional credentials"""
+    # Verify current password
+    if not verify_password(request.current_password, current_user["password_hash"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    # Validate new password strength
+    if len(request.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    
+    # Update password and mark as changed
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {
+            "$set": {
+                "password_hash": hash_password(request.new_password),
+                "requires_password_change": False,
+                "password_changed_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {"message": "Password changed successfully"}
+
+# ==================== WHITE-LABEL & INSTITUTION BRANDING ====================
+
+class InstitutionBrandingUpdate(BaseModel):
+    name: str
+    logo_url: Optional[str] = None
+    primary_color: str = "#58CC02"
+    secondary_color: str = "#46A302"
+    tagline: Optional[str] = None
+    custom_domain: Optional[str] = None
+    hide_powered_by: bool = True
+
+@api_router.get("/institution/branding/{slug}")
+async def get_institution_branding(slug: str):
+    """Get institution branding for white-label portal"""
+    institution = await db.users.find_one(
+        {"institution_slug": slug, "user_type": "institution"},
+        {"_id": 0, "branding": 1, "institution_name": 1}
+    )
+    
+    if not institution:
+        raise HTTPException(status_code=404, detail="Institution not found")
+    
+    branding = institution.get("branding", {})
+    return {
+        "name": branding.get("name", institution.get("institution_name", "Student Portal")),
+        "logo": branding.get("logo_url"),
+        "primaryColor": branding.get("primary_color", "#58CC02"),
+        "secondaryColor": branding.get("secondary_color", "#46A302"),
+        "tagline": branding.get("tagline", "Access your exam preparation materials"),
+        "hide_powered_by": branding.get("hide_powered_by", True)
+    }
+
+@api_router.put("/institution/branding")
+async def update_institution_branding(
+    branding: InstitutionBrandingUpdate, 
+    current_user: dict = Depends(get_current_user)
+):
+    """Update institution branding settings (white-label)"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can update branding")
+    
+    # Generate slug from name if not exists
+    slug = current_user.get("institution_slug")
+    if not slug:
+        slug = branding.name.lower().replace(" ", "-").replace("'", "")[:50]
+        # Ensure unique slug
+        existing = await db.users.find_one({"institution_slug": slug})
+        if existing and existing["id"] != current_user["id"]:
+            slug = f"{slug}-{current_user['id'][:8]}"
+    
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {
+            "$set": {
+                "institution_slug": slug,
+                "branding": {
+                    "name": branding.name,
+                    "logo_url": branding.logo_url,
+                    "primary_color": branding.primary_color,
+                    "secondary_color": branding.secondary_color,
+                    "tagline": branding.tagline,
+                    "custom_domain": branding.custom_domain,
+                    "hide_powered_by": branding.hide_powered_by
+                }
+            }
+        }
+    )
+    
+    return {
+        "message": "Branding updated successfully",
+        "student_portal_url": f"/student-portal/{slug}"
+    }
+
+@api_router.get("/institution/branding")
+async def get_my_branding(current_user: dict = Depends(get_current_user)):
+    """Get current institution's branding settings"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can access branding")
+    
+    return {
+        "slug": current_user.get("institution_slug"),
+        "branding": current_user.get("branding", {}),
+        "student_portal_url": f"/student-portal/{current_user.get('institution_slug', '')}" if current_user.get("institution_slug") else None
+    }
+
+# ==================== STUDENT MANAGEMENT WITH CREDITS ====================
+
+class StudentCreateWithCredits(BaseModel):
+    email: str
+    name: str
+    exam_type: str  # The exam they are preparing for
+    credits: int = 100  # Default credits
+    
+@api_router.post("/institution/students/create")
+async def create_student_with_credentials(
+    student_data: StudentCreateWithCredits,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a student with provisional credentials and credits"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can create students")
+    
+    # Check if email already exists
+    existing = await db.users.find_one({"email": student_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Generate provisional password
+    import secrets
+    import string
+    provisional_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+    
+    student_id = str(uuid.uuid4())
+    student_doc = {
+        "id": student_id,
+        "email": student_data.email,
+        "name": student_data.name,
+        "password_hash": hash_password(provisional_password),
+        "user_type": "student",
+        "institution_id": current_user["id"],
+        "institution_slug": current_user.get("institution_slug"),
+        "institution_name": current_user.get("institution_name"),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "requires_password_change": True,  # Must change on first login
+        "provisional_password": provisional_password,  # Store temporarily for display
+        "credits": student_data.credits,
+        "credits_used": 0,
+        "current_exam": student_data.exam_type,
+        "exam_access": [student_data.exam_type],  # Only one exam at a time
+        "status": "active",
+        "language": "en",
+        "settings": {}
+    }
+    
+    await db.users.insert_one(student_doc)
+    
+    return {
+        "id": student_id,
+        "email": student_data.email,
+        "name": student_data.name,
+        "provisional_password": provisional_password,
+        "credits": student_data.credits,
+        "exam_type": student_data.exam_type,
+        "message": "Student created. Share the provisional password with the student. They will be required to change it on first login."
+    }
+
+@api_router.post("/institution/students/bulk-create")
+async def bulk_create_students(
+    students: List[StudentCreateWithCredits],
+    current_user: dict = Depends(get_current_user)
+):
+    """Create multiple students at once"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can create students")
+    
+    created = []
+    errors = []
+    
+    for student_data in students:
+        try:
+            existing = await db.users.find_one({"email": student_data.email})
+            if existing:
+                errors.append({"email": student_data.email, "error": "Email already exists"})
+                continue
+            
+            import secrets
+            import string
+            provisional_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+            
+            student_id = str(uuid.uuid4())
+            student_doc = {
+                "id": student_id,
+                "email": student_data.email,
+                "name": student_data.name,
+                "password_hash": hash_password(provisional_password),
+                "user_type": "student",
+                "institution_id": current_user["id"],
+                "institution_slug": current_user.get("institution_slug"),
+                "institution_name": current_user.get("institution_name"),
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "requires_password_change": True,
+                "provisional_password": provisional_password,
+                "credits": student_data.credits,
+                "credits_used": 0,
+                "current_exam": student_data.exam_type,
+                "exam_access": [student_data.exam_type],
+                "status": "active",
+                "language": "en",
+                "settings": {}
+            }
+            
+            await db.users.insert_one(student_doc)
+            created.append({
+                "email": student_data.email,
+                "name": student_data.name,
+                "provisional_password": provisional_password,
+                "credits": student_data.credits
+            })
+        except Exception as e:
+            errors.append({"email": student_data.email, "error": str(e)})
+    
+    return {
+        "created_count": len(created),
+        "error_count": len(errors),
+        "created": created,
+        "errors": errors
+    }
+
+@api_router.put("/institution/students/{student_id}/credits")
+async def update_student_credits(
+    student_id: str,
+    credits: int,
+    current_user: dict = Depends(get_current_user)
+):
+    """Add or update student credits"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can manage credits")
+    
+    student = await db.users.find_one({
+        "id": student_id,
+        "institution_id": current_user["id"]
+    })
+    
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    await db.users.update_one(
+        {"id": student_id},
+        {"$set": {"credits": credits}}
+    )
+    
+    return {"message": "Credits updated", "new_credits": credits}
+
+@api_router.put("/institution/students/{student_id}/exam")
+async def update_student_exam(
+    student_id: str,
+    exam_type: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Change the exam a student is preparing for"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can manage student exams")
+    
+    if exam_type not in EXAM_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid exam type")
+    
+    student = await db.users.find_one({
+        "id": student_id,
+        "institution_id": current_user["id"]
+    })
+    
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    await db.users.update_one(
+        {"id": student_id},
+        {
+            "$set": {"current_exam": exam_type},
+            "$addToSet": {"exam_access": exam_type}
+        }
+    )
+    
+    return {"message": f"Student now preparing for {exam_type.upper()}", "exam_type": exam_type}
+
+@api_router.get("/student/credits")
+async def get_student_credits(current_user: dict = Depends(get_current_user)):
+    """Get current student's credit balance and usage"""
+    if current_user["user_type"] != "student":
+        raise HTTPException(status_code=403, detail="Only students can access credits")
+    
+    return {
+        "credits": current_user.get("credits", 0),
+        "credits_used": current_user.get("credits_used", 0),
+        "credits_remaining": current_user.get("credits", 0) - current_user.get("credits_used", 0),
+        "current_exam": current_user.get("current_exam"),
+        "exam_access": current_user.get("exam_access", [])
+    }
+
+@api_router.post("/student/use-credits")
+async def use_student_credits(
+    amount: int,
+    action: str,  # 'ai_tutor', 'speaking_test', 'writing_feedback', 'mock_test'
+    current_user: dict = Depends(get_current_user)
+):
+    """Deduct credits for student activities"""
+    if current_user["user_type"] != "student":
+        raise HTTPException(status_code=403, detail="Only students can use credits")
+    
+    credits_remaining = current_user.get("credits", 0) - current_user.get("credits_used", 0)
+    
+    if credits_remaining < amount:
+        raise HTTPException(status_code=402, detail="Insufficient credits")
+    
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$inc": {"credits_used": amount}}
+    )
+    
+    # Log credit usage
+    await db.credit_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "institution_id": current_user.get("institution_id"),
+        "amount": amount,
+        "action": action,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "credits_used": amount,
+        "credits_remaining": credits_remaining - amount,
+        "action": action
+    }
+
 # ==================== INSTITUTION ENDPOINTS ====================
 
 @api_router.post("/institution/students", response_model=StudentResponse)
