@@ -77,6 +77,8 @@ function AppRoutes() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<PublicRoute><Auth /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Auth /></PublicRoute>} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
+      <Route path="/pricing" element={<Landing />} />
       
       {/* Institution Routes */}
       <Route 
