@@ -1593,24 +1593,39 @@ AI_TUTOR_ADDONS = {
 
 @api_router.get("/pricing/exam-packages")
 async def get_exam_packages():
-    """Get all exam packages with pricing"""
+    """Get all 4 exam packages with pricing - AI Tutor is add-on"""
     packages = []
     for pkg_id, pkg in EXAM_PACKAGES.items():
         packages.append({
             "id": pkg_id,
             "mock_tests": pkg["mock_tests"],
-            "ai_tutor_minutes": pkg["ai_tutor_minutes"],
             "price": pkg["price"],
-            "price_per_test": round(pkg["price"] / pkg["mock_tests"], 2),
-            "has_ai_tutor": pkg["ai_tutor_minutes"] > 0,
+            "price_per_exam": pkg["price_per_exam"],
+            "internal_cost": pkg["internal_cost"],
+            "volume_discount": pkg["volume_discount"],
             "description": pkg["description"],
             "features": pkg["features"],
             "margin": f"{int(pkg['margin'] * 100)}%"
         })
+    
+    # AI Tutor add-on options
+    tutor_addons = []
+    for addon_id, addon in AI_TUTOR_ADDON["packages"].items():
+        tutor_addons.append({
+            "id": addon_id,
+            "minutes": addon["minutes"],
+            "price": addon["price"],
+            "price_per_minute": round(addon["price"] / addon["minutes"], 2)
+        })
+    
     return {
         "packages": packages,
-        "exam_types": list(EXAM_COSTS.keys()),
-        "exam_details": {k: {"description": v["description"]} for k, v in EXAM_COSTS.items()}
+        "ai_tutor_addon": {
+            "description": "Añade AI Tutor a cualquier plan",
+            "price_per_minute": AI_TUTOR_ADDON["price_per_minute"],
+            "packages": tutor_addons
+        },
+        "exam_types": list(EXAM_COSTS.keys())
     }
 
 @api_router.get("/pricing/test-packages")
