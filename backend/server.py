@@ -1491,13 +1491,22 @@ async def get_admin_stats(current_user: dict = Depends(get_current_user)):
     total_students = await db.users.count_documents({"user_type": "student"})
     total_exams = await db.exam_attempts.count_documents({})
     total_library_items = await db.library_items.count_documents({})
+    total_conversations = await db.tutor_conversations.count_documents({})
+    total_transactions = await db.payment_transactions.count_documents({})
+    
+    # Today's stats
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    exams_today = await db.exam_attempts.count_documents({"created_at": {"$gte": today_start}})
     
     return {
         "total_users": total_users,
         "total_institutions": total_institutions,
         "total_students": total_students,
         "total_exam_attempts": total_exams,
-        "total_library_items": total_library_items
+        "total_library_items": total_library_items,
+        "ai_conversations": total_conversations,
+        "total_transactions": total_transactions,
+        "exams_today": exams_today
     }
 
 # ==================== LANGUAGES ====================
