@@ -109,6 +109,18 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 
 ## API Endpoints
 
+### B2B Authentication (NEW)
+- `POST /api/auth/login` - Returns `requires_password_change` flag
+- `POST /api/auth/change-password` - Change password (required on first login)
+- `POST /api/institution/students/create` - Create student with provisional credentials
+- `POST /api/institution/students/bulk-create` - Bulk student creation
+- `PUT /api/institution/branding` - Set white-label branding (name, colors, logo)
+- `GET /api/institution/branding/{slug}` - Get branding for student portal
+- `GET /api/student/credits` - Get student credit balance
+- `POST /api/student/use-credits` - Deduct credits for AI activities
+- `PUT /api/institution/students/{id}/credits` - Update student credits
+- `PUT /api/institution/students/{id}/exam` - Change student exam type
+
 ### Exams
 - `GET /api/exams/types` - All exam types with configs
 - `GET /api/exams/{examType}/practice` - Practice questions
@@ -136,6 +148,11 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - `GET /api/admin/settings` - API key settings
 - `POST /api/admin/settings` - Save API keys
 
+## Test Results (Session 5) - January 6, 2026
+- **B2B Auth Backend**: 100% (17/17 tests passed)
+- **B2B Auth Frontend**: 100% (all features working)
+- **Test File**: `/app/tests/test_b2b_auth_system.py`
+
 ## Test Results (Session 4)
 - **Backend**: 100% (20/20 tests passed)
 - **Frontend**: 100% (all features working)
@@ -143,30 +160,38 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 
 ## Credentials
 - **Admin**: santaliestralimited@gmail.com / Admin123!
+- **Institution**: demo_academy@test.com / Demo123!
+- **Student (first login)**: student1@demo.com / 62Wuaor4R4Qp (requires password change)
 
 ## URLs
 - Landing: https://proficiencypal.preview.emergentagent.com
 - Login: https://proficiencypal.preview.emergentagent.com/login
 - Admin: https://proficiencypal.preview.emergentagent.com/admin
+- Student Portal: https://proficiencypal.preview.emergentagent.com/student-portal
+- White-Label Portal: https://proficiencypal.preview.emergentagent.com/student-portal/demo-language-academy
 - AI Tutor: https://proficiencypal.preview.emergentagent.com/tutor/ielts
 - Exam: https://proficiencypal.preview.emergentagent.com/exam/ielts
 
 ## Remaining Backlog
 
+### P0 - Next Priority
+- [ ] UI for exam selection (dropdown to choose exam #1-20)
+- [ ] Full Admin Panel functionality (Users, Revenue, API Keys management)
+
 ### P1 - High Priority
+- [ ] Whitelabel Management UI (upload logo, set colors from dashboard)
 - [ ] ElevenLabs integration (when API key provided)
-- [ ] More exam questions per section
-- [ ] Student invite via email
-- [ ] Video streaming for classes
+- [ ] Student invite via email with provisional credentials
+- [ ] Institutional media library with offline content
 
 ### P2 - Medium Priority
-- [ ] Real exam score conversion
+- [ ] Gamification (badges, points, leaderboards)
 - [ ] Learning path recommendations
-- [ ] Gamification (badges, leaderboards)
 - [ ] Mobile-responsive optimizations
+- [ ] Video streaming for classes
 
 ### P3 - Nice to Have
-- [ ] Additional language translations
+- [ ] Additional language translations (200 languages)
 - [ ] Video tutorials
 - [ ] Community features
 - [ ] API for third-party integrations
