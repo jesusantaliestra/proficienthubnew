@@ -2,9 +2,9 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 2.1  
+**Version:** 2.2  
 **Date:** January 2026  
-**Status:** B2B Premium System Complete
+**Status:** Pricing Model v2 Complete
 
 ## Original Problem Statement
 Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, IELTS, Cambridge, PTE, OET) with:
@@ -16,6 +16,39 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - Multi-language support
 - White-label student portals
 - Provisional credential system
+
+## Features Implemented (Session 6) - January 6, 2026
+
+### 🆕 Nuevo Modelo de Precios por Paquetes de Exámenes
+- **Análisis de costos completo** basado en precios reales de OpenAI y ElevenLabs 2025
+- **Costos calculados por tipo de examen:**
+  - TOEFL: $1.70/mock test
+  - IELTS: $1.56/mock test
+  - Cambridge: $1.90/mock test
+  - PTE: $1.76/mock test
+  - OET: $1.91/mock test
+  - **Promedio: $1.77/mock test**
+- **Costos individuales:**
+  - Writing Test: $0.26/test
+  - Speaking Test: $1.39/test
+  - AI Tutor: $0.10/min (mixto)
+
+### 📦 Paquetes de Exámenes
+| Paquete | Mock Tests | AI Tutor | Precio | Margen |
+|---------|------------|----------|--------|--------|
+| Starter 20 | 20 | - | $118 | 70% |
+| Starter 20 + AI | 20 | 60 min | $138 | 70% |
+| Growth 40 | 40 | - | $354 | 80% |
+| Growth 40 + AI | 40 | 150 min | $429 | 80% |
+| Scale 100 | 100 | - | $1,770 | 90% |
+| Scale 100 + AI | 100 | 500 min | $2,270 | 90% |
+
+### 📊 Calculadora ROI de Paquetes
+- Selector de paquete
+- Número de estudiantes
+- Precio por estudiante configurable
+- Cálculo automático de: costo, margen, ganancia, ROI%
+- Recomendaciones inteligentes
 
 ## Features Implemented (Session 5) - January 6, 2026
 
