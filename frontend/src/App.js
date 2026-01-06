@@ -81,6 +81,16 @@ function AppRoutes() {
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/pricing" element={<Landing />} />
       
+      {/* Admin Routes */}
+      <Route 
+        path="/admin" 
+        element={
+          <ProtectedRoute allowedTypes={['admin']}>
+            <AdminPanel />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Institution Routes */}
       <Route 
         path="/institution/dashboard" 
