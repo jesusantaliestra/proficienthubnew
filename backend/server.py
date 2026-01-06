@@ -1600,20 +1600,18 @@ WRITING_TEST_PACKAGES = {
     "writing_50": {"tests": 50, "price": 10.00, "price_per_test": 0.20, "internal_cost": 2.50, "margin": 0.75},
     "writing_100": {"tests": 100, "price": 15.00, "price_per_test": 0.15, "internal_cost": 5.00, "margin": 0.67},
 }
-    "writing_100": {"tests": 100, "price": 173.00, "price_per_test": 1.73, "internal_cost": 26.00, "margin": 0.85},
-}
 
 SPEAKING_TEST_PACKAGES = {
-    "speaking_20": {"tests": 20, "price": 111.00, "price_per_test": 5.55, "internal_cost": 27.80, "margin": 0.75},
-    "speaking_50": {"tests": 50, "price": 348.00, "price_per_test": 6.96, "internal_cost": 69.50, "margin": 0.80},
-    "speaking_100": {"tests": 100, "price": 927.00, "price_per_test": 9.27, "internal_cost": 139.00, "margin": 0.85},
+    "speaking_20": {"tests": 20, "price": 25.00, "price_per_test": 1.25, "internal_cost": 17.00, "margin": 0.32},
+    "speaking_50": {"tests": 50, "price": 55.00, "price_per_test": 1.10, "internal_cost": 42.50, "margin": 0.23},
+    "speaking_100": {"tests": 100, "price": 99.00, "price_per_test": 0.99, "internal_cost": 85.00, "margin": 0.14},
 }
 
 # ==================== ADD-ONS ====================
 AI_TUTOR_ADDONS = {
-    "tutor_30min": {"minutes": 30, "price": 15.00, "internal_cost": 3.00},
-    "tutor_100min": {"minutes": 100, "price": 45.00, "internal_cost": 10.00},
-    "tutor_300min": {"minutes": 300, "price": 120.00, "internal_cost": 30.00},
+    "tutor_30min": {"minutes": 30, "price": 5.00, "internal_cost": 1.80},
+    "tutor_100min": {"minutes": 100, "price": 12.00, "internal_cost": 6.00},
+    "tutor_300min": {"minutes": 300, "price": 29.00, "internal_cost": 18.00},
 }
 
 # ==================== NUEVAS FUNCIONES DE PRICING ====================
