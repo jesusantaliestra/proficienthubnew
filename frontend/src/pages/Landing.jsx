@@ -171,48 +171,12 @@ export default function Landing() {
   ];
 
   const examTypes = [
-    { id: 'toefl', name: 'TOEFL', color: 'bg-blue-500' },
-    { id: 'ielts', name: 'IELTS', color: 'bg-red-500' },
-    { id: 'cambridge', name: 'Cambridge', color: 'bg-purple-500' },
-    { id: 'pte', name: 'PTE', color: 'bg-orange-500' },
-    { id: 'oet', name: 'OET', color: 'bg-green-500' }
+    { id: 'toefl', name: 'TOEFL', color: 'bg-blue-500', cost: '$1.70/test' },
+    { id: 'ielts', name: 'IELTS', color: 'bg-red-500', cost: '$1.56/test' },
+    { id: 'cambridge', name: 'Cambridge', color: 'bg-purple-500', cost: '$1.90/test' },
+    { id: 'pte', name: 'PTE', color: 'bg-orange-500', cost: '$1.76/test' },
+    { id: 'oet', name: 'OET', color: 'bg-green-500', cost: '$1.91/test' }
   ];
-
-  // Pricing tiers with correct examples per tier
-  const getPricingTiers = () => {
-    const examMult = selectedExams === 1 ? 1 : selectedExams === 2 ? 1.4 : 1.8;
-    const creditMult = selectedCreditTier === 'basic' ? 1 : selectedCreditTier === 'medium' ? 1.7 : 2.8;
-    const credits = creditTiers[selectedCreditTier].credits;
-    
-    return [
-      { id: 'tier_1', range: '1-10', basePrice: 39, exampleStudents: 5, extraCreditPrice: 0.90 },
-      { id: 'tier_2', range: '11-50', basePrice: 29, exampleStudents: 30, extraCreditPrice: 0.80, popular: true },
-      { id: 'tier_3', range: '51-100', basePrice: 24, exampleStudents: 75, extraCreditPrice: 0.70 },
-      { id: 'tier_4', range: '101-200', basePrice: 20, exampleStudents: 150, extraCreditPrice: 0.60 },
-      { id: 'tier_5', range: '201-500', basePrice: 18, exampleStudents: 300, extraCreditPrice: 0.50 }
-    ].map(tier => ({
-      ...tier,
-      price: Math.round(tier.basePrice * examMult * creditMult * 100) / 100,
-      credits: credits
-    }));
-  };
-
-  const pricingTiers = getPricingTiers();
-
-  const getTierFeatures = (tierId) => {
-    const examText = selectedExams === 1 ? '1 exam' : selectedExams === 2 ? '2 exams' : 'All 5 exams';
-    const credits = creditTiers[selectedCreditTier].credits;
-    
-    const base = [examText, 'AI Tutoring', `${credits} credits/student`];
-    
-    if (selectedCreditTier !== 'basic') base.push('Writing Feedback');
-    if (selectedCreditTier === 'intensive') base.push('Priority AI');
-    
-    if (['tier_2', 'tier_3', 'tier_4', 'tier_5'].includes(tierId)) {
-      base.push('Voice AI');
-    }
-    if (['tier_3', 'tier_4', 'tier_5'].includes(tierId)) {
-      base.push('Risk Analytics');
     }
     if (['tier_4', 'tier_5'].includes(tierId)) {
       base.push('Video Classes');
