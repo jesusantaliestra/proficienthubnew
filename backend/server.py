@@ -1498,96 +1498,71 @@ INDIVIDUAL_TEST_COSTS = {
 }
 
 # ==================== PAQUETES DE EXÁMENES B2B ====================
-# Estructura: 4 planes con descuento por volumen
+# 4 PLANES BASE por número de exámenes
+# AI Tutor es ADD-ON opcional, no plan separado
 # MÁS VOLUMEN = MENOS PRECIO POR EXAMEN
 
 EXAM_PACKAGES = {
-    # STARTER - 10 exámenes (60% margen) - Para probar
-    "starter_10": {
+    # PLAN 1: 10 exámenes - Para probar / pequeños grupos
+    "plan_10": {
         "mock_tests": 10,
-        "ai_tutor_minutes": 0,
         "internal_cost": 9.40,  # 10 × $0.94
-        "price": 22.00,
-        "price_per_exam": 2.20,
-        "margin": 0.57,
-        "description": "Starter - 10 Mock Tests",
-        "features": ["10 mock tests completos", "Todos los tipos de examen", "AI Speaking grading", "AI Writing feedback"]
-    },
-    "starter_10_ai": {
-        "mock_tests": 10,
-        "ai_tutor_minutes": 30,
-        "internal_cost": 11.20,  # 9.40 + (30 × $0.06)
-        "price": 29.00,
-        "price_per_exam": 2.90,
-        "margin": 0.61,
-        "description": "Starter - 10 Mock Tests + 30 min AI Tutor",
-        "features": ["10 mock tests completos", "30 min AI Tutor", "Conversación con voz", "Feedback personalizado"]
+        "price": 19.00,
+        "price_per_exam": 1.90,
+        "margin": 0.51,
+        "description": "10 Mock Tests",
+        "volume_discount": "0%",
+        "features": ["10 mock tests completos", "5 tipos de examen", "AI Speaking grading", "AI Writing feedback", "Dashboard básico"]
     },
     
-    # BASIC - 20 exámenes (65% margen) - Pequeñas academias
-    "basic_20": {
+    # PLAN 2: 20 exámenes - Pequeñas academias
+    "plan_20": {
         "mock_tests": 20,
-        "ai_tutor_minutes": 0,
         "internal_cost": 18.80,  # 20 × $0.94
-        "price": 35.00,
-        "price_per_exam": 1.75,
-        "margin": 0.46,
-        "description": "Basic - 20 Mock Tests",
-        "features": ["20 mock tests completos", "Descuento volumen 20%", "Dashboard básico", "Exportar resultados"]
-    },
-    "basic_20_ai": {
-        "mock_tests": 20,
-        "ai_tutor_minutes": 60,
-        "internal_cost": 22.40,  # 18.80 + (60 × $0.06)
-        "price": 49.00,
-        "price_per_exam": 2.45,
-        "margin": 0.54,
-        "description": "Basic - 20 Mock Tests + 60 min AI Tutor",
-        "features": ["20 mock tests completos", "60 min AI Tutor", "Análisis de progreso", "Recomendaciones AI"]
+        "price": 29.00,
+        "price_per_exam": 1.45,
+        "margin": 0.35,
+        "description": "20 Mock Tests",
+        "volume_discount": "24%",
+        "features": ["20 mock tests completos", "5 tipos de examen", "AI Speaking grading", "AI Writing feedback", "Exportar resultados"]
     },
     
-    # GROWTH - 40 exámenes (70% margen) - Academias medianas
-    "growth_40": {
+    # PLAN 3: 40 exámenes - Academias medianas
+    "plan_40": {
         "mock_tests": 40,
-        "ai_tutor_minutes": 0,
         "internal_cost": 37.60,  # 40 × $0.94
-        "price": 59.00,
-        "price_per_exam": 1.48,
-        "margin": 0.36,
-        "description": "Growth - 40 Mock Tests",
-        "features": ["40 mock tests completos", "Descuento volumen 33%", "Analytics avanzado", "Multi-estudiante"]
-    },
-    "growth_40_ai": {
-        "mock_tests": 40,
-        "ai_tutor_minutes": 120,
-        "internal_cost": 44.80,  # 37.60 + (120 × $0.06)
-        "price": 79.00,
-        "price_per_exam": 1.98,
-        "margin": 0.43,
-        "description": "Growth - 40 Mock Tests + 120 min AI Tutor",
-        "features": ["40 mock tests completos", "120 min AI Tutor", "White-label básico", "Soporte prioritario"]
+        "price": 49.00,
+        "price_per_exam": 1.23,
+        "margin": 0.23,
+        "description": "40 Mock Tests",
+        "volume_discount": "35%",
+        "features": ["40 mock tests completos", "5 tipos de examen", "Analytics avanzado", "Multi-estudiante", "Soporte email"]
     },
     
-    # SCALE - 100 exámenes (75% margen) - Instituciones grandes
-    "scale_100": {
+    # PLAN 4: 100 exámenes - Instituciones grandes
+    "plan_100": {
         "mock_tests": 100,
-        "ai_tutor_minutes": 0,
         "internal_cost": 94.00,  # 100 × $0.94
-        "price": 129.00,
-        "price_per_exam": 1.29,
-        "margin": 0.27,
-        "description": "Scale - 100 Mock Tests",
-        "features": ["100 mock tests completos", "Descuento volumen 41%", "White-label completo", "API access"]
-    },
-    "scale_100_ai": {
-        "mock_tests": 100,
-        "ai_tutor_minutes": 300,
-        "internal_cost": 112.00,  # 94 + (300 × $0.06)
-        "price": 179.00,
-        "price_per_exam": 1.79,
-        "margin": 0.37,
-        "description": "Scale - 100 Mock Tests + 300 min AI Tutor",
-        "features": ["100 mock tests completos", "300 min AI Tutor", "White-label + API", "Account manager dedicado"]
+        "price": 99.00,
+        "price_per_exam": 0.99,
+        "margin": 0.05,
+        "description": "100 Mock Tests",
+        "volume_discount": "48%",
+        "features": ["100 mock tests completos", "5 tipos de examen", "White-label", "API access", "Account manager"]
+    }
+}
+
+# ==================== AI TUTOR ADD-ON ====================
+# Se añade a cualquier plan, precio por minutos
+AI_TUTOR_ADDON = {
+    "price_per_minute": 0.15,  # Precio venta por minuto
+    "internal_cost_per_minute": 0.06,  # Coste interno
+    "margin": 0.60,
+    "packages": {
+        "tutor_30": {"minutes": 30, "price": 4.50, "internal_cost": 1.80},
+        "tutor_60": {"minutes": 60, "price": 8.00, "internal_cost": 3.60},
+        "tutor_120": {"minutes": 120, "price": 14.00, "internal_cost": 7.20},
+        "tutor_300": {"minutes": 300, "price": 30.00, "internal_cost": 18.00},
     }
 }
 
