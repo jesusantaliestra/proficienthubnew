@@ -46,21 +46,22 @@ export default function Landing() {
   });
   const [monetizationResult, setMonetizationResult] = useState(null);
 
-  // Fetch exam packages on mount
-  useEffect(() => {
-    fetchExamPackages();
-  }, []);
-
-  const fetchExamPackages = async () => {
+  // Fetch exam packages function
+  const fetchExamPackages = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/pricing/exam-packages`);
       setExamPackages(response.data.packages);
     } catch (error) {
       console.error('Error fetching packages:', error);
     }
-  };
+  }, []);
 
-  const calculatePackageROI = async () => {
+  // Fetch exam packages on mount
+  useEffect(() => {
+    fetchExamPackages();
+  }, [fetchExamPackages]);
+
+  const calculatePackageROI = useCallback(async () => {
     try {
       const response = await axios.get(
         `${API_URL}/pricing/roi-calculator?package_id=${selectedPackage}&num_students=${numStudents}&price_per_student=${pricePerStudent}`
@@ -69,13 +70,13 @@ export default function Landing() {
     } catch (error) {
       console.error('ROI calculation error:', error);
     }
-  };
+  }, [selectedPackage, numStudents, pricePerStudent]);
 
   useEffect(() => {
     if (selectedPackage && numStudents > 0) {
       calculatePackageROI();
     }
-  }, [selectedPackage, numStudents, pricePerStudent]);
+  }, [selectedPackage, numStudents, pricePerStudent, calculatePackageROI]);
 
   const calculateMonetization = async () => {
     try {
