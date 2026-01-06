@@ -2164,22 +2164,23 @@ async def get_pricing_analysis(current_user: dict = Depends(get_current_user)):
     if current_user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    # 4 planes base
-    analysis = []
-    for pkg_id, pkg in EXAM_PACKAGES.items():
-        margin = pkg["margin"]
-        internal_cost = pkg["internal_cost"]
-        price = pkg["price"]
+    # Tiers analysis
+    tier_analysis = []
+    for tier_id, tier in EXAM_PACKAGES.items():
+        margin = tier["margin"]
+        internal_cost = tier["internal_cost_per_license"]
+        price = tier["price_per_license"]
         profit = price - internal_cost
         
-        analysis.append({
-            "package_id": pkg_id,
-            "mock_tests": pkg["mock_tests"],
-            "price_per_exam": pkg["price_per_exam"],
-            "volume_discount": pkg["volume_discount"],
+        tier_analysis.append({
+            "tier_id": tier_id,
+            "licenses_range": f"{tier['min_licenses']}-{tier['max_licenses']}",
+            "mock_tests_per_license": tier["mock_tests_per_license"],
+            "price_per_license": price,
+            "price_per_exam": tier["price_per_exam"],
+            "discount": tier["discount"],
             "internal_cost": internal_cost,
-            "price": price,
-            "profit": round(profit, 2),
+            "profit_per_license": round(profit, 2),
             "margin_percentage": f"{int(margin * 100)}%"
         })
     
@@ -2192,16 +2193,25 @@ async def get_pricing_analysis(current_user: dict = Depends(get_current_user)):
             "internal_cost": addon["internal_cost"],
             "price": addon["price"],
             "profit": round(addon["price"] - addon["internal_cost"], 2),
-            "margin": f"{int((1 - addon['internal_cost']/addon['price']) * 100)}%"
+            "margin": f"{int(addon['margin'] * 100)}%"
         })
     
     return {
+        "pricing_model": "per_license_volume_discount",
+        "base_cost_per_exam": AVG_MOCK_TEST_COST,
         "exam_costs": {k: {"description": v["description"], "internal_cost": v["internal_cost"]} for k, v in EXAM_COSTS.items()},
         "individual_test_costs": INDIVIDUAL_TEST_COSTS,
         "avg_mock_test_cost": AVG_MOCK_TEST_COST,
-        "package_analysis": analysis,
+        "tier_analysis": tier_analysis,
         "ai_tutor_addon_analysis": tutor_analysis,
-        "note": "This data is internal only - never expose to clients"
+        "margin_summary": {
+            "tier_1_20": "51% margen",
+            "tier_21_100": "41% margen", 
+            "tier_101_500": "33% margen",
+            "tier_500_plus": "25% margen (mínimo enterprise)",
+            "ai_tutor": "64-70% margen"
+        },
+        "note": "Márgenes saludables en todos los tiers. El descuento va por volumen de licencias, no por exámenes."
     }
 
 @api_router.post("/pricing/calculate-roi-legacy")
