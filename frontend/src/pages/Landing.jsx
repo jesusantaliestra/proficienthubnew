@@ -63,6 +63,44 @@ export default function Landing() {
     }
   };
 
+  const calculateMonetization = async () => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/pricing/monetization-calculator?writing_tests=${monetizationValues.writingTests}&speaking_tests=${monetizationValues.speakingTests}&writing_sell_price=${monetizationValues.writingSellPrice}&speaking_sell_price=${monetizationValues.speakingSellPrice}`
+      );
+      setMonetizationResult(response.data);
+    } catch (error) {
+      console.error('Monetization calculation error:', error);
+      // Fallback local calculation
+      const writingCost = monetizationValues.writingTests * 1.0;
+      const speakingCost = monetizationValues.speakingTests * 1.5;
+      const writingRevenue = monetizationValues.writingTests * monetizationValues.writingSellPrice;
+      const speakingRevenue = monetizationValues.speakingTests * monetizationValues.speakingSellPrice;
+      
+      setMonetizationResult({
+        writing: {
+          profit: Math.round(writingRevenue - writingCost),
+          cost: writingCost,
+          revenue: writingRevenue
+        },
+        speaking: {
+          profit: Math.round(speakingRevenue - speakingCost),
+          cost: speakingCost,
+          revenue: speakingRevenue
+        },
+        totals: {
+          investment: writingCost + speakingCost,
+          profit: Math.round((writingRevenue - writingCost) + (speakingRevenue - speakingCost)),
+          roi_percent: Math.round(((writingRevenue + speakingRevenue) / (writingCost + speakingCost) - 1) * 100)
+        },
+        subscription_recovery: {
+          writing_tests_needed: Math.ceil(500 / monetizationValues.writingSellPrice),
+          speaking_tests_needed: Math.ceil(500 / monetizationValues.speakingSellPrice)
+        }
+      });
+    }
+  };
+
   const calculateROI = async () => {
     setCalculating(true);
     
