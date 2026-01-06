@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../components/ui/button';
@@ -12,7 +12,7 @@ import {
   Zap, Users, TrendingUp, ChevronRight, Star, CheckCircle,
   BookOpen, Target, Award, Clock, ArrowRight, Building,
   DollarSign, Calculator, UserCheck, AlertTriangle, Headphones,
-  Video, FolderOpen, Volume2
+  Video, FolderOpen, Volume2, CreditCard, Coins
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -32,50 +32,50 @@ export default function Landing() {
   const [calculating, setCalculating] = useState(false);
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [selectedExams, setSelectedExams] = useState(1);
+  const [studentCount, setStudentCount] = useState(30);
+  const [pricingResult, setPricingResult] = useState(null);
 
-  // Realistic ROI calculation based on AI capabilities
+  // Calculate pricing when student count or exams change
+  useEffect(() => {
+    calculatePricing();
+  }, [studentCount, selectedExams]);
+
+  const calculatePricing = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/pricing/calculate?students=${studentCount}&exams=${selectedExams}`);
+      setPricingResult(response.data);
+    } catch (error) {
+      console.error('Pricing calculation error:', error);
+    }
+  };
+
+  // ROI calculation
   const calculateROI = async () => {
     setCalculating(true);
     
-    // Industry standard: 1 teacher per 15-20 students in language academies
     const currentRatio = calculatorValues.students / calculatorValues.teachers;
-    const standardRatio = 15;
-    
-    // With AI (unlimited feedback, AI tutors, automated practice), ratio can be 10x
-    // AI handles: grading, feedback, practice sessions, Q&A, speaking practice
-    const aiEnhancedRatio = 100; // 1 teacher can now handle 100 students with AI
-    
-    // Calculate potential students with same teachers
+    const aiEnhancedRatio = 100;
     const potentialStudents = calculatorValues.teachers * aiEnhancedRatio;
     const additionalStudents = Math.max(0, potentialStudents - calculatorValues.students);
     const multiplier = Math.round(potentialStudents / calculatorValues.students);
     
-    // Pass rate improvement: AI provides personalized practice, instant feedback
-    // Typical improvement: 15-25% with consistent AI practice
     const passRateImprovement = 0.20;
     const newPassRate = Math.min(95, calculatorValues.passRate + (passRateImprovement * 100));
     
-    // No-show reduction: AI engagement, reminders, progress tracking
-    // Dashboard metrics help identify at-risk students early
-    const noShowReduction = 0.60; // 60% reduction typical with engagement tools
+    const noShowReduction = 0.60;
     const newNoShowRate = Math.max(5, calculatorValues.noShowRate * (1 - noShowReduction));
     
-    // Revenue calculation
-    // Assuming average exam prep course: $500/student
     const avgRevenuePerStudent = 500;
     const currentRevenue = calculatorValues.students * avgRevenuePerStudent * (calculatorValues.passRate / 100);
     const projectedRevenue = potentialStudents * avgRevenuePerStudent * (newPassRate / 100);
     const revenueIncrease = projectedRevenue - currentRevenue;
     
-    // Teacher cost savings
-    // Without AI: would need more teachers to scale
+    const standardRatio = 15;
     const teachersNeededWithoutAI = Math.ceil(potentialStudents / standardRatio);
     const additionalTeachersNeeded = teachersNeededWithoutAI - calculatorValues.teachers;
-    const teacherCostSavings = additionalTeachersNeeded * calculatorValues.teacherSalary * 12; // Annual
+    const teacherCostSavings = additionalTeachersNeeded * calculatorValues.teacherSalary * 12;
     
-    // Time saved per teacher (hours/week)
-    // AI handles: grading (10h), feedback (15h), basic Q&A (5h), practice supervision (10h)
-    const timeSavedPerTeacher = 30; // hours per week
+    const timeSavedPerTeacher = 30;
     const totalTimeSaved = timeSavedPerTeacher * calculatorValues.teachers;
 
     setRoiResults({
@@ -113,36 +113,35 @@ export default function Landing() {
     { id: 'oet', name: 'OET', color: 'bg-green-500', students: '15K+' }
   ];
 
-  // Pricing based on student tiers and number of exams
-  // Calculated for 85-95% margins considering ElevenLabs + OpenAI costs
-  const getPricingPlans = () => {
-    const examMultiplier = selectedExams === 1 ? 1 : selectedExams === 2 ? 1.6 : 2.2;
-    const basePrices = {
-      starter: { monthly: 149, yearly: 1490, students: '1-10', label: 'Starter' },
-      growth: { monthly: 349, yearly: 3490, students: '11-50', label: 'Growth' },
-      professional: { monthly: 699, yearly: 6990, students: '51-100', label: 'Professional' },
-      enterprise: { monthly: 1299, yearly: 12990, students: '101-200', label: 'Enterprise', extra: '+$8/student' }
-    };
+  // Pricing tiers with unit prices
+  const pricingTiers = [
+    { id: 'tier_1', range: '1-10', price: selectedExams === 1 ? 39 : selectedExams === 2 ? 55 : 70, margin: 92 },
+    { id: 'tier_2', range: '11-50', price: selectedExams === 1 ? 29 : selectedExams === 2 ? 41 : 52, margin: 90 },
+    { id: 'tier_3', range: '51-100', price: selectedExams === 1 ? 24 : selectedExams === 2 ? 34 : 43, margin: 87 },
+    { id: 'tier_4', range: '101-200', price: selectedExams === 1 ? 20 : selectedExams === 2 ? 28 : 36, margin: 85 },
+    { id: 'tier_5', range: '201-500', price: selectedExams === 1 ? 18 : selectedExams === 2 ? 25 : 32, margin: 83 }
+  ];
 
-    return Object.entries(basePrices).map(([key, plan]) => ({
-      id: key,
-      name: plan.label,
-      students: plan.students,
-      price: Math.round(plan.monthly * examMultiplier),
-      yearly: Math.round(plan.yearly * examMultiplier),
-      extra: plan.extra,
-      features: key === 'starter' 
-        ? ['Up to 10 students', `${selectedExams} exam type${selectedExams > 1 ? 's' : ''}`, 'AI Tutoring', 'Basic Analytics', 'Email Support']
-        : key === 'growth'
-        ? ['Up to 50 students', `${selectedExams} exam type${selectedExams > 1 ? 's' : ''}`, 'AI Tutoring + Voice', 'Advanced Analytics', 'Library (5GB)', 'Priority Support']
-        : key === 'professional'
-        ? ['Up to 100 students', `${selectedExams} exam type${selectedExams > 1 ? 's' : ''}`, 'AI Tutoring + Voice', 'Premium Analytics', 'Library (25GB)', 'Video Classes', 'Dedicated Support']
-        : ['101-200 students', 'All exam types', 'Unlimited AI + Voice', 'Full Analytics Suite', 'Unlimited Library', 'Video Classes + Recording', 'White-label Option', 'Dedicated Account Manager'],
-      popular: key === 'professional'
-    }));
+  const getTierFeatures = (tierId) => {
+    const examText = selectedExams === 1 ? '1 exam' : selectedExams === 2 ? '2 exams' : 'All 5 exams';
+    
+    const base = [examText, 'AI Tutoring', '50 credits/student'];
+    
+    if (['tier_2', 'tier_3', 'tier_4', 'tier_5'].includes(tierId)) {
+      base.push('Voice AI', 'Speaking Practice');
+    }
+    if (['tier_3', 'tier_4', 'tier_5'].includes(tierId)) {
+      base.push('Premium Analytics', 'Library 25GB');
+    }
+    if (['tier_4', 'tier_5'].includes(tierId)) {
+      base.push('Video Classes', 'Custom Branding');
+    }
+    if (tierId === 'tier_5') {
+      base.push('White-label', 'API Access');
+    }
+    
+    return base;
   };
-
-  const pricingPlans = getPricingPlans();
 
   return (
     <div className="min-h-screen bg-white">
@@ -185,7 +184,7 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* Hero Section - B2B Focused */}
+      {/* Hero Section */}
       <section className="relative pt-28 pb-20 overflow-hidden">
         <div className="absolute top-20 right-0 w-96 h-96 bg-green-100 rounded-full blur-3xl opacity-50"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
@@ -258,11 +257,7 @@ export default function Landing() {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
-              <Card 
-                key={index} 
-                className="card-duo border-2 p-6"
-                data-testid={`feature-card-${index}`}
-              >
+              <Card key={index} className="card-duo border-2 p-6" data-testid={`feature-card-${index}`}>
                 <div className={`feature-icon ${feature.color} mb-4`}>
                   <feature.icon className="w-7 h-7" />
                 </div>
@@ -284,11 +279,7 @@ export default function Landing() {
           
           <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6">
             {examTypes.map((exam) => (
-              <Card 
-                key={exam.id}
-                className="card-duo text-center p-6"
-                data-testid={`exam-card-${exam.id}`}
-              >
+              <Card key={exam.id} className="card-duo text-center p-6" data-testid={`exam-card-${exam.id}`}>
                 <div className={`w-16 h-16 mx-auto rounded-2xl ${exam.color} flex items-center justify-center mb-4`}>
                   <GraduationCap className="w-8 h-8 text-white" />
                 </div>
@@ -300,8 +291,199 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Pricing Section - Dynamic Unit Pricing */}
+      <section id="pricing" className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Transparent Per-Student Pricing</h2>
+            <p className="text-xl text-gray-600 mb-8">Pay only for what you need. Volume discounts applied automatically.</p>
+            
+            {/* Exam selector */}
+            <div className="flex flex-col items-center gap-6 mb-8">
+              <div className="flex items-center gap-4">
+                <Label className="text-gray-600 font-semibold">Exam types:</Label>
+                <div className="inline-flex bg-white border-2 border-gray-200 rounded-xl p-1">
+                  {[1, 2, 3].map((num) => (
+                    <button
+                      key={num}
+                      className={`px-6 py-2 rounded-lg font-bold transition-all ${selectedExams === num ? 'bg-[#58CC02] text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                      onClick={() => setSelectedExams(num)}
+                      data-testid={`exam-count-${num}`}
+                    >
+                      {num === 3 ? 'All 5 Exams' : `${num} Exam${num > 1 ? 's' : ''}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Billing toggle */}
+              <div className="inline-flex bg-white border-2 border-gray-200 rounded-xl p-1">
+                <button
+                  className={`px-6 py-2 rounded-lg font-bold transition-all ${billingCycle === 'monthly' ? 'bg-gray-800 text-white' : 'text-gray-500'}`}
+                  onClick={() => setBillingCycle('monthly')}
+                  data-testid="billing-monthly-btn"
+                >
+                  Monthly
+                </button>
+                <button
+                  className={`px-6 py-2 rounded-lg font-bold transition-all ${billingCycle === 'yearly' ? 'bg-gray-800 text-white' : 'text-gray-500'}`}
+                  onClick={() => setBillingCycle('yearly')}
+                  data-testid="billing-yearly-btn"
+                >
+                  Yearly
+                  <Badge className="ml-2 bg-green-100 text-green-700 border-0">Save 17%</Badge>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Cost breakdown */}
+          <div className="bg-white rounded-2xl border-2 border-gray-200 p-6 mb-8 max-w-2xl mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <Coins className="w-6 h-6 text-[#58CC02]" />
+              <h3 className="text-lg font-bold text-gray-900">Credit System</h3>
+            </div>
+            <p className="text-gray-600 mb-4">Each student receives <strong>50 AI credits/month</strong> including:</p>
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="bg-gray-50 rounded-xl p-3 text-center">
+                <Brain className="w-5 h-5 mx-auto mb-1 text-blue-500" />
+                <div className="font-bold text-gray-900">50</div>
+                <div className="text-gray-500">AI Conversations</div>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3 text-center">
+                <Volume2 className="w-5 h-5 mx-auto mb-1 text-purple-500" />
+                <div className="font-bold text-gray-900">20 min</div>
+                <div className="text-gray-500">Voice Practice</div>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3 text-center">
+                <Mic className="w-5 h-5 mx-auto mb-1 text-orange-500" />
+                <div className="font-bold text-gray-900">20 min</div>
+                <div className="text-gray-500">Speaking Tests</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Pricing Calculator */}
+          <div className="bg-white rounded-2xl border-2 border-[#58CC02] p-6 mb-8 max-w-2xl mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <Calculator className="w-6 h-6 text-[#58CC02]" />
+              <h3 className="text-lg font-bold text-gray-900">Calculate Your Price</h3>
+            </div>
+            
+            <div className="mb-4">
+              <div className="flex justify-between mb-2">
+                <Label className="text-gray-700 font-semibold">Number of Students</Label>
+                <span className="text-[#58CC02] font-bold text-xl">{studentCount}</span>
+              </div>
+              <Slider
+                value={[studentCount]}
+                onValueChange={([v]) => setStudentCount(v)}
+                max={500}
+                min={1}
+                step={1}
+                className="w-full"
+                data-testid="student-count-slider"
+              />
+              <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <span>1</span>
+                <span>500</span>
+              </div>
+            </div>
+            
+            {pricingResult && pricingResult.final_price_per_student && (
+              <div className="bg-green-50 rounded-xl p-4 mt-4" data-testid="pricing-result">
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <div className="text-gray-500 text-sm">Price per Student</div>
+                    <div className="text-2xl font-extrabold text-gray-900">
+                      ${pricingResult.final_price_per_student}
+                      <span className="text-sm text-gray-500 font-normal">/mo</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 text-sm">Your Tier</div>
+                    <div className="text-lg font-bold text-[#58CC02]">
+                      {pricingResult.students_range} students
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="border-t border-green-200 pt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-600">Monthly Total</span>
+                    <span className="text-2xl font-extrabold text-gray-900">
+                      ${billingCycle === 'monthly' ? pricingResult.monthly_total.toLocaleString() : Math.round(pricingResult.yearly_total / 12).toLocaleString()}
+                    </span>
+                  </div>
+                  {billingCycle === 'yearly' && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-500">Yearly Total (save 17%)</span>
+                      <span className="font-bold text-[#58CC02]">${pricingResult.yearly_total.toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="mt-4 text-xs text-gray-500">
+                  Credits: {pricingResult.credits_per_student}/student • AI cost: ${pricingResult.ai_cost_per_student}/student • Margin: {pricingResult.margin_percentage}%
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Pricing Tiers */}
+          <div className="overflow-x-auto">
+            <table className="w-full bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
+              <thead>
+                <tr className="bg-gray-50 border-b-2 border-gray-200">
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-500 uppercase">Students</th>
+                  <th className="px-6 py-4 text-center text-sm font-bold text-gray-500 uppercase">Price/Student</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-500 uppercase">Included Features</th>
+                  <th className="px-6 py-4 text-center text-sm font-bold text-gray-500 uppercase">Example (25 students)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pricingTiers.map((tier, index) => (
+                  <tr key={tier.id} className={`border-b border-gray-100 ${index === 1 ? 'bg-green-50' : ''}`}>
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-gray-900">{tier.range}</div>
+                      {index === 1 && <Badge className="bg-[#58CC02] text-white border-0 mt-1">Popular</Badge>}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="text-2xl font-extrabold text-gray-900">${tier.price}</div>
+                      <div className="text-xs text-gray-500">/student/mo</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-1">
+                        {getTierFeatures(tier.id).slice(0, 4).map((feature, i) => (
+                          <Badge key={i} className="bg-gray-100 text-gray-600 border-gray-200 text-xs">
+                            {feature}
+                          </Badge>
+                        ))}
+                        {getTierFeatures(tier.id).length > 4 && (
+                          <Badge className="bg-green-100 text-green-600 border-green-200 text-xs">
+                            +{getTierFeatures(tier.id).length - 4} more
+                          </Badge>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="font-bold text-gray-900">${tier.price * 25}/mo</div>
+                      <div className="text-xs text-gray-500">${Math.round(tier.price * 25 * 10)}/yr</div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <p className="text-center text-gray-500 mt-8">
+            Need 500+ students? <a href="#" className="text-[#58CC02] font-semibold hover:underline">Contact us for custom enterprise pricing</a>
+          </p>
+        </div>
+      </section>
+
       {/* ROI Calculator Section */}
-      <section id="calculator" className="py-20 bg-gray-50">
+      <section id="calculator" className="py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Calculate Your ROI</h2>
@@ -332,10 +514,6 @@ export default function Landing() {
                       className="w-full"
                       data-testid="calculator-students-slider"
                     />
-                    <div className="flex justify-between text-xs text-gray-400 mt-1">
-                      <span>10</span>
-                      <span>200</span>
-                    </div>
                   </div>
                   
                   <div>
@@ -352,10 +530,6 @@ export default function Landing() {
                       className="w-full"
                       data-testid="calculator-teachers-slider"
                     />
-                    <div className="flex justify-between text-xs text-gray-400 mt-1">
-                      <span>1</span>
-                      <span>20</span>
-                    </div>
                   </div>
                   
                   <div>
@@ -370,7 +544,6 @@ export default function Landing() {
                       min={40}
                       step={5}
                       className="w-full"
-                      data-testid="calculator-passrate-slider"
                     />
                   </div>
                   
@@ -386,7 +559,6 @@ export default function Landing() {
                       min={5}
                       step={5}
                       className="w-full"
-                      data-testid="calculator-noshow-slider"
                     />
                   </div>
                   
@@ -464,8 +636,7 @@ export default function Landing() {
                       <div className="text-green-100 text-sm font-semibold mb-2">Total Annual Benefit</div>
                       <div className="text-4xl font-extrabold">${roiResults.totalAnnualBenefit.toLocaleString()}</div>
                       <div className="text-green-100 text-sm mt-2">
-                        Revenue increase: ${roiResults.revenueIncrease.toLocaleString()} + 
-                        Teacher cost savings: ${roiResults.teacherCostSavings.toLocaleString()}
+                        Revenue: ${roiResults.revenueIncrease.toLocaleString()} + Savings: ${roiResults.teacherCostSavings.toLocaleString()}
                       </div>
                     </div>
                     
@@ -486,110 +657,6 @@ export default function Landing() {
               </div>
             </div>
           </Card>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-xl text-gray-600 mb-8">Choose the plan that fits your institution size</p>
-            
-            {/* Exam selector */}
-            <div className="flex justify-center gap-4 mb-8">
-              <Label className="text-gray-600 font-semibold self-center">Exam types:</Label>
-              <div className="inline-flex bg-gray-100 rounded-xl p-1">
-                {[1, 2, 3].map((num) => (
-                  <button
-                    key={num}
-                    className={`px-6 py-2 rounded-lg font-bold transition-all ${selectedExams === num ? 'bg-white shadow text-[#58CC02]' : 'text-gray-500'}`}
-                    onClick={() => setSelectedExams(num)}
-                    data-testid={`exam-count-${num}`}
-                  >
-                    {num === 3 ? '3+ Exams' : `${num} Exam${num > 1 ? 's' : ''}`}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            {/* Billing toggle */}
-            <div className="inline-flex bg-gray-100 rounded-xl p-1">
-              <button
-                className={`px-6 py-2 rounded-lg font-bold transition-all ${billingCycle === 'monthly' ? 'bg-white shadow text-gray-800' : 'text-gray-500'}`}
-                onClick={() => setBillingCycle('monthly')}
-                data-testid="billing-monthly-btn"
-              >
-                Monthly
-              </button>
-              <button
-                className={`px-6 py-2 rounded-lg font-bold transition-all ${billingCycle === 'yearly' ? 'bg-white shadow text-gray-800' : 'text-gray-500'}`}
-                onClick={() => setBillingCycle('yearly')}
-                data-testid="billing-yearly-btn"
-              >
-                Yearly
-                <Badge className="ml-2 bg-green-100 text-green-700 border-0">Save 17%</Badge>
-              </button>
-            </div>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {pricingPlans.map((plan) => (
-              <Card 
-                key={plan.id}
-                className={`relative border-2 rounded-2xl ${plan.popular ? 'pricing-popular border-[#58CC02]' : 'border-gray-200'}`}
-                data-testid={`pricing-card-${plan.id}`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-[#58CC02] text-white border-0 px-4 py-1 font-bold">
-                      <Star className="w-3 h-3 mr-1" />
-                      Most Popular
-                    </Badge>
-                  </div>
-                )}
-                <CardContent className="p-6">
-                  <div className="mb-4">
-                    <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
-                    <p className="text-gray-500 text-sm">{plan.students} students</p>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <span className="text-4xl font-extrabold text-gray-900">
-                      ${billingCycle === 'monthly' ? plan.price : plan.yearly}
-                    </span>
-                    <span className="text-gray-500">
-                      /{billingCycle === 'monthly' ? 'mo' : 'yr'}
-                    </span>
-                    {plan.extra && (
-                      <p className="text-sm text-gray-500 mt-1">{plan.extra}</p>
-                    )}
-                  </div>
-                  
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-2 text-gray-700 text-sm">
-                        <CheckCircle className="w-5 h-5 text-[#58CC02] flex-shrink-0 mt-0.5" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  <button 
-                    className={`w-full py-3 rounded-xl font-bold transition-all ${plan.popular ? 'btn-duo' : 'btn-duo-outline'}`}
-                    onClick={() => navigate('/register')}
-                    data-testid={`pricing-cta-${plan.id}`}
-                  >
-                    Get Started
-                  </button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          <p className="text-center text-gray-500 mt-8">
-            Need more than 200 students? <a href="#" className="text-[#58CC02] font-semibold hover:underline">Contact us for custom enterprise pricing</a>
-          </p>
         </div>
       </section>
 
@@ -634,7 +701,6 @@ export default function Landing() {
                 <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
                 <li><a href="#exams" className="hover:text-white transition-colors">Exams</a></li>
                 <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#calculator" className="hover:text-white transition-colors">ROI Calculator</a></li>
               </ul>
             </div>
             
