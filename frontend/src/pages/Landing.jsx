@@ -33,6 +33,15 @@ export default function Landing() {
   const [selectedCreditTier, setSelectedCreditTier] = useState('basic');
   const [studentCount, setStudentCount] = useState(30);
   const [pricingResult, setPricingResult] = useState(null);
+  
+  // Monetization calculator state
+  const [monetizationValues, setMonetizationValues] = useState({
+    writingTests: 100,
+    speakingTests: 50,
+    writingSellPrice: 5.0,
+    speakingSellPrice: 7.0
+  });
+  const [monetizationResult, setMonetizationResult] = useState(null);
 
   // Credit tier definitions
   const creditTiers = {
