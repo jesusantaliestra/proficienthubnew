@@ -30,12 +30,12 @@ export default function Landing() {
   const [calculating, setCalculating] = useState(false);
   const [billingCycle, setBillingCycle] = useState('monthly');
   
-  // New exam package pricing state - 4 simple plans
-  const [selectedPackage, setSelectedPackage] = useState('plan_40');
-  const [numStudents, setNumStudents] = useState(20);
+  // New exam package pricing state - Volume-based licensing
+  const [selectedTier, setSelectedTier] = useState('tier_21_100');
+  const [numLicenses, setNumLicenses] = useState(50);
   const [pricePerStudent, setPricePerStudent] = useState(30);
   const [aiTutorMinutes, setAiTutorMinutes] = useState(0);
-  const [examPackages, setExamPackages] = useState([]);
+  const [pricingTiers, setPricingTiers] = useState([]);
   const [packageRoiResult, setPackageRoiResult] = useState(null);
   
   // Monetization calculator state
