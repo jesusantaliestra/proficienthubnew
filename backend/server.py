@@ -1026,7 +1026,7 @@ Format your response as JSON with keys: fluency_score, lexical_score, grammar_sc
         try:
             import json
             eval_data = json.loads(evaluation)
-        except:
+        except (json.JSONDecodeError, TypeError, ValueError):
             eval_data = {"feedback": evaluation, "overall_score": 6.0}
         
         # Save attempt
