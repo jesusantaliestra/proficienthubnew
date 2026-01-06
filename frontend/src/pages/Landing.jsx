@@ -314,36 +314,38 @@ export default function Landing() {
       <section id="pricing" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Paquetes de Exámenes B2B</h2>
-            <p className="text-xl text-gray-600 mb-8">4 planes simples. Más volumen = menos precio por examen. AI Tutor opcional.</p>
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Precios por Licencia B2B</h2>
+            <p className="text-xl text-gray-600 mb-8">Más licencias = Mejor precio. Cada licencia incluye 10 mock tests. Márgenes saludables garantizados.</p>
           </div>
           
-          {/* 4 Package Cards */}
+          {/* 4 Tier Cards */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {examPackages.map((pkg, index) => (
+            {pricingTiers.map((tier, index) => (
               <div 
-                key={pkg.id} 
-                className={`bg-white rounded-2xl border-2 p-6 ${pkg.id === 'plan_40' ? 'border-[#58CC02] ring-4 ring-green-100' : 'border-gray-200'}`}
-                data-testid={`package-${pkg.id}`}
+                key={tier.id} 
+                className={`bg-white rounded-2xl border-2 p-6 ${tier.id === 'tier_21_100' ? 'border-[#58CC02] ring-4 ring-green-100' : 'border-gray-200'}`}
+                data-testid={`tier-${tier.id}`}
               >
-                {pkg.id === 'plan_40' && (
+                {tier.id === 'tier_21_100' && (
                   <Badge className="bg-[#58CC02] text-white border-0 mb-4">Más Popular</Badge>
                 )}
-                {pkg.volume_discount !== "0%" && (
-                  <Badge className="bg-orange-100 text-orange-700 border-0 mb-4">-{pkg.volume_discount}</Badge>
+                {tier.discount !== "0%" && (
+                  <Badge className="bg-orange-100 text-orange-700 border-0 mb-4">-{tier.discount}</Badge>
                 )}
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{pkg.mock_tests} Tests</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{tier.description}</h3>
                 <div className="mb-4">
-                  <span className="text-4xl font-extrabold text-gray-900">${pkg.price}</span>
+                  <span className="text-3xl font-extrabold text-gray-900">${tier.price_per_license}</span>
+                  <span className="text-gray-500 text-sm">/licencia</span>
                 </div>
                 
                 <div className="bg-green-50 rounded-lg p-3 mb-4">
                   <div className="text-sm text-gray-600">Precio por examen</div>
-                  <div className="text-2xl font-bold text-[#58CC02]">${pkg.price_per_exam}</div>
+                  <div className="text-xl font-bold text-[#58CC02]">${tier.price_per_exam}</div>
+                  <div className="text-xs text-gray-500">{tier.mock_tests_per_license} tests/licencia</div>
                 </div>
                 
                 <div className="space-y-2 mb-6 text-sm">
-                  {pkg.features.slice(0, 4).map((feature, i) => (
+                  {tier.features.slice(0, 4).map((feature, i) => (
                     <div key={i} className="flex items-center gap-2 text-gray-600">
                       <Check className="w-4 h-4 text-[#58CC02]" />
                       <span>{feature}</span>
@@ -351,10 +353,14 @@ export default function Landing() {
                   ))}
                 </div>
                 
+                <div className="text-center text-xs text-gray-500 mb-4">
+                  Tu margen: <span className="font-bold text-green-600">{tier.margin}</span>
+                </div>
+                
                 <button 
-                  className={`w-full py-3 rounded-xl font-bold transition-all ${pkg.id === 'plan_40' ? 'btn-duo' : 'btn-duo-outline'}`}
+                  className={`w-full py-3 rounded-xl font-bold transition-all ${tier.id === 'tier_21_100' ? 'btn-duo' : 'btn-duo-outline'}`}
                   onClick={() => {
-                    setSelectedPackage(pkg.id);
+                    setNumLicenses(tier.min_licenses + 10);
                     document.getElementById('calculator').scrollIntoView({ behavior: 'smooth' });
                   }}
                 >
@@ -370,30 +376,27 @@ export default function Landing() {
               <Brain className="w-8 h-8 text-purple-600" />
               <div>
                 <h3 className="text-xl font-bold text-gray-900">AI Tutor Add-on</h3>
-                <p className="text-gray-600">Añade tutorías con voz a cualquier plan</p>
+                <p className="text-gray-600">Añade tutorías con voz a cada licencia (64-70% margen)</p>
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-white rounded-xl p-3 text-center">
                 <div className="font-bold text-gray-900">30 min</div>
-                <div className="text-purple-600 font-bold">+$4.50</div>
+                <div className="text-purple-600 font-bold">+$6/lic</div>
               </div>
               <div className="bg-white rounded-xl p-3 text-center">
                 <div className="font-bold text-gray-900">60 min</div>
-                <div className="text-purple-600 font-bold">+$8.00</div>
+                <div className="text-purple-600 font-bold">+$12/lic</div>
               </div>
               <div className="bg-white rounded-xl p-3 text-center">
                 <div className="font-bold text-gray-900">120 min</div>
-                <div className="text-purple-600 font-bold">+$14.00</div>
+                <div className="text-purple-600 font-bold">+$22/lic</div>
               </div>
               <div className="bg-white rounded-xl p-3 text-center">
                 <div className="font-bold text-gray-900">300 min</div>
-                <div className="text-purple-600 font-bold">+$30.00</div>
+                <div className="text-purple-600 font-bold">+$50/lic</div>
               </div>
             </div>
-            <p className="text-center text-gray-500 mt-4 text-sm">
-              $0.15/min - Conversación con voz, feedback personalizado, práctica de pronunciación
-            </p>
           </div>
           
           {/* Cost breakdown */}
@@ -414,7 +417,7 @@ export default function Landing() {
               ))}
             </div>
             <p className="text-center text-gray-500 mt-4 text-sm">
-              Promedio: <strong>$0.94</strong> por mock test (Speaking AI + Writing AI + Corrección)
+              Promedio: <strong>$0.94</strong> por mock test · 10 tests por licencia = <strong>$9.40</strong> coste por licencia
             </p>
           </div>
         </div>
