@@ -729,32 +729,14 @@ async def get_tutor_history(exam_type: str, current_user: dict = Depends(get_cur
     
     return {"conversations": conversations}
 
-# ==================== PRICING ENDPOINTS ====================
-# INTERNAL COST CALCULATION (NOT VISIBLE TO CLIENTS):
-# 
-# CREDIT USAGE BREAKDOWN PER STUDENT/MONTH:
-# 
-# AI TEACHER (Tutoring conversations):
-#   - Basic: 50 conversations × $0.02 = $1.00
-#   - Medium: 100 conversations × $0.02 = $2.00
-#   - Intensive: 200 conversations × $0.02 = $4.00
-#
-# WRITING FEEDBACK (Essay grading + detailed feedback):
-#   - Basic: 5 essays × $0.30 = $1.50
-#   - Medium: 15 essays × $0.30 = $4.50
-#   - Intensive: 30 essays × $0.30 = $9.00
-#
-# VOICE PRACTICE (ElevenLabs TTS + Whisper STT):
-#   - Basic: 20 min × $0.15 = $3.00
-#   - Medium: 40 min × $0.15 = $6.00
-#   - Intensive: 80 min × $0.15 = $12.00
-#
-# TOTAL AI COSTS:
-#   - Basic (50 credits): $5.50/student/month
-#   - Medium (100 credits): $12.50/student/month  
-#   - Intensive (200 credits): $25.00/student/month
+# ==================== STRIPE CHECKOUT ====================
 
-# Credit tiers with detailed breakdown
+from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
+
+stripe_api_key = os.environ.get('STRIPE_API_KEY', 'sk_test_emergent')
+
+# ==================== PRICING ENDPOINTS ====================
+# Credit tiers with detailed breakdown (internal costs hidden from clients)
 CREDIT_TIERS = {
     "basic": {
         "credits": 50,
@@ -765,7 +747,7 @@ CREDIT_TIERS = {
             "writing_essays_graded": 5,
             "voice_practice_minutes": 20
         },
-        "internal_cost": 5.50
+        "internal_cost": 5.50  # INTERNAL ONLY
     },
     "medium": {
         "credits": 100,
@@ -776,7 +758,7 @@ CREDIT_TIERS = {
             "writing_essays_graded": 15,
             "voice_practice_minutes": 40
         },
-        "internal_cost": 12.50
+        "internal_cost": 12.50  # INTERNAL ONLY
     },
     "intensive": {
         "credits": 200,
@@ -787,8 +769,30 @@ CREDIT_TIERS = {
             "writing_essays_graded": 30,
             "voice_practice_minutes": 80
         },
-        "internal_cost": 25.00
+        "internal_cost": 25.00  # INTERNAL ONLY
     }
+}
+
+# ==================== WRITING & SPEAKING TEST PACKAGES ====================
+# Institutions can purchase these separately and monetize them with their clients
+# Internal AI cost per test: Writing = $0.30, Speaking = $0.40
+
+WRITING_TEST_PACKAGES = {
+    "writing_10": {"tests": 10, "price": 15.00, "price_per_test": 1.50, "internal_cost": 3.00},
+    "writing_50": {"tests": 50, "price": 60.00, "price_per_test": 1.20, "internal_cost": 15.00},
+    "writing_100": {"tests": 100, "price": 100.00, "price_per_test": 1.00, "internal_cost": 30.00},
+    "writing_250": {"tests": 250, "price": 200.00, "price_per_test": 0.80, "internal_cost": 75.00},
+    "writing_500": {"tests": 500, "price": 350.00, "price_per_test": 0.70, "internal_cost": 150.00},
+    "writing_1000": {"tests": 1000, "price": 600.00, "price_per_test": 0.60, "internal_cost": 300.00},
+}
+
+SPEAKING_TEST_PACKAGES = {
+    "speaking_10": {"tests": 10, "price": 20.00, "price_per_test": 2.00, "internal_cost": 4.00},
+    "speaking_50": {"tests": 50, "price": 85.00, "price_per_test": 1.70, "internal_cost": 20.00},
+    "speaking_100": {"tests": 100, "price": 150.00, "price_per_test": 1.50, "internal_cost": 40.00},
+    "speaking_250": {"tests": 250, "price": 325.00, "price_per_test": 1.30, "internal_cost": 100.00},
+    "speaking_500": {"tests": 500, "price": 550.00, "price_per_test": 1.10, "internal_cost": 200.00},
+    "speaking_1000": {"tests": 1000, "price": 900.00, "price_per_test": 0.90, "internal_cost": 400.00},
 }
 
 # Dynamic unit pricing per student (price per student/month) - Basic tier base prices
