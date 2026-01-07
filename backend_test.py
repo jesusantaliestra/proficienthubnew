@@ -121,13 +121,13 @@ class ProficientHubAPITester:
             self.log_test("Pricing with 3+ Exams", True, f"Found {len(response['plans'])} plans for 3+ exams")
 
     def test_b2b_pricing_model(self):
-        """Test new B2B pricing model endpoints"""
-        print("\n🏢 Testing B2B Pricing Model...")
+        """Test updated B2B pricing model endpoints"""
+        print("\n🏢 Testing Updated B2B Pricing Model...")
         
         # Test platform plans endpoint
         response = self.run_test("Platform Plans Endpoint", "GET", "pricing/platform-plans", 200)
         if response:
-            # Verify exam_plans structure
+            # Verify exam_plans structure (6 plans)
             if 'exam_plans' in response:
                 exam_plans = response['exam_plans']
                 expected_plans = ['plan_5', 'plan_10', 'plan_20', 'plan_40', 'plan_60', 'plan_100']
@@ -135,27 +135,41 @@ class ProficientHubAPITester:
                 missing_plans = [plan for plan in expected_plans if plan not in found_plan_ids]
                 
                 if len(exam_plans) == 6 and not missing_plans:
-                    self.log_test("Exam Plans Structure", True, f"Found all 6 exam plans: {found_plan_ids}")
+                    self.log_test("Exam Plans Structure (6 plans)", True, f"Found all 6 exam plans: {found_plan_ids}")
+                    
+                    # Verify NO internal costs are visible
+                    has_internal_costs = any('cost' in str(plan).lower() or 'margin' in str(plan).lower() for plan in exam_plans)
+                    if not has_internal_costs:
+                        self.log_test("No Internal Costs in Exam Plans", True, "Internal costs properly hidden")
+                    else:
+                        self.log_test("No Internal Costs in Exam Plans", False, "Internal costs visible in response")
                 else:
-                    self.log_test("Exam Plans Structure", False, f"Expected 6 plans, found {len(exam_plans)}. Missing: {missing_plans}")
+                    self.log_test("Exam Plans Structure (6 plans)", False, f"Expected 6 plans, found {len(exam_plans)}. Missing: {missing_plans}")
             else:
-                self.log_test("Exam Plans Structure", False, "Missing exam_plans in response")
+                self.log_test("Exam Plans Structure (6 plans)", False, "Missing exam_plans in response")
             
-            # Verify volume_pricing structure
+            # Verify volume_pricing structure (7 tiers)
             if 'volume_pricing' in response:
                 volume_tiers = response['volume_pricing']
-                expected_tiers = ['tier_1_100', 'tier_101_500', 'tier_501_2000', 'tier_2001_10000']
+                expected_tiers = ['tier_100', 'tier_500', 'tier_1000', 'tier_2000', 'tier_5000', 'tier_10000', 'tier_100000']
                 found_tier_ids = [tier['id'] for tier in volume_tiers]
                 missing_tiers = [tier for tier in expected_tiers if tier not in found_tier_ids]
                 
-                if len(volume_tiers) == 4 and not missing_tiers:
-                    self.log_test("Volume Pricing Structure", True, f"Found all 4 volume tiers: {found_tier_ids}")
+                if len(volume_tiers) == 7 and not missing_tiers:
+                    self.log_test("Volume Pricing Structure (7 tiers)", True, f"Found all 7 volume tiers: {found_tier_ids}")
+                    
+                    # Verify NO internal costs are visible
+                    has_internal_costs = any('cost' in str(tier).lower() or 'margin' in str(tier).lower() for tier in volume_tiers)
+                    if not has_internal_costs:
+                        self.log_test("No Internal Costs in Volume Tiers", True, "Internal costs properly hidden")
+                    else:
+                        self.log_test("No Internal Costs in Volume Tiers", False, "Internal costs visible in response")
                 else:
-                    self.log_test("Volume Pricing Structure", False, f"Expected 4 tiers, found {len(volume_tiers)}. Missing: {missing_tiers}")
+                    self.log_test("Volume Pricing Structure (7 tiers)", False, f"Expected 7 tiers, found {len(volume_tiers)}. Missing: {missing_tiers}")
             else:
-                self.log_test("Volume Pricing Structure", False, "Missing volume_pricing in response")
+                self.log_test("Volume Pricing Structure (7 tiers)", False, "Missing volume_pricing in response")
             
-            # Verify ai_tutor_options structure
+            # Verify ai_tutor_options structure (5 options)
             if 'ai_tutor_options' in response:
                 ai_options = response['ai_tutor_options']
                 expected_options = ['none', 'basic', 'standard', 'premium', 'unlimited']
@@ -163,72 +177,79 @@ class ProficientHubAPITester:
                 missing_options = [option for option in expected_options if option not in found_option_ids]
                 
                 if len(ai_options) == 5 and not missing_options:
-                    self.log_test("AI Tutor Options Structure", True, f"Found all 5 AI tutor options: {found_option_ids}")
+                    self.log_test("AI Tutor Options Structure (5 options)", True, f"Found all 5 AI tutor options: {found_option_ids}")
+                    
+                    # Verify NO internal costs are visible
+                    has_internal_costs = any('cost' in str(option).lower() for option in ai_options)
+                    if not has_internal_costs:
+                        self.log_test("No Internal Costs in AI Options", True, "Internal costs properly hidden")
+                    else:
+                        self.log_test("No Internal Costs in AI Options", False, "Internal costs visible in response")
                 else:
-                    self.log_test("AI Tutor Options Structure", False, f"Expected 5 options, found {len(ai_options)}. Missing: {missing_options}")
+                    self.log_test("AI Tutor Options Structure (5 options)", False, f"Expected 5 options, found {len(ai_options)}. Missing: {missing_options}")
             else:
-                self.log_test("AI Tutor Options Structure", False, "Missing ai_tutor_options in response")
+                self.log_test("AI Tutor Options Structure (5 options)", False, "Missing ai_tutor_options in response")
         
-        # Test pricing calculator with different scenarios
+        # Test pricing calculator with specific scenarios from review request
         test_scenarios = [
             {
-                "name": "Plan 10 - 50 students - No AI",
-                "params": "exam_plan=plan_10&num_students=50&ai_tutor_option=none&resale_price_per_student=25",
-                "expected_cost": 9.40,
-                "expected_price": 18.80
+                "name": "Plan 10 - 100 licenses - No AI",
+                "params": "exam_plan=plan_10&num_licenses=100&ai_tutor_option=none",
+                "expected_price_per_license": 18.80,
+                "expected_tier": "tier_100"
             },
             {
-                "name": "Plan 20 - 200 students - Basic AI",
-                "params": "exam_plan=plan_20&num_students=200&ai_tutor_option=basic&resale_price_per_student=50",
-                "expected_tier": "tier_101_500"
+                "name": "Plan 40 - 500 licenses - Standard AI",
+                "params": "exam_plan=plan_40&num_licenses=500&ai_tutor_option=standard",
+                "expected_tier": "tier_500",
+                "should_have_discount": True
             },
             {
-                "name": "Plan 100 - 1000 students - Premium AI",
-                "params": "exam_plan=plan_100&num_students=1000&ai_tutor_option=premium&resale_price_per_student=25",
-                "expected_tier": "tier_501_2000"
-            },
-            {
-                "name": "Plan 20 - 5000 students - Standard AI",
-                "params": "exam_plan=plan_20&num_students=5000&ai_tutor_option=standard&resale_price_per_student=50",
-                "expected_tier": "tier_2001_10000"
+                "name": "Plan 20 - 5000 licenses - Premium AI",
+                "params": "exam_plan=plan_20&num_licenses=5000&ai_tutor_option=premium",
+                "expected_tier": "tier_5000",
+                "should_have_significant_discount": True
             }
         ]
         
         for scenario in test_scenarios:
             response = self.run_test(f"Calculator - {scenario['name']}", "GET", f"pricing/calculator?{scenario['params']}", 200)
             if response:
-                # Verify response structure
-                required_fields = ['plan', 'volume_tier', 'ai_tutor', 'pricing', 'customer_roi']
+                # Verify expected response structure
+                required_fields = ['plan', 'ai_tutor', 'volume_tier', 'pricing', 'summary']
                 missing_fields = [field for field in required_fields if field not in response]
                 
                 if not missing_fields:
                     self.log_test(f"Calculator Response Structure - {scenario['name']}", True, "All required fields present")
                     
+                    # Verify NO internal costs in response
+                    response_str = str(response).lower()
+                    forbidden_fields = ['cost_per_student', 'margin_percentage', 'profit']
+                    found_forbidden = [field for field in forbidden_fields if field in response_str]
+                    
+                    if not found_forbidden:
+                        self.log_test(f"No Internal Costs in Calculator - {scenario['name']}", True, "Internal costs properly hidden")
+                    else:
+                        self.log_test(f"No Internal Costs in Calculator - {scenario['name']}", False, f"Found forbidden fields: {found_forbidden}")
+                    
                     # Verify pricing structure
                     if 'pricing' in response:
                         pricing = response['pricing']
-                        pricing_fields = ['cost_per_student', 'price_per_student', 'total_cost', 'total_price', 'profit', 'margin_percentage']
-                        missing_pricing_fields = [field for field in pricing_fields if field not in pricing]
+                        expected_pricing_fields = ['price_per_license', 'total_order_price', 'full_price_per_license', 'savings_per_license', 'total_savings']
+                        missing_pricing_fields = [field for field in expected_pricing_fields if field not in pricing]
                         
                         if not missing_pricing_fields:
-                            self.log_test(f"Pricing Fields - {scenario['name']}", True, "All pricing fields present")
+                            self.log_test(f"Pricing Fields Structure - {scenario['name']}", True, "All expected pricing fields present")
                             
-                            # Test specific calculations for plan_10 scenario
-                            if scenario['name'] == "Plan 10 - 50 students - No AI":
-                                cost_per_student = pricing.get('cost_per_student', 0)
-                                price_per_student = pricing.get('price_per_student', 0)
-                                
-                                if abs(cost_per_student - 9.40) < 0.01:
-                                    self.log_test("Cost Calculation Accuracy", True, f"Cost per student: ${cost_per_student}")
+                            # Test specific price for plan_10 scenario
+                            if scenario['name'] == "Plan 10 - 100 licenses - No AI":
+                                price_per_license = pricing.get('price_per_license', 0)
+                                if abs(price_per_license - 18.80) < 0.01:
+                                    self.log_test("Price Calculation Accuracy", True, f"Price per license: ${price_per_license}")
                                 else:
-                                    self.log_test("Cost Calculation Accuracy", False, f"Expected $9.40, got ${cost_per_student}")
-                                
-                                if abs(price_per_student - 18.80) < 0.01:
-                                    self.log_test("Price Calculation Accuracy", True, f"Price per student: ${price_per_student}")
-                                else:
-                                    self.log_test("Price Calculation Accuracy", False, f"Expected $18.80, got ${price_per_student}")
+                                    self.log_test("Price Calculation Accuracy", False, f"Expected ~$18.80, got ${price_per_license}")
                         else:
-                            self.log_test(f"Pricing Fields - {scenario['name']}", False, f"Missing pricing fields: {missing_pricing_fields}")
+                            self.log_test(f"Pricing Fields Structure - {scenario['name']}", False, f"Missing pricing fields: {missing_pricing_fields}")
                     
                     # Verify volume tier assignment
                     if 'expected_tier' in scenario:
@@ -237,10 +258,44 @@ class ProficientHubAPITester:
                             self.log_test(f"Volume Tier Assignment - {scenario['name']}", True, f"Correct tier: {volume_tier}")
                         else:
                             self.log_test(f"Volume Tier Assignment - {scenario['name']}", False, f"Expected {scenario['expected_tier']}, got {volume_tier}")
+                    
+                    # Verify discount application
+                    if scenario.get('should_have_discount'):
+                        pricing = response.get('pricing', {})
+                        savings = pricing.get('total_savings', 0)
+                        if savings > 0:
+                            self.log_test(f"Discount Applied - {scenario['name']}", True, f"Savings: ${savings}")
+                        else:
+                            self.log_test(f"Discount Applied - {scenario['name']}", False, "No savings/discount applied")
                 else:
                     self.log_test(f"Calculator Response Structure - {scenario['name']}", False, f"Missing fields: {missing_fields}")
             else:
                 self.log_test(f"Calculator - {scenario['name']}", False, "No response received")
+        
+        # Test volume tier assignments specifically
+        volume_tier_tests = [
+            {"licenses": 50, "expected_tier": "tier_100", "description": "1-100 licenses"},
+            {"licenses": 250, "expected_tier": "tier_500", "description": "101-500 licenses"},
+            {"licenses": 750, "expected_tier": "tier_1000", "description": "501-1000 licenses"},
+            {"licenses": 1500, "expected_tier": "tier_2000", "description": "1001-2000 licenses"},
+            {"licenses": 3500, "expected_tier": "tier_5000", "description": "2001-5000 licenses"},
+            {"licenses": 7500, "expected_tier": "tier_10000", "description": "5001-10000 licenses"},
+            {"licenses": 50000, "expected_tier": "tier_100000", "description": "10001-100000 licenses"}
+        ]
+        
+        for tier_test in volume_tier_tests:
+            response = self.run_test(
+                f"Volume Tier Test - {tier_test['description']}", 
+                "GET", 
+                f"pricing/calculator?exam_plan=plan_20&num_licenses={tier_test['licenses']}&ai_tutor_option=none", 
+                200
+            )
+            if response:
+                volume_tier = response.get('volume_tier', {}).get('id', '')
+                if volume_tier == tier_test['expected_tier']:
+                    self.log_test(f"Tier Assignment {tier_test['licenses']} licenses", True, f"Correct tier: {volume_tier}")
+                else:
+                    self.log_test(f"Tier Assignment {tier_test['licenses']} licenses", False, f"Expected {tier_test['expected_tier']}, got {volume_tier}")
 
     def test_admin_pricing_analysis(self):
         """Test admin pricing analysis endpoint"""
