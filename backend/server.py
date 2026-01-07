@@ -1472,43 +1472,43 @@ VOLUME_PRICING = {
         "min": 1, "max": 100,
         "price_multiplier": 2.00,
         "discount": "0%",
-        "label": "1-100 licencias"
+        "label": "1-100 licenses"
     },
     "tier_500": {
         "min": 101, "max": 500,
         "price_multiplier": 1.85,
         "discount": "7%",
-        "label": "101-500 licencias"
+        "label": "101-500 licenses"
     },
     "tier_1000": {
         "min": 501, "max": 1000,
         "price_multiplier": 1.72,
         "discount": "14%",
-        "label": "501-1,000 licencias"
+        "label": "501-1,000 licenses"
     },
     "tier_2000": {
         "min": 1001, "max": 2000,
         "price_multiplier": 1.60,
         "discount": "20%",
-        "label": "1,001-2,000 licencias"
+        "label": "1,001-2,000 licenses"
     },
     "tier_5000": {
         "min": 2001, "max": 5000,
         "price_multiplier": 1.50,
         "discount": "25%",
-        "label": "2,001-5,000 licencias"
+        "label": "2,001-5,000 licenses"
     },
     "tier_10000": {
         "min": 5001, "max": 10000,
         "price_multiplier": 1.42,
         "discount": "29%",
-        "label": "5,001-10,000 licencias"
+        "label": "5,001-10,000 licenses"
     },
     "tier_100000": {
         "min": 10001, "max": 100000,
         "price_multiplier": 1.35,
         "discount": "32%",
-        "label": "10,001-100,000 licencias"
+        "label": "10,001-100,000 licenses"
     },
 }
 
