@@ -273,12 +273,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Interactive Price Calculator"
-    - "Pricing Plans Display"
-    - "Volume Pricing Tiers"
-    - "Admin Panel Costs Tab"
+    - "Admin Panel ROI Calculator Tab"
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
