@@ -1593,51 +1593,44 @@ AI_TUTOR_ADDONS = {
 
 @api_router.get("/pricing/platform-plans")
 async def get_platform_plans():
-    """Get platform pricing plans: exam plans + volume pricing + AI tutor options"""
+    """Get available exam plans, volume tiers, and AI options for B2B pricing"""
     
-    # Exam plans
+    # Planes de exámenes (sin mostrar costes internos)
     exam_plans = []
     for plan_id, plan in EXAM_PLANS.items():
         exam_plans.append({
             "id": plan_id,
             "exams": plan["exams"],
-            "base_cost": plan["base_cost"],
             "label": plan["label"]
         })
     
-    # Volume pricing tiers
-    volume_tiers = []
+    # Tiers de volumen (sin mostrar multiplicadores internos)
+    volume_pricing = []
     for tier_id, tier in VOLUME_PRICING.items():
-        volume_tiers.append({
+        volume_pricing.append({
             "id": tier_id,
-            "min_students": tier["min"],
-            "max_students": tier["max"],
-            "price_multiplier": tier["price_multiplier"],
+            "min": tier["min"],
+            "max": tier["max"],
             "discount": tier["discount"],
             "label": tier["label"]
         })
     
-    # AI Tutor options
+    # Opciones de AI Tutor (solo precio, sin coste interno)
     ai_tutor_options = []
     for option_id, option in AI_TUTOR_OPTIONS.items():
         ai_tutor_options.append({
             "id": option_id,
             "minutes": option["minutes"],
-            "cost": option["cost"],
             "price": option["price"],
             "label": option["label"]
         })
     
     return {
-        "pricing_model": "exam_plans_with_volume_pricing",
+        "pricing_model": "exam_plans_with_volume_licensing",
         "exam_plans": exam_plans,
-        "volume_pricing": volume_tiers,
+        "volume_pricing": volume_pricing,
         "ai_tutor_options": ai_tutor_options,
-        "base_costs": {
-            "mock_test": AVG_MOCK_TEST_COST,
-            "ai_tutor_per_minute": AI_TUTOR_COST_PER_MIN
-        },
-        "note": "Selecciona plan de exámenes, número de estudiantes y opción de AI Tutor"
+        "description": "Selecciona el número de exámenes por licencia, si quieres AI Tutor, y el volumen de licencias para obtener tu precio final"
     }
 
 @api_router.get("/pricing/test-packages")
