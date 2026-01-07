@@ -33,6 +33,37 @@ export default function AdminPanel() {
     stripe_key: ''
   });
 
+  // ROI Calculator State - Editable prices
+  const [licensePricing, setLicensePricing] = useState({
+    // Base costs (internal)
+    baseCostPerExam: 0.94,
+    aiTutorCostPerMin: 0.06,
+    writingTestCost: 0.05,
+    speakingTestCost: 0.85,
+    // Selling prices (editable)
+    volumeMultipliers: {
+      tier_100: 2.00,
+      tier_500: 1.85,
+      tier_1000: 1.72,
+      tier_2000: 1.60,
+      tier_5000: 1.50,
+      tier_10000: 1.42,
+      tier_100000: 1.35,
+    },
+    aiTutorPrices: {
+      basic: 5.00,
+      standard: 9.00,
+      premium: 15.00,
+      unlimited: 35.00,
+    },
+    // Test packages sell prices
+    writingTestPrice: 1.10,
+    speakingTestPrice: 2.70,
+    mockExamPrice: 2.20,
+  });
+
+  const [roiResults, setRoiResults] = useState(null);
+
   useEffect(() => {
     if (user?.user_type !== 'admin') {
       toast.error('Acceso denegado: Solo administradores');
