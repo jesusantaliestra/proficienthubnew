@@ -189,11 +189,11 @@ export default function Landing() {
   ];
 
   const examTypes = [
-    { id: 'toefl', name: 'TOEFL', color: 'bg-blue-500', cost: '$0.92' },
-    { id: 'ielts', name: 'IELTS', color: 'bg-red-500', cost: '$0.82' },
-    { id: 'cambridge', name: 'Cambridge', color: 'bg-purple-500', cost: '$0.95' },
-    { id: 'pte', name: 'PTE', color: 'bg-orange-500', cost: '$0.98' },
-    { id: 'oet', name: 'OET', color: 'bg-green-500', cost: '$1.02' }
+    { id: 'toefl', name: 'TOEFL', color: 'bg-blue-500' },
+    { id: 'ielts', name: 'IELTS', color: 'bg-red-500' },
+    { id: 'cambridge', name: 'Cambridge', color: 'bg-purple-500' },
+    { id: 'pte', name: 'PTE', color: 'bg-orange-500' },
+    { id: 'oet', name: 'OET', color: 'bg-green-500' }
   ];
 
   return (
