@@ -201,6 +201,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ VERIFIED: Interactive Price Calculator working perfectly. Plan selection (6 buttons) functional, AI Tutor dropdown works with all options (none, basic, standard, premium), real-time pricing calculations display correctly. Shows TU COSTE/Estudiante, PRECIO/Estudiante, Tu Inversión, Precio Total, Tu Ganancia, Margen ProficientHub %, and Tu ROI calculations. Minor: Student slider and resale price slider selectors need adjustment but functionality works via other inputs."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE B2B PRICING CALCULATOR VERIFIED: Updated 3-step flow working perfectly. Step 1: All 6 exam plans (5,10,20,40,60,100) with plan_20 'Popular' badge and green border selection. Step 2: AI Tutor toggle with 'Sin AI Tutor' default selected, 'Incluir AI Tutor' shows 4 time options (30,60,120,300 min). Step 3: 7 volume tiers (1-100 to 10,001-100,000) with discount percentages, license slider functional. Final pricing section shows configuration summary, price per license ($73.67 for plan_40 + 60min AI + 501 licenses), total order price, savings calculation, and 'Solicitar Demo' button. CRITICAL: NO internal costs visible anywhere - properly hidden from clients."
 
   - task: "Writing/Speaking Packages Display"
     implemented: true
