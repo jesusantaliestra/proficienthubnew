@@ -399,6 +399,41 @@ export default function Landing() {
                     ))}
                   </div>
                 )}
+                
+                {/* Exam Types Selection */}
+                <div className="mt-6 bg-gray-50 rounded-xl p-4">
+                  <Label className="text-gray-700 font-semibold block mb-3">Which exam types? (doesn't affect price)</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {availableExamTypes.map((examType) => (
+                      <button
+                        key={examType.id}
+                        onClick={() => {
+                          if (examType.id === 'all') {
+                            setSelectedExamTypes(['all']);
+                          } else {
+                            const newSelection = selectedExamTypes.filter(e => e !== 'all');
+                            if (newSelection.includes(examType.id)) {
+                              const filtered = newSelection.filter(e => e !== examType.id);
+                              setSelectedExamTypes(filtered.length > 0 ? filtered : ['all']);
+                            } else {
+                              setSelectedExamTypes([...newSelection, examType.id]);
+                            }
+                          }
+                        }}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          selectedExamTypes.includes(examType.id) || (examType.id === 'all' && selectedExamTypes.includes('all'))
+                            ? 'bg-[#58CC02] text-white'
+                            : 'bg-white border border-gray-200 text-gray-700 hover:border-[#58CC02]'
+                        }`}
+                      >
+                        {examType.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Selected: {selectedExamTypes.includes('all') ? 'All exam types' : selectedExamTypes.map(e => availableExamTypes.find(a => a.id === e)?.label).join(', ')}
+                  </p>
+                </div>
               </div>
               
               {/* STEP 2: AI Tutor Option */}
