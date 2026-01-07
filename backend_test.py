@@ -120,6 +120,201 @@ class ProficientHubAPITester:
         if response and 'plans' in response:
             self.log_test("Pricing with 3+ Exams", True, f"Found {len(response['plans'])} plans for 3+ exams")
 
+    def test_b2b_pricing_model(self):
+        """Test new B2B pricing model endpoints"""
+        print("\n🏢 Testing B2B Pricing Model...")
+        
+        # Test platform plans endpoint
+        response = self.run_test("Platform Plans Endpoint", "GET", "pricing/platform-plans", 200)
+        if response:
+            # Verify exam_plans structure
+            if 'exam_plans' in response:
+                exam_plans = response['exam_plans']
+                expected_plans = ['plan_5', 'plan_10', 'plan_20', 'plan_40', 'plan_60', 'plan_100']
+                found_plan_ids = [plan['id'] for plan in exam_plans]
+                missing_plans = [plan for plan in expected_plans if plan not in found_plan_ids]
+                
+                if len(exam_plans) == 6 and not missing_plans:
+                    self.log_test("Exam Plans Structure", True, f"Found all 6 exam plans: {found_plan_ids}")
+                else:
+                    self.log_test("Exam Plans Structure", False, f"Expected 6 plans, found {len(exam_plans)}. Missing: {missing_plans}")
+            else:
+                self.log_test("Exam Plans Structure", False, "Missing exam_plans in response")
+            
+            # Verify volume_pricing structure
+            if 'volume_pricing' in response:
+                volume_tiers = response['volume_pricing']
+                expected_tiers = ['tier_1_100', 'tier_101_500', 'tier_501_2000', 'tier_2001_10000']
+                found_tier_ids = [tier['id'] for tier in volume_tiers]
+                missing_tiers = [tier for tier in expected_tiers if tier not in found_tier_ids]
+                
+                if len(volume_tiers) == 4 and not missing_tiers:
+                    self.log_test("Volume Pricing Structure", True, f"Found all 4 volume tiers: {found_tier_ids}")
+                else:
+                    self.log_test("Volume Pricing Structure", False, f"Expected 4 tiers, found {len(volume_tiers)}. Missing: {missing_tiers}")
+            else:
+                self.log_test("Volume Pricing Structure", False, "Missing volume_pricing in response")
+            
+            # Verify ai_tutor_options structure
+            if 'ai_tutor_options' in response:
+                ai_options = response['ai_tutor_options']
+                expected_options = ['none', 'basic', 'standard', 'premium', 'unlimited']
+                found_option_ids = [option['id'] for option in ai_options]
+                missing_options = [option for option in expected_options if option not in found_option_ids]
+                
+                if len(ai_options) == 5 and not missing_options:
+                    self.log_test("AI Tutor Options Structure", True, f"Found all 5 AI tutor options: {found_option_ids}")
+                else:
+                    self.log_test("AI Tutor Options Structure", False, f"Expected 5 options, found {len(ai_options)}. Missing: {missing_options}")
+            else:
+                self.log_test("AI Tutor Options Structure", False, "Missing ai_tutor_options in response")
+        
+        # Test pricing calculator with different scenarios
+        test_scenarios = [
+            {
+                "name": "Plan 10 - 50 students - No AI",
+                "params": "exam_plan=plan_10&num_students=50&ai_tutor_option=none&resale_price_per_student=25",
+                "expected_cost": 9.40,
+                "expected_price": 18.80
+            },
+            {
+                "name": "Plan 20 - 200 students - Basic AI",
+                "params": "exam_plan=plan_20&num_students=200&ai_tutor_option=basic&resale_price_per_student=50",
+                "expected_tier": "tier_101_500"
+            },
+            {
+                "name": "Plan 100 - 1000 students - Premium AI",
+                "params": "exam_plan=plan_100&num_students=1000&ai_tutor_option=premium&resale_price_per_student=25",
+                "expected_tier": "tier_501_2000"
+            },
+            {
+                "name": "Plan 20 - 5000 students - Standard AI",
+                "params": "exam_plan=plan_20&num_students=5000&ai_tutor_option=standard&resale_price_per_student=50",
+                "expected_tier": "tier_2001_10000"
+            }
+        ]
+        
+        for scenario in test_scenarios:
+            response = self.run_test(f"Calculator - {scenario['name']}", "GET", f"pricing/calculator?{scenario['params']}", 200)
+            if response:
+                # Verify response structure
+                required_fields = ['plan', 'volume_tier', 'ai_tutor', 'pricing', 'customer_roi']
+                missing_fields = [field for field in required_fields if field not in response]
+                
+                if not missing_fields:
+                    self.log_test(f"Calculator Response Structure - {scenario['name']}", True, "All required fields present")
+                    
+                    # Verify pricing structure
+                    if 'pricing' in response:
+                        pricing = response['pricing']
+                        pricing_fields = ['cost_per_student', 'price_per_student', 'total_cost', 'total_price', 'profit', 'margin_percentage']
+                        missing_pricing_fields = [field for field in pricing_fields if field not in pricing]
+                        
+                        if not missing_pricing_fields:
+                            self.log_test(f"Pricing Fields - {scenario['name']}", True, "All pricing fields present")
+                            
+                            # Test specific calculations for plan_10 scenario
+                            if scenario['name'] == "Plan 10 - 50 students - No AI":
+                                cost_per_student = pricing.get('cost_per_student', 0)
+                                price_per_student = pricing.get('price_per_student', 0)
+                                
+                                if abs(cost_per_student - 9.40) < 0.01:
+                                    self.log_test("Cost Calculation Accuracy", True, f"Cost per student: ${cost_per_student}")
+                                else:
+                                    self.log_test("Cost Calculation Accuracy", False, f"Expected $9.40, got ${cost_per_student}")
+                                
+                                if abs(price_per_student - 18.80) < 0.01:
+                                    self.log_test("Price Calculation Accuracy", True, f"Price per student: ${price_per_student}")
+                                else:
+                                    self.log_test("Price Calculation Accuracy", False, f"Expected $18.80, got ${price_per_student}")
+                        else:
+                            self.log_test(f"Pricing Fields - {scenario['name']}", False, f"Missing pricing fields: {missing_pricing_fields}")
+                    
+                    # Verify volume tier assignment
+                    if 'expected_tier' in scenario:
+                        volume_tier = response.get('volume_tier', {}).get('id', '')
+                        if volume_tier == scenario['expected_tier']:
+                            self.log_test(f"Volume Tier Assignment - {scenario['name']}", True, f"Correct tier: {volume_tier}")
+                        else:
+                            self.log_test(f"Volume Tier Assignment - {scenario['name']}", False, f"Expected {scenario['expected_tier']}, got {volume_tier}")
+                else:
+                    self.log_test(f"Calculator Response Structure - {scenario['name']}", False, f"Missing fields: {missing_fields}")
+            else:
+                self.log_test(f"Calculator - {scenario['name']}", False, "No response received")
+
+    def test_admin_pricing_analysis(self):
+        """Test admin pricing analysis endpoint"""
+        print("\n👑 Testing Admin Pricing Analysis...")
+        
+        # First, try to login as admin
+        admin_login_data = {
+            "email": "santaliestralimited@gmail.com",
+            "password": "Admin123!"
+        }
+        
+        # Store current token
+        original_token = self.token
+        
+        response = self.run_test("Admin Login", "POST", "auth/login", 200, admin_login_data)
+        if response and 'access_token' in response:
+            admin_token = response['access_token']
+            self.token = admin_token
+            self.log_test("Admin Authentication", True, "Admin login successful")
+            
+            # Test admin pricing analysis endpoint
+            response = self.run_test("Admin Pricing Analysis", "GET", "admin/pricing-analysis", 200)
+            if response:
+                # Verify response structure
+                required_sections = ['exam_costs', 'individual_test_costs', 'tier_analysis', 'ai_tutor_addon_analysis']
+                missing_sections = [section for section in required_sections if section not in response]
+                
+                if not missing_sections:
+                    self.log_test("Admin Analysis Structure", True, "All required sections present")
+                    
+                    # Verify tier_analysis structure
+                    if 'tier_analysis' in response:
+                        tier_analysis = response['tier_analysis']
+                        if isinstance(tier_analysis, list) and len(tier_analysis) > 0:
+                            first_tier = tier_analysis[0]
+                            tier_fields = ['tier_id', 'licenses_range', 'price_per_license', 'price_per_exam', 'discount', 'internal_cost', 'profit_per_license', 'margin_percentage']
+                            missing_tier_fields = [field for field in tier_fields if field not in first_tier]
+                            
+                            if not missing_tier_fields:
+                                self.log_test("Tier Analysis Fields", True, "All tier analysis fields present")
+                            else:
+                                self.log_test("Tier Analysis Fields", False, f"Missing tier fields: {missing_tier_fields}")
+                        else:
+                            self.log_test("Tier Analysis Data", False, "Tier analysis is empty or not a list")
+                    
+                    # Verify exam_costs structure
+                    if 'exam_costs' in response:
+                        exam_costs = response['exam_costs']
+                        if isinstance(exam_costs, dict) and len(exam_costs) > 0:
+                            self.log_test("Exam Costs Data", True, f"Found exam costs for {len(exam_costs)} exam types")
+                        else:
+                            self.log_test("Exam Costs Data", False, "Exam costs data is empty or invalid")
+                    
+                    # Verify individual_test_costs
+                    if 'individual_test_costs' in response:
+                        test_costs = response['individual_test_costs']
+                        expected_tests = ['writing', 'speaking']
+                        found_tests = [test for test in expected_tests if test in test_costs]
+                        
+                        if len(found_tests) == len(expected_tests):
+                            self.log_test("Individual Test Costs", True, f"Found costs for: {found_tests}")
+                        else:
+                            missing_tests = [test for test in expected_tests if test not in found_tests]
+                            self.log_test("Individual Test Costs", False, f"Missing test costs: {missing_tests}")
+                else:
+                    self.log_test("Admin Analysis Structure", False, f"Missing sections: {missing_sections}")
+            else:
+                self.log_test("Admin Pricing Analysis", False, "No response received")
+        else:
+            self.log_test("Admin Authentication", False, "Admin login failed")
+        
+        # Restore original token
+        self.token = original_token
+
     def test_exam_endpoints(self):
         """Test exam-related endpoints"""
         print("\n📚 Testing Exam Endpoints...")
