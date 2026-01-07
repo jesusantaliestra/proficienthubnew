@@ -465,18 +465,28 @@ export default function Landing() {
                   </div>
                 )}
                 
-                {/* License Slider */}
+                {/* License Input + Slider */}
                 <div className="bg-gray-50 rounded-xl p-6">
-                  <div className="flex justify-between mb-3">
+                  <div className="flex justify-between items-center mb-4">
                     <Label className="text-gray-700 font-semibold">Número exacto de licencias</Label>
-                    <span className="text-2xl font-extrabold text-[#58CC02]">{numLicenses.toLocaleString()}</span>
+                    <input
+                      type="number"
+                      value={numLicenses}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 1;
+                        setNumLicenses(Math.min(100000, Math.max(1, val)));
+                      }}
+                      className="w-32 text-right text-2xl font-extrabold text-[#58CC02] bg-white border-2 border-gray-200 rounded-lg px-3 py-1 focus:border-[#58CC02] outline-none"
+                      min={1}
+                      max={100000}
+                    />
                   </div>
                   <Slider
                     value={[numLicenses]}
                     onValueChange={([v]) => setNumLicenses(v)}
                     max={100000}
                     min={1}
-                    step={numLicenses < 100 ? 1 : numLicenses < 1000 ? 10 : numLicenses < 10000 ? 100 : 1000}
+                    step={1}
                     className="w-full"
                   />
                   <div className="flex justify-between text-xs text-gray-400 mt-2">
