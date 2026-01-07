@@ -592,12 +592,11 @@ export default function Landing() {
           <div className="text-center mb-12">
             <Badge className="bg-orange-100 text-orange-700 border-orange-200 px-4 py-2 mb-6 text-sm font-semibold">
               <Coins className="w-4 h-4 mr-2" />
-              Servicios Extra para Monetización
+              Servicios Extra
             </Badge>
             <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Paquetes de Writing & Speaking</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Compra tests individuales a precio mayorista y revéndelos a tus estudiantes.
-              <strong className="text-[#58CC02]"> Genera ingresos adicionales con márgenes excelentes.</strong>
+              Compra tests individuales y ofrécelos a tus estudiantes como servicio adicional.
             </p>
           </div>
           
@@ -616,38 +615,75 @@ export default function Landing() {
                 <table className="w-full">
                   <thead>
                     <tr className="text-left text-sm text-gray-500 border-b">
-                      <th className="pb-2">Tests</th>
-                      <th className="pb-2 text-center">Tu Coste</th>
-                      <th className="pb-2 text-center">Reventa Sugerida</th>
-                      <th className="pb-2 text-center">Tu Ganancia</th>
+                      <th className="pb-2">Cantidad</th>
+                      <th className="pb-2 text-center">Precio</th>
+                      <th className="pb-2 text-center">Por Test</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm">
                     {[
-                      { tests: 100, cost: 5, resale: 3, profit: 295 },
-                      { tests: 500, cost: 22.50, resale: 3, profit: 1477.50, popular: true },
-                      { tests: 1000, cost: 40, resale: 3, profit: 2960 },
-                      { tests: 5000, cost: 175, resale: 2.50, profit: 12325 },
-                      { tests: 10000, cost: 300, resale: 2.50, profit: 24700 }
+                      { tests: 100, price: 150, perTest: 1.50 },
+                      { tests: 500, price: 625, perTest: 1.25, popular: true },
+                      { tests: 1000, price: 1100, perTest: 1.10 },
+                      { tests: 5000, price: 4750, perTest: 0.95 },
+                      { tests: 10000, price: 8500, perTest: 0.85 }
                     ].map((pkg) => (
                       <tr key={pkg.tests} className={`border-b ${pkg.popular ? 'bg-blue-50' : ''}`}>
                         <td className="py-3 font-semibold">
                           {pkg.tests.toLocaleString()} tests 
-                          {pkg.popular && <Badge className="ml-2 bg-blue-500 text-white border-0 text-xs">Best Value</Badge>}
+                          {pkg.popular && <Badge className="ml-2 bg-blue-500 text-white border-0 text-xs">Popular</Badge>}
                         </td>
-                        <td className="py-3 text-center text-red-600 font-bold">${pkg.cost}</td>
-                        <td className="py-3 text-center text-gray-600">${pkg.resale}/test</td>
-                        <td className="py-3 text-center text-green-600 font-bold">${pkg.profit.toLocaleString()}</td>
+                        <td className="py-3 text-center font-bold text-blue-600">${pkg.price.toLocaleString()}</td>
+                        <td className="py-3 text-center text-gray-600">${pkg.perTest}/test</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                <p className="text-xs text-gray-500 mt-2 text-center">Coste interno: ~$0.05/test</p>
               </div>
             </Card>
             
             {/* Speaking Tests */}
             <Card className="border-2 border-purple-200 rounded-2xl overflow-hidden">
+              <div className="bg-purple-50 p-4 border-b border-purple-200">
+                <h3 className="text-xl font-bold text-purple-800 flex items-center gap-2">
+                  <Mic className="w-5 h-5" />
+                  Speaking Test Packages
+                </h3>
+                <p className="text-sm text-purple-600">AI-powered con feedback de pronunciación</p>
+              </div>
+              <div className="p-4">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-sm text-gray-500 border-b">
+                      <th className="pb-2">Cantidad</th>
+                      <th className="pb-2 text-center">Precio</th>
+                      <th className="pb-2 text-center">Por Test</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm">
+                    {[
+                      { tests: 100, price: 350, perTest: 3.50 },
+                      { tests: 500, price: 1500, perTest: 3.00, popular: true },
+                      { tests: 1000, price: 2700, perTest: 2.70 },
+                      { tests: 5000, price: 11500, perTest: 2.30 },
+                      { tests: 10000, price: 20000, perTest: 2.00 }
+                    ].map((pkg) => (
+                      <tr key={pkg.tests} className={`border-b ${pkg.popular ? 'bg-purple-50' : ''}`}>
+                        <td className="py-3 font-semibold">
+                          {pkg.tests.toLocaleString()} tests 
+                          {pkg.popular && <Badge className="ml-2 bg-purple-500 text-white border-0 text-xs">Popular</Badge>}
+                        </td>
+                        <td className="py-3 text-center font-bold text-purple-600">${pkg.price.toLocaleString()}</td>
+                        <td className="py-3 text-center text-gray-600">${pkg.perTest}/test</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
               <div className="bg-purple-50 p-4 border-b border-purple-200">
                 <h3 className="text-xl font-bold text-purple-800 flex items-center gap-2">
                   <Mic className="w-5 h-5" />
