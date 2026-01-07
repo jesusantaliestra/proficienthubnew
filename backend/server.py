@@ -1805,25 +1805,26 @@ INDIVIDUAL_TEST_COSTS = {
     "ai_tutor_per_min_mixed": AI_TUTOR_COST_PER_MIN
 }
 
-@api_router.get("/pricing/institutional")
-async def get_institutional_pricing():
-    """Get institutional pricing packages"""
+@api_router.get("/pricing/summary")
+async def get_pricing_summary():
+    """Get complete pricing summary for the new model"""
     return {
-        "pricing_model": "exam_packages",
-        "packages": [
-            {
-                "id": pkg_id,
-                "mock_tests": pkg["mock_tests"],
-                "ai_tutor_minutes": pkg["ai_tutor_minutes"],
-                "price": pkg["price"],
-                "description": pkg["description"],
-                "features": pkg["features"],
-                "price_per_test": round(pkg["price"] / pkg["mock_tests"], 2)
-            }
-            for pkg_id, pkg in EXAM_PACKAGES.items()
+        "pricing_model": "exam_plans_with_volume_pricing",
+        "exam_plans": [
+            {"id": k, "exams": v["exams"], "label": v["label"]} 
+            for k, v in EXAM_PLANS.items()
         ],
-        "exam_types": list(EXAM_COSTS.keys()),
-        "addons": AI_TUTOR_ADDONS
+        "volume_tiers": [
+            {"id": k, "range": f"{v['min']}-{v['max']} estudiantes", "discount": v["discount"]} 
+            for k, v in VOLUME_PRICING.items()
+        ],
+        "ai_tutor_options": [
+            {"id": k, "label": v["label"], "price": v["price"]} 
+            for k, v in AI_TUTOR_OPTIONS.items()
+        ],
+        "bulk_products": ["writing", "speaking", "mock_exam", "ai_tutor_minutes"],
+        "max_students": 10000,
+        "max_bulk_quantity": 100000
     }
 
 # ==================== MONETIZATION CALCULATOR ====================
