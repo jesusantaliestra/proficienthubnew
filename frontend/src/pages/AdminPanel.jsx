@@ -64,6 +64,34 @@ export default function AdminPanel() {
 
   const [roiResults, setRoiResults] = useState(null);
 
+  // Income Simulator State
+  const [incomeSimulator, setIncomeSimulator] = useState({
+    // License sales by plan
+    licenses: {
+      plan_5: { quantity: 0, examsPerLicense: 5 },
+      plan_10: { quantity: 100, examsPerLicense: 10 },
+      plan_20: { quantity: 50, examsPerLicense: 20 },
+      plan_40: { quantity: 20, examsPerLicense: 40 },
+      plan_60: { quantity: 10, examsPerLicense: 60 },
+      plan_100: { quantity: 5, examsPerLicense: 100 },
+    },
+    // AI Tutor add-ons sold
+    aiTutor: {
+      basic: 50,
+      standard: 80,
+      premium: 30,
+      unlimited: 10,
+    },
+    // Test packages sold
+    testPackages: {
+      writing: 2000,
+      speaking: 1000,
+      mockExams: 500,
+    },
+  });
+
+  const [incomeResults, setIncomeResults] = useState(null);
+
   useEffect(() => {
     if (user?.user_type !== 'admin') {
       toast.error('Acceso denegado: Solo administradores');
