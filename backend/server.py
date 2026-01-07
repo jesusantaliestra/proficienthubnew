@@ -1786,20 +1786,24 @@ async def get_bulk_product_pricing(
         "pricing": pricing_data,
         "note": f"Precios para reventa de {product_type}. Márgenes incluyen descuentos por volumen."
     }
-        "exam_costs": {
-            k: {
-                "description": v["description"],
-                "speaking_minutes": v["speaking_minutes"],
-                "writing_tasks": v["writing_tasks"]
-            } for k, v in EXAM_COSTS.items()
-        },
-        "average_mock_test_cost_display": f"${AVG_MOCK_TEST_COST}",
-        "individual_test_costs_display": {
-            "writing_test": f"${INDIVIDUAL_TEST_COSTS['writing']}",
-            "speaking_test": f"${INDIVIDUAL_TEST_COSTS['speaking']}",
-            "ai_tutor_per_minute": f"${INDIVIDUAL_TEST_COSTS['ai_tutor_per_min_mixed']}"
-        }
-    }
+
+# ==================== LEGACY SUPPORT FUNCTIONS ====================
+# Keep some old variable names for backward compatibility
+
+# For backward compatibility with existing code
+EXAM_COSTS = {
+    "toefl": {"description": "TOEFL iBT - Academic English"},
+    "ielts": {"description": "IELTS Academic/General"},
+    "cambridge": {"description": "Cambridge C1/C2 Advanced"},
+    "pte": {"description": "PTE Academic"},
+    "oet": {"description": "OET - Healthcare Professionals"}
+}
+
+INDIVIDUAL_TEST_COSTS = {
+    "writing": 0.05,
+    "speaking": 0.85,
+    "ai_tutor_per_min_mixed": AI_TUTOR_COST_PER_MIN
+}
 
 @api_router.get("/pricing/institutional")
 async def get_institutional_pricing():
