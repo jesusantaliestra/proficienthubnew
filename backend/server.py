@@ -2190,21 +2190,88 @@ async def get_pricing_analysis(current_user: dict = Depends(get_current_user)):
     if current_user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    # Volume pricing analysis
-    volume_analysis = []
+    # Exam costs breakdown by type
+    exam_costs = {
+        "toefl": {
+            "description": "TOEFL iBT - Academic English",
+            "speaking_minutes": 17,
+            "writing_tasks": 2,
+            "internal_cost": 0.92
+        },
+        "ielts": {
+            "description": "IELTS Academic/General",
+            "speaking_minutes": 14,
+            "writing_tasks": 2,
+            "internal_cost": 0.82
+        },
+        "cambridge": {
+            "description": "Cambridge C1/C2 Advanced",
+            "speaking_minutes": 15,
+            "writing_tasks": 2,
+            "internal_cost": 0.95
+        },
+        "pte": {
+            "description": "PTE Academic",
+            "speaking_minutes": 20,
+            "writing_tasks": 2,
+            "internal_cost": 0.98
+        },
+        "oet": {
+            "description": "OET - Healthcare Professionals",
+            "speaking_minutes": 20,
+            "writing_tasks": 1,
+            "internal_cost": 1.02
+        }
+    }
+    
+    # Individual test costs
+    individual_test_costs = {
+        "writing": 0.05,
+        "speaking": 0.85,
+        "ai_tutor_per_min_voice": 0.18,
+        "ai_tutor_per_min_mixed": 0.06
+    }
+    
+    # Tier analysis with complete pricing breakdown
+    tier_analysis = []
+    base_license_cost = AVG_MOCK_TEST_COST * 10  # 10 exams per student default
+    
     for tier_id, tier in VOLUME_PRICING.items():
-        volume_analysis.append({
+        price_per_license = round(base_license_cost * tier["price_multiplier"], 2)
+        internal_cost = base_license_cost
+        profit = round(price_per_license - internal_cost, 2)
+        margin = int((profit / price_per_license) * 100) if price_per_license > 0 else 0
+        
+        tier_analysis.append({
             "tier_id": tier_id,
-            "student_range": f"{tier['min']}-{tier['max']} estudiantes",
-            "price_multiplier": tier["price_multiplier"],
+            "licenses_range": f"{tier['min']}-{tier['max']:,}",
+            "price_per_license": price_per_license,
+            "price_per_exam": round(price_per_license / 10, 2),
             "discount": tier["discount"],
-            "estimated_margin": f"{int((1 - 1/tier['price_multiplier']) * 100)}%"
+            "internal_cost": internal_cost,
+            "profit_per_license": profit,
+            "margin_percentage": f"{margin}%"
         })
     
+    # AI Tutor addon analysis
+    ai_tutor_addon_analysis = []
+    for option_id, option in AI_TUTOR_OPTIONS.items():
+        if option["minutes"] > 0:
+            profit = round(option["price"] - option["cost"], 2)
+            margin = int((profit / option["price"]) * 100) if option["price"] > 0 else 0
+            ai_tutor_addon_analysis.append({
+                "addon_id": option_id,
+                "minutes": option["minutes"],
+                "internal_cost": option["cost"],
+                "price": option["price"],
+                "profit": profit,
+                "margin": f"{margin}%"
+            })
+    
     # Exam plans analysis
-    plan_analysis = []
+    exam_plans_analysis = []
     for plan_id, plan in EXAM_PLANS.items():
-        plan_analysis.append({
+        exam_plans_analysis.append({
             "plan_id": plan_id,
             "exams": plan["exams"],
             "base_cost": plan["base_cost"],
@@ -2212,26 +2279,15 @@ async def get_pricing_analysis(current_user: dict = Depends(get_current_user)):
             "label": plan["label"]
         })
     
-    # AI Tutor options analysis
-    tutor_analysis = []
-    for option_id, option in AI_TUTOR_OPTIONS.items():
-        if option["minutes"] > 0:
-            tutor_analysis.append({
-                "option_id": option_id,
-                "minutes": option["minutes"],
-                "internal_cost": option["cost"],
-                "price": option["price"],
-                "profit": round(option["price"] - option["cost"], 2),
-                "margin": f"{int((option['price'] - option['cost']) / option['price'] * 100)}%"
-            })
-    
     return {
         "pricing_model": "exam_plans_with_volume_pricing",
-        "base_cost_per_exam": AVG_MOCK_TEST_COST,
+        "avg_mock_test_cost": AVG_MOCK_TEST_COST,
         "ai_tutor_cost_per_minute": AI_TUTOR_COST_PER_MIN,
-        "exam_plans": plan_analysis,
-        "volume_pricing": volume_analysis,
-        "ai_tutor_options": tutor_analysis,
+        "exam_costs": exam_costs,
+        "individual_test_costs": individual_test_costs,
+        "tier_analysis": tier_analysis,
+        "ai_tutor_addon_analysis": ai_tutor_addon_analysis,
+        "exam_plans": exam_plans_analysis,
         "margin_summary": {
             "tier_1_100": "50% margen base",
             "tier_101_500": "45% margen", 
@@ -2239,7 +2295,7 @@ async def get_pricing_analysis(current_user: dict = Depends(get_current_user)):
             "tier_2001_10000": "35% margen (enterprise)",
             "ai_tutor": "Hasta 67% margen"
         },
-        "note": "Nuevo modelo: Planes por número de exámenes + descuento por volumen de estudiantes + AI opcional"
+        "note": "Modelo B2B: Planes por número de exámenes (5-100) + descuento por volumen de estudiantes (hasta 10,000) + AI Tutor opcional"
     }
 
 @api_router.post("/pricing/calculate-roi-legacy")
