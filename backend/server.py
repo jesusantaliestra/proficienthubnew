@@ -1446,135 +1446,110 @@ from emergentintegrations.payments.stripe.checkout import StripeCheckout, Checko
 stripe_api_key = os.environ.get('STRIPE_API_KEY', 'sk_test_emergent')
 
 # ==================== PRICING ENDPOINTS ====================
-# COSTOS INTERNOS REALES OPTIMIZADOS (basados en OpenAI pricing 2025)
-# Usando GPT-4o-mini para evaluaciones y optimización de TTS
-# NO EXPONER ESTOS COSTOS AL CLIENTE
+# MODELO B2B: Planes por número de exámenes + descuento por volumen de estudiantes
+# Cada plan puede tener AI Tutor o no
 
-# Costos por tipo de examen (Mock Test completo: Speaking + Writing + Corrección)
-# OPTIMIZADO: Usando GPT-4o-mini para evaluaciones, TTS solo 1 min feedback
-EXAM_COSTS = {
-    "toefl": {
-        "speaking_minutes": 17,
-        "writing_tasks": 1,
-        "internal_cost": 0.92,  # Speaking optimizado $0.85 + Writing $0.05 + correction $0.02
-        "description": "TOEFL iBT - Academic English"
-    },
-    "ielts": {
-        "speaking_minutes": 14,
-        "writing_tasks": 1,
-        "internal_cost": 0.82,  # Speaking $0.75 + Writing $0.05 + correction $0.02
-        "description": "IELTS Academic/General"
-    },
-    "cambridge": {
-        "speaking_minutes": 15,
-        "writing_tasks": 2,
-        "internal_cost": 0.95,  # Speaking $0.80 + Writing $0.10 (2 tasks) + correction $0.05
-        "description": "Cambridge C1/C2 Advanced"
-    },
-    "pte": {
-        "speaking_minutes": 20,
-        "writing_tasks": 1,
-        "internal_cost": 0.98,  # Speaking $0.90 + Writing $0.05 + correction $0.03
-        "description": "PTE Academic"
-    },
-    "oet": {
-        "speaking_minutes": 20,
-        "writing_tasks": 1,
-        "internal_cost": 1.02,  # Speaking $0.92 (medical terminology) + Writing $0.07 + correction $0.03
-        "description": "OET - Healthcare Professionals"
-    }
+# Costes base
+AVG_MOCK_TEST_COST = 0.94  # Coste interno por mock test
+AI_TUTOR_COST_PER_MIN = 0.06  # Coste interno por minuto AI
+
+# ==================== PLANES POR NÚMERO DE EXÁMENES ====================
+# El cliente elige cuántos mock exams incluye cada licencia
+EXAM_PLANS = {
+    "plan_5": {"exams": 5, "base_cost": 4.70, "label": "5 Mock Exams"},
+    "plan_10": {"exams": 10, "base_cost": 9.40, "label": "10 Mock Exams"},
+    "plan_20": {"exams": 20, "base_cost": 18.80, "label": "20 Mock Exams"},
+    "plan_40": {"exams": 40, "base_cost": 37.60, "label": "40 Mock Exams"},
+    "plan_60": {"exams": 60, "base_cost": 56.40, "label": "60 Mock Exams"},
+    "plan_100": {"exams": 100, "base_cost": 94.00, "label": "100 Mock Exams"},
 }
 
-# Costo promedio por Mock Test OPTIMIZADO = $0.94
-AVG_MOCK_TEST_COST = 0.94
-
-# Costos individuales de tests (OPTIMIZADOS)
-INDIVIDUAL_TEST_COSTS = {
-    "writing": 0.05,    # AI grading con GPT-4o-mini + texto feedback
-    "speaking": 0.85,   # STT ($0.60 para 10min) + AI eval ($0.01) + TTS feedback 1min ($0.24)
-    "ai_tutor_per_min_voice": 0.12,    # STT ($0.06) + GPT-mini ($0.01) + TTS ($0.05 optimizado)
-    "ai_tutor_per_min_text": 0.01,     # Solo GPT-4o-mini
-    "ai_tutor_per_min_mixed": 0.06     # Promedio mixto optimizado
-}
-
-# ==================== PAQUETES DE EXÁMENES B2B ====================
-# PRECIOS BASADOS EN NÚMERO DE LICENCIAS/CLIENTES CONTRATADOS
-# Más licencias = Mejor precio, PERO siempre con márgenes saludables (30-50%)
-
-# Coste base por mock test: $0.94
-# Margen mínimo saludable: 30%
-
-EXAM_PACKAGES = {
-    # TIER 1: 1-20 clientes (pequeños grupos, profesores individuales)
-    "tier_1_20": {
-        "min_licenses": 1,
-        "max_licenses": 20,
-        "mock_tests_per_license": 10,
-        "internal_cost_per_license": 9.40,  # 10 × $0.94
-        "price_per_license": 19.00,
-        "price_per_exam": 1.90,
-        "margin": 0.51,  # 51% margen
+# ==================== PRECIOS POR VOLUMEN DE ESTUDIANTES ====================
+# Más estudiantes = mejor precio por estudiante
+# Márgenes saludables: 40-55%
+VOLUME_PRICING = {
+    # Tier 1: 1-100 estudiantes (margen ~50%)
+    "tier_1_100": {
+        "min": 1, "max": 100,
+        "price_multiplier": 2.00,  # 2x coste = 50% margen
         "discount": "0%",
-        "description": "1-20 Licencias",
-        "features": ["10 mock tests por licencia", "5 tipos de examen", "AI Speaking + Writing", "Dashboard básico"]
+        "label": "1-100 estudiantes"
     },
-    
-    # TIER 2: 21-100 clientes (academias pequeñas)
-    "tier_21_100": {
-        "min_licenses": 21,
-        "max_licenses": 100,
-        "mock_tests_per_license": 10,
-        "internal_cost_per_license": 9.40,
-        "price_per_license": 16.00,
-        "price_per_exam": 1.60,
-        "margin": 0.41,  # 41% margen
-        "discount": "16%",
-        "description": "21-100 Licencias",
-        "features": ["10 mock tests por licencia", "Analytics avanzado", "Exportar resultados", "Soporte email"]
-    },
-    
-    # TIER 3: 101-500 clientes (academias medianas)
+    # Tier 2: 101-500 estudiantes (margen ~45%)
     "tier_101_500": {
-        "min_licenses": 101,
-        "max_licenses": 500,
-        "mock_tests_per_license": 10,
-        "internal_cost_per_license": 9.40,
-        "price_per_license": 14.00,
-        "price_per_exam": 1.40,
-        "margin": 0.33,  # 33% margen
-        "discount": "26%",
-        "description": "101-500 Licencias",
-        "features": ["10 mock tests por licencia", "White-label básico", "API access", "Soporte prioritario"]
+        "min": 101, "max": 500,
+        "price_multiplier": 1.82,  # ~45% margen
+        "discount": "9%",
+        "label": "101-500 estudiantes"
     },
-    
-    # TIER 4: 500+ clientes (instituciones grandes)
-    "tier_500_plus": {
-        "min_licenses": 501,
-        "max_licenses": 10000,
-        "mock_tests_per_license": 10,
-        "internal_cost_per_license": 9.40,
-        "price_per_license": 12.50,
-        "price_per_exam": 1.25,
-        "margin": 0.25,  # 25% margen (mínimo para enterprise)
-        "discount": "34%",
-        "description": "500+ Licencias",
-        "features": ["10 mock tests por licencia", "White-label completo", "API + Webhooks", "Account manager dedicado"]
-    }
+    # Tier 3: 501-2000 estudiantes (margen ~40%)
+    "tier_501_2000": {
+        "min": 501, "max": 2000,
+        "price_multiplier": 1.67,  # ~40% margen
+        "discount": "17%",
+        "label": "501-2,000 estudiantes"
+    },
+    # Tier 4: 2001-10000 estudiantes (margen ~35%)
+    "tier_2001_10000": {
+        "min": 2001, "max": 10000,
+        "price_multiplier": 1.54,  # ~35% margen
+        "discount": "23%",
+        "label": "2,001-10,000 estudiantes"
+    },
 }
 
 # ==================== AI TUTOR ADD-ON ====================
-# Se añade a cualquier tier, precio por minutos
-# Márgenes saludables 40-60%
-AI_TUTOR_ADDON = {
-    "price_per_minute": 0.20,  # Precio venta por minuto
-    "internal_cost_per_minute": 0.06,  # Coste interno
-    "margin": 0.70,  # 70% margen en AI Tutor
-    "packages": {
-        "tutor_30": {"minutes": 30, "price": 6.00, "internal_cost": 1.80, "margin": 0.70},
-        "tutor_60": {"minutes": 60, "price": 12.00, "internal_cost": 3.60, "margin": 0.70},
-        "tutor_120": {"minutes": 120, "price": 22.00, "internal_cost": 7.20, "margin": 0.67},
-        "tutor_300": {"minutes": 300, "price": 50.00, "internal_cost": 18.00, "margin": 0.64},
+# Minutos de AI Tutor por estudiante (opcional)
+AI_TUTOR_OPTIONS = {
+    "none": {"minutes": 0, "cost": 0, "price": 0, "label": "Sin AI Tutor"},
+    "basic": {"minutes": 30, "cost": 1.80, "price": 4.00, "label": "30 min AI Tutor"},
+    "standard": {"minutes": 60, "cost": 3.60, "price": 7.00, "label": "60 min AI Tutor"},
+    "premium": {"minutes": 120, "cost": 7.20, "price": 12.00, "label": "120 min AI Tutor"},
+    "unlimited": {"minutes": 300, "cost": 18.00, "price": 30.00, "label": "300 min AI Tutor"},
+}
+
+# ==================== PRODUCTOS EXTRA PARA REVENTA ====================
+# Writing, Speaking, Mock Exams - hasta 100,000 unidades
+
+def get_bulk_pricing(quantity: int, cost_per_unit: float, base_margin: float = 0.50) -> dict:
+    """Calculate bulk pricing with volume discounts"""
+    if quantity <= 100:
+        margin = base_margin
+        discount = "0%"
+    elif quantity <= 1000:
+        margin = base_margin - 0.05
+        discount = "5%"
+    elif quantity <= 10000:
+        margin = base_margin - 0.10
+        discount = "10%"
+    elif quantity <= 50000:
+        margin = base_margin - 0.15
+        discount = "15%"
+    else:  # 50001-100000
+        margin = base_margin - 0.18
+        discount = "18%"
+    
+    price_per_unit = round(cost_per_unit / (1 - margin), 2)
+    total_cost = round(cost_per_unit * quantity, 2)
+    total_price = round(price_per_unit * quantity, 2)
+    profit = round(total_price - total_cost, 2)
+    
+    return {
+        "quantity": quantity,
+        "price_per_unit": price_per_unit,
+        "total_price": total_price,
+        "internal_cost": total_cost,
+        "profit": profit,
+        "margin": f"{int(margin * 100)}%",
+        "discount": discount
     }
+
+# Precios sugeridos de reventa para academias
+RESALE_SUGGESTIONS = {
+    "writing": {"min": 3.00, "max": 8.00, "recommended": 5.00},
+    "speaking": {"min": 8.00, "max": 20.00, "recommended": 12.00},
+    "mock_exam": {"min": 15.00, "max": 40.00, "recommended": 25.00},
+    "ai_tutor_minute": {"min": 0.50, "max": 1.50, "recommended": 1.00},
 }
 
 # ==================== PAQUETES SEPARADOS WRITING & SPEAKING ====================
