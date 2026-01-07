@@ -650,17 +650,17 @@ export default function Landing() {
       </section>
 
       {/* Writing & Speaking Test Packages Section */}
-      <section id="test-packages" className="py-20">
+      <section id="test-packages" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
             <Badge className="bg-orange-100 text-orange-700 border-orange-200 px-4 py-2 mb-6 text-sm font-semibold">
               <Coins className="w-4 h-4 mr-2" />
-              Additional Revenue Stream
+              Servicios Extra para Monetización
             </Badge>
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Writing & Speaking Test Packages</h2>
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Paquetes de Writing & Speaking</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Buy test packages at wholesale prices and resell them to your students. 
-              <strong className="text-[#58CC02]"> Recover your subscription cost and generate extra profit.</strong>
+              Compra tests individuales a precio mayorista y revéndelos a tus estudiantes.
+              <strong className="text-[#58CC02]"> Genera ingresos adicionales con márgenes excelentes.</strong>
             </p>
           </div>
           
@@ -673,34 +673,39 @@ export default function Landing() {
                   <BookOpen className="w-5 h-5" />
                   Writing Test Packages
                 </h3>
-                <p className="text-sm text-blue-600">AI-graded essays with detailed feedback</p>
+                <p className="text-sm text-blue-600">AI-graded essays con feedback detallado</p>
               </div>
               <div className="p-4">
                 <table className="w-full">
                   <thead>
                     <tr className="text-left text-sm text-gray-500 border-b">
                       <th className="pb-2">Tests</th>
-                      <th className="pb-2 text-center">Price</th>
-                      <th className="pb-2 text-center">Per Test</th>
+                      <th className="pb-2 text-center">Tu Coste</th>
+                      <th className="pb-2 text-center">Reventa Sugerida</th>
+                      <th className="pb-2 text-center">Tu Ganancia</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm">
                     {[
-                      { tests: 10, price: 15, perTest: 1.50 },
-                      { tests: 50, price: 60, perTest: 1.20 },
-                      { tests: 100, price: 100, perTest: 1.00, popular: true },
-                      { tests: 250, price: 200, perTest: 0.80 },
-                      { tests: 500, price: 350, perTest: 0.70 },
-                      { tests: 1000, price: 600, perTest: 0.60 }
+                      { tests: 100, cost: 5, resale: 3, profit: 295 },
+                      { tests: 500, cost: 22.50, resale: 3, profit: 1477.50, popular: true },
+                      { tests: 1000, cost: 40, resale: 3, profit: 2960 },
+                      { tests: 5000, cost: 175, resale: 2.50, profit: 12325 },
+                      { tests: 10000, cost: 300, resale: 2.50, profit: 24700 }
                     ].map((pkg) => (
                       <tr key={pkg.tests} className={`border-b ${pkg.popular ? 'bg-blue-50' : ''}`}>
-                        <td className="py-3 font-semibold">{pkg.tests} tests {pkg.popular && <Badge className="ml-2 bg-blue-500 text-white border-0 text-xs">Best Value</Badge>}</td>
-                        <td className="py-3 text-center font-bold">${pkg.price}</td>
-                        <td className="py-3 text-center text-blue-600 font-bold">${pkg.perTest}</td>
+                        <td className="py-3 font-semibold">
+                          {pkg.tests.toLocaleString()} tests 
+                          {pkg.popular && <Badge className="ml-2 bg-blue-500 text-white border-0 text-xs">Best Value</Badge>}
+                        </td>
+                        <td className="py-3 text-center text-red-600 font-bold">${pkg.cost}</td>
+                        <td className="py-3 text-center text-gray-600">${pkg.resale}/test</td>
+                        <td className="py-3 text-center text-green-600 font-bold">${pkg.profit.toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                <p className="text-xs text-gray-500 mt-2 text-center">Coste interno: ~$0.05/test</p>
               </div>
             </Card>
             
@@ -711,34 +716,39 @@ export default function Landing() {
                   <Mic className="w-5 h-5" />
                   Speaking Test Packages
                 </h3>
-                <p className="text-sm text-purple-600">AI-powered with pronunciation feedback</p>
+                <p className="text-sm text-purple-600">AI-powered con feedback de pronunciación</p>
               </div>
               <div className="p-4">
                 <table className="w-full">
                   <thead>
                     <tr className="text-left text-sm text-gray-500 border-b">
                       <th className="pb-2">Tests</th>
-                      <th className="pb-2 text-center">Price</th>
-                      <th className="pb-2 text-center">Per Test</th>
+                      <th className="pb-2 text-center">Tu Coste</th>
+                      <th className="pb-2 text-center">Reventa Sugerida</th>
+                      <th className="pb-2 text-center">Tu Ganancia</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm">
                     {[
-                      { tests: 10, price: 20, perTest: 2.00 },
-                      { tests: 50, price: 85, perTest: 1.70 },
-                      { tests: 100, price: 150, perTest: 1.50, popular: true },
-                      { tests: 250, price: 325, perTest: 1.30 },
-                      { tests: 500, price: 550, perTest: 1.10 },
-                      { tests: 1000, price: 900, perTest: 0.90 }
+                      { tests: 100, cost: 85, resale: 5, profit: 415 },
+                      { tests: 500, cost: 382.50, resale: 5, profit: 2117.50, popular: true },
+                      { tests: 1000, cost: 680, resale: 4, profit: 3320 },
+                      { tests: 5000, cost: 2975, resale: 3.50, profit: 14525 },
+                      { tests: 10000, cost: 5100, resale: 3, profit: 24900 }
                     ].map((pkg) => (
                       <tr key={pkg.tests} className={`border-b ${pkg.popular ? 'bg-purple-50' : ''}`}>
-                        <td className="py-3 font-semibold">{pkg.tests} tests {pkg.popular && <Badge className="ml-2 bg-purple-500 text-white border-0 text-xs">Best Value</Badge>}</td>
-                        <td className="py-3 text-center font-bold">${pkg.price}</td>
-                        <td className="py-3 text-center text-purple-600 font-bold">${pkg.perTest}</td>
+                        <td className="py-3 font-semibold">
+                          {pkg.tests.toLocaleString()} tests 
+                          {pkg.popular && <Badge className="ml-2 bg-purple-500 text-white border-0 text-xs">Best Value</Badge>}
+                        </td>
+                        <td className="py-3 text-center text-red-600 font-bold">${pkg.cost}</td>
+                        <td className="py-3 text-center text-gray-600">${pkg.resale}/test</td>
+                        <td className="py-3 text-center text-green-600 font-bold">${pkg.profit.toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                <p className="text-xs text-gray-500 mt-2 text-center">Coste interno: ~$0.85/test (incluye STT + TTS + AI eval)</p>
               </div>
             </Card>
           </div>
@@ -748,21 +758,21 @@ export default function Landing() {
             <div className="bg-green-50 p-6 border-b border-green-200">
               <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
                 <TrendingUp className="w-7 h-7 text-[#58CC02]" />
-                Monetization Calculator
+                Calculadora de Monetización
               </h3>
-              <p className="text-gray-600 mt-1">See how much you can earn by reselling tests to your students</p>
+              <p className="text-gray-600 mt-1">Calcula cuánto puedes ganar revendiendo tests a tus estudiantes</p>
             </div>
             
             <div className="grid lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
               {/* Inputs */}
               <div className="p-6 space-y-6">
                 <div>
-                  <Label className="text-gray-700 font-semibold block mb-2">Writing Tests to Sell Monthly</Label>
+                  <Label className="text-gray-700 font-semibold block mb-2">Writing Tests a Vender (mensual)</Label>
                   <div className="flex items-center gap-4">
                     <Slider
                       value={[monetizationValues.writingTests]}
                       onValueChange={([v]) => setMonetizationValues(prev => ({ ...prev, writingTests: v }))}
-                      max={500}
+                      max={1000}
                       min={0}
                       step={10}
                       className="flex-1"
@@ -772,7 +782,7 @@ export default function Landing() {
                 </div>
                 
                 <div>
-                  <Label className="text-gray-700 font-semibold block mb-2">Speaking Tests to Sell Monthly</Label>
+                  <Label className="text-gray-700 font-semibold block mb-2">Speaking Tests a Vender (mensual)</Label>
                   <div className="flex items-center gap-4">
                     <Slider
                       value={[monetizationValues.speakingTests]}
@@ -788,7 +798,7 @@ export default function Landing() {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-700 font-semibold block mb-2">Your Writing Price ($)</Label>
+                    <Label className="text-gray-700 font-semibold block mb-2">Tu Precio Writing ($)</Label>
                     <Input
                       type="number"
                       step="0.5"
@@ -798,7 +808,7 @@ export default function Landing() {
                     />
                   </div>
                   <div>
-                    <Label className="text-gray-700 font-semibold block mb-2">Your Speaking Price ($)</Label>
+                    <Label className="text-gray-700 font-semibold block mb-2">Tu Precio Speaking ($)</Label>
                     <Input
                       type="number"
                       step="0.5"
@@ -814,7 +824,7 @@ export default function Landing() {
                   onClick={calculateMonetization}
                   data-testid="calculate-monetization-btn"
                 >
-                  Calculate Profit
+                  Calcular Ganancia
                 </button>
               </div>
               
@@ -824,50 +834,52 @@ export default function Landing() {
                   <div className="space-y-4" data-testid="monetization-results">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-white rounded-xl p-4 border border-blue-200">
-                        <div className="text-sm text-gray-500 mb-1">Writing Profit</div>
+                        <div className="text-sm text-gray-500 mb-1">Ganancia Writing</div>
                         <div className="text-2xl font-extrabold text-blue-600">${monetizationResult.writing.profit}</div>
                         <div className="text-xs text-gray-400">
-                          Cost: ${monetizationResult.writing.cost} | Revenue: ${monetizationResult.writing.revenue}
+                          Coste: ${monetizationResult.writing.cost} | Ingreso: ${monetizationResult.writing.revenue}
                         </div>
                       </div>
                       <div className="bg-white rounded-xl p-4 border border-purple-200">
-                        <div className="text-sm text-gray-500 mb-1">Speaking Profit</div>
+                        <div className="text-sm text-gray-500 mb-1">Ganancia Speaking</div>
                         <div className="text-2xl font-extrabold text-purple-600">${monetizationResult.speaking.profit}</div>
                         <div className="text-xs text-gray-400">
-                          Cost: ${monetizationResult.speaking.cost} | Revenue: ${monetizationResult.speaking.revenue}
+                          Coste: ${monetizationResult.speaking.cost} | Ingreso: ${monetizationResult.speaking.revenue}
                         </div>
                       </div>
                     </div>
                     
                     <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-5 text-white">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-green-100">Total Monthly Profit</span>
+                        <span className="text-green-100">Ganancia Mensual Total</span>
                         <span className="text-3xl font-extrabold">${monetizationResult.totals.profit}</span>
                       </div>
                       <div className="flex justify-between text-sm text-green-100">
-                        <span>Investment: ${monetizationResult.totals.investment}</span>
+                        <span>Inversión: ${monetizationResult.totals.investment}</span>
                         <span>ROI: {monetizationResult.totals.roi_percent}%</span>
                       </div>
                     </div>
                     
-                    <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
-                      <div className="flex items-start gap-3">
-                        <Coins className="w-5 h-5 text-orange-600 mt-0.5" />
-                        <div>
-                          <div className="font-bold text-orange-800">Subscription Recovery</div>
-                          <div className="text-sm text-orange-600">
-                            Sell just <strong>{monetizationResult.subscription_recovery.writing_tests_needed} writing tests</strong> or{' '}
-                            <strong>{monetizationResult.subscription_recovery.speaking_tests_needed} speaking tests</strong> to recover a $500/mo subscription!
+                    {monetizationResult.subscription_recovery && (
+                      <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+                        <div className="flex items-start gap-3">
+                          <Coins className="w-5 h-5 text-orange-600 mt-0.5" />
+                          <div>
+                            <div className="font-bold text-orange-800">Recuperación de Suscripción</div>
+                            <div className="text-sm text-orange-600">
+                              Vende solo <strong>{monetizationResult.subscription_recovery.writing_tests_needed} writing tests</strong> o{' '}
+                              <strong>{monetizationResult.subscription_recovery.speaking_tests_needed} speaking tests</strong> para recuperar una suscripción de $500/mes
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-gray-400 py-8">
                     <TrendingUp className="w-12 h-12 mb-3 opacity-30" />
-                    <p className="font-semibold">Adjust values and calculate</p>
-                    <p className="text-sm">to see your potential profits</p>
+                    <p className="font-semibold">Ajusta valores y calcula</p>
+                    <p className="text-sm">para ver tus ganancias potenciales</p>
                   </div>
                 )}
               </div>
