@@ -999,12 +999,12 @@ export default function Landing() {
                   <div>
                     <div className="flex justify-between mb-3">
                       <Label className="text-gray-700 font-semibold">Current Students</Label>
-                      <span className="text-[#58CC02] font-bold text-lg">{calculatorValues.students}</span>
+                      <span className="text-[#58CC02] font-bold text-lg">{calculatorValues.students.toLocaleString()}</span>
                     </div>
                     <Slider
                       value={[calculatorValues.students]}
                       onValueChange={([v]) => setCalculatorValues(prev => ({ ...prev, students: v }))}
-                      max={200}
+                      max={10000}
                       min={10}
                       step={10}
                       className="w-full"
@@ -1019,7 +1019,7 @@ export default function Landing() {
                     <Slider
                       value={[calculatorValues.teachers]}
                       onValueChange={([v]) => setCalculatorValues(prev => ({ ...prev, teachers: v }))}
-                      max={20}
+                      max={100}
                       min={1}
                       step={1}
                       className="w-full"
