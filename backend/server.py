@@ -1681,9 +1681,11 @@ async def calculate_pricing(
     
     # Find volume pricing tier
     volume_tier = None
+    volume_tier_id = None
     for tier_id, tier in VOLUME_PRICING.items():
         if tier["min"] <= num_students <= tier["max"]:
             volume_tier = tier
+            volume_tier_id = tier_id
             break
     
     if not volume_tier:
