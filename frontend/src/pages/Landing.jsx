@@ -592,17 +592,17 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Writing & Speaking Test Packages Section */}
+      {/* Test Packages Section */}
       <section id="test-packages" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
             <Badge className="bg-orange-100 text-orange-700 border-orange-200 px-4 py-2 mb-6 text-sm font-semibold">
               <Coins className="w-4 h-4 mr-2" />
-              Servicios Extra
+              Additional Services
             </Badge>
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Paquetes de Tests Adicionales</h2>
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Additional Test Packages</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Compra tests individuales y ofrécelos a tus estudiantes como servicio adicional.
+              Purchase individual tests and offer them to your students as additional services.
             </p>
           </div>
           
@@ -621,9 +621,9 @@ export default function Landing() {
                 <table className="w-full">
                   <thead>
                     <tr className="text-left text-sm text-gray-500 border-b">
-                      <th className="pb-2">Cantidad</th>
-                      <th className="pb-2 text-right">Precio</th>
-                      <th className="pb-2 text-right">Por Test</th>
+                      <th className="pb-2">Quantity</th>
+                      <th className="pb-2 text-right">Price</th>
+                      <th className="pb-2 text-right">Per Test</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm">
@@ -663,9 +663,9 @@ export default function Landing() {
                 <table className="w-full">
                   <thead>
                     <tr className="text-left text-sm text-gray-500 border-b">
-                      <th className="pb-2">Cantidad</th>
-                      <th className="pb-2 text-right">Precio</th>
-                      <th className="pb-2 text-right">Por Test</th>
+                      <th className="pb-2">Quantity</th>
+                      <th className="pb-2 text-right">Price</th>
+                      <th className="pb-2 text-right">Per Test</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm">
@@ -705,9 +705,9 @@ export default function Landing() {
                 <table className="w-full">
                   <thead>
                     <tr className="text-left text-sm text-gray-500 border-b">
-                      <th className="pb-2">Cantidad</th>
-                      <th className="pb-2 text-right">Precio</th>
-                      <th className="pb-2 text-right">Por Exam</th>
+                      <th className="pb-2">Quantity</th>
+                      <th className="pb-2 text-right">Price</th>
+                      <th className="pb-2 text-right">Per Exam</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm">
