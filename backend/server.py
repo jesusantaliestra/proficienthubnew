@@ -1577,45 +1577,53 @@ AI_TUTOR_ADDONS = {
 
 # ==================== NUEVAS FUNCIONES DE PRICING ====================
 
-@api_router.get("/pricing/exam-packages")
-async def get_exam_packages():
-    """Get pricing tiers based on number of licenses"""
-    tiers = []
-    for tier_id, tier in EXAM_PACKAGES.items():
-        tiers.append({
-            "id": tier_id,
-            "min_licenses": tier["min_licenses"],
-            "max_licenses": tier["max_licenses"],
-            "mock_tests_per_license": tier["mock_tests_per_license"],
-            "price_per_license": tier["price_per_license"],
-            "price_per_exam": tier["price_per_exam"],
-            "discount": tier["discount"],
-            "margin": f"{int(tier['margin'] * 100)}%",
-            "description": tier["description"],
-            "features": tier["features"]
+@api_router.get("/pricing/platform-plans")
+async def get_platform_plans():
+    """Get platform pricing plans: exam plans + volume pricing + AI tutor options"""
+    
+    # Exam plans
+    exam_plans = []
+    for plan_id, plan in EXAM_PLANS.items():
+        exam_plans.append({
+            "id": plan_id,
+            "exams": plan["exams"],
+            "base_cost": plan["base_cost"],
+            "label": plan["label"]
         })
     
-    # AI Tutor add-on options
-    tutor_addons = []
-    for addon_id, addon in AI_TUTOR_ADDON["packages"].items():
-        tutor_addons.append({
-            "id": addon_id,
-            "minutes": addon["minutes"],
-            "price": addon["price"],
-            "price_per_minute": round(addon["price"] / addon["minutes"], 2),
-            "margin": f"{int(addon['margin'] * 100)}%"
+    # Volume pricing tiers
+    volume_tiers = []
+    for tier_id, tier in VOLUME_PRICING.items():
+        volume_tiers.append({
+            "id": tier_id,
+            "min_students": tier["min"],
+            "max_students": tier["max"],
+            "price_multiplier": tier["price_multiplier"],
+            "discount": tier["discount"],
+            "label": tier["label"]
+        })
+    
+    # AI Tutor options
+    ai_tutor_options = []
+    for option_id, option in AI_TUTOR_OPTIONS.items():
+        ai_tutor_options.append({
+            "id": option_id,
+            "minutes": option["minutes"],
+            "cost": option["cost"],
+            "price": option["price"],
+            "label": option["label"]
         })
     
     return {
-        "pricing_model": "per_license",
-        "tiers": tiers,
-        "ai_tutor_addon": {
-            "description": "Añade AI Tutor a cualquier licencia",
-            "price_per_minute": AI_TUTOR_ADDON["price_per_minute"],
-            "packages": tutor_addons
+        "pricing_model": "exam_plans_with_volume_pricing",
+        "exam_plans": exam_plans,
+        "volume_pricing": volume_tiers,
+        "ai_tutor_options": ai_tutor_options,
+        "base_costs": {
+            "mock_test": AVG_MOCK_TEST_COST,
+            "ai_tutor_per_minute": AI_TUTOR_COST_PER_MIN
         },
-        "exam_types": list(EXAM_COSTS.keys()),
-        "note": "Cada licencia incluye 10 mock tests. Más licencias = mejor precio por licencia."
+        "note": "Selecciona plan de exámenes, número de estudiantes y opción de AI Tutor"
     }
 
 @api_router.get("/pricing/test-packages")
