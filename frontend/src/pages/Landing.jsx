@@ -28,15 +28,15 @@ export default function Landing() {
   });
   const [roiResults, setRoiResults] = useState(null);
   const [calculating, setCalculating] = useState(false);
-  const [billingCycle, setBillingCycle] = useState('monthly');
   
-  // New exam package pricing state - Volume-based licensing
-  const [selectedTier, setSelectedTier] = useState('tier_21_100');
-  const [numLicenses, setNumLicenses] = useState(50);
-  const [pricePerStudent, setPricePerStudent] = useState(30);
-  const [aiTutorMinutes, setAiTutorMinutes] = useState(0);
-  const [pricingTiers, setPricingTiers] = useState([]);
-  const [packageRoiResult, setPackageRoiResult] = useState(null);
+  // NEW: Pricing model state
+  const [pricingData, setPricingData] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState('plan_10');
+  const [numStudents, setNumStudents] = useState(50);
+  const [selectedAiOption, setSelectedAiOption] = useState('none');
+  const [resalePrice, setResalePrice] = useState(30);
+  const [calculatedPrice, setCalculatedPrice] = useState(null);
+  const [calculatingPrice, setCalculatingPrice] = useState(false);
   
   // Monetization calculator state
   const [monetizationValues, setMonetizationValues] = useState({
@@ -47,37 +47,46 @@ export default function Landing() {
   });
   const [monetizationResult, setMonetizationResult] = useState(null);
 
-  // Fetch pricing tiers function
-  const fetchExamPackages = useCallback(async () => {
+  // Fetch pricing data from backend
+  const fetchPricingData = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_URL}/pricing/exam-packages`);
-      setPricingTiers(response.data.tiers);
+      const response = await axios.get(`${API_URL}/pricing/platform-plans`);
+      setPricingData(response.data);
     } catch (error) {
       console.error('Error fetching pricing:', error);
     }
   }, []);
 
-  // Fetch pricing tiers on mount
+  // Fetch pricing data on mount
   useEffect(() => {
-    fetchExamPackages();
-  }, [fetchExamPackages]);
+    fetchPricingData();
+  }, [fetchPricingData]);
 
-  const calculatePackageROI = useCallback(async () => {
+  // Calculate pricing when inputs change
+  const calculatePricing = useCallback(async () => {
+    if (!selectedPlan || numStudents < 1) return;
+    
+    setCalculatingPrice(true);
     try {
       const response = await axios.get(
-        `${API_URL}/pricing/roi-calculator?num_licenses=${numLicenses}&price_per_student=${pricePerStudent}&ai_tutor_minutes_per_license=${aiTutorMinutes}`
+        `${API_URL}/pricing/calculator?exam_plan=${selectedPlan}&num_students=${numStudents}&ai_tutor_option=${selectedAiOption}&resale_price_per_student=${resalePrice}`
       );
-      setPackageRoiResult(response.data);
+      setCalculatedPrice(response.data);
     } catch (error) {
-      console.error('ROI calculation error:', error);
+      console.error('Pricing calculation error:', error);
+    } finally {
+      setCalculatingPrice(false);
     }
-  }, [numLicenses, pricePerStudent, aiTutorMinutes]);
+  }, [selectedPlan, numStudents, selectedAiOption, resalePrice]);
 
   useEffect(() => {
-    if (numLicenses > 0) {
-      calculatePackageROI();
-    }
-  }, [numLicenses, pricePerStudent, aiTutorMinutes, calculatePackageROI]);
+    const debounceTimer = setTimeout(() => {
+      if (selectedPlan && numStudents > 0) {
+        calculatePricing();
+      }
+    }, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [selectedPlan, numStudents, selectedAiOption, resalePrice, calculatePricing]);
 
   const calculateMonetization = async () => {
     try {
