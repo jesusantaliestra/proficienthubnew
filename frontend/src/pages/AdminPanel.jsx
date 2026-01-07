@@ -251,6 +251,139 @@ export default function AdminPanel() {
     setRoiResults(results);
   };
 
+  // Calculate total income simulation
+  const calculateIncomeSimulation = () => {
+    const baseExamCost = licensePricing.baseCostPerExam * 10; // Cost per 10 exams
+    const results = {
+      licenses: { items: [], subtotalCost: 0, subtotalRevenue: 0, subtotalProfit: 0 },
+      aiTutor: { items: [], subtotalCost: 0, subtotalRevenue: 0, subtotalProfit: 0 },
+      testPackages: { items: [], subtotalCost: 0, subtotalRevenue: 0, subtotalProfit: 0 },
+      grandTotal: { cost: 0, revenue: 0, profit: 0, margin: 0 },
+    };
+
+    // Calculate licenses income
+    const planDetails = {
+      plan_5: { exams: 5, name: '5 Exams' },
+      plan_10: { exams: 10, name: '10 Exams' },
+      plan_20: { exams: 20, name: '20 Exams' },
+      plan_40: { exams: 40, name: '40 Exams' },
+      plan_60: { exams: 60, name: '60 Exams' },
+      plan_100: { exams: 100, name: '100 Exams' },
+    };
+
+    Object.entries(incomeSimulator.licenses).forEach(([planId, data]) => {
+      if (data.quantity > 0) {
+        const plan = planDetails[planId];
+        const costPerLicense = licensePricing.baseCostPerExam * plan.exams;
+        
+        // Determine tier based on quantity
+        let multiplier = licensePricing.volumeMultipliers.tier_100;
+        if (data.quantity > 10000) multiplier = licensePricing.volumeMultipliers.tier_100000;
+        else if (data.quantity > 5000) multiplier = licensePricing.volumeMultipliers.tier_10000;
+        else if (data.quantity > 2000) multiplier = licensePricing.volumeMultipliers.tier_5000;
+        else if (data.quantity > 1000) multiplier = licensePricing.volumeMultipliers.tier_2000;
+        else if (data.quantity > 500) multiplier = licensePricing.volumeMultipliers.tier_1000;
+        else if (data.quantity > 100) multiplier = licensePricing.volumeMultipliers.tier_500;
+
+        const pricePerLicense = costPerLicense * multiplier;
+        const totalCost = costPerLicense * data.quantity;
+        const totalRevenue = pricePerLicense * data.quantity;
+        const totalProfit = totalRevenue - totalCost;
+
+        results.licenses.items.push({
+          plan: plan.name,
+          quantity: data.quantity,
+          pricePerUnit: pricePerLicense,
+          costPerUnit: costPerLicense,
+          totalCost,
+          totalRevenue,
+          totalProfit,
+          margin: ((totalProfit / totalRevenue) * 100).toFixed(1),
+        });
+
+        results.licenses.subtotalCost += totalCost;
+        results.licenses.subtotalRevenue += totalRevenue;
+        results.licenses.subtotalProfit += totalProfit;
+      }
+    });
+
+    // Calculate AI Tutor income
+    const aiTutorDetails = {
+      basic: { minutes: 30, name: 'Basic (30 min)' },
+      standard: { minutes: 60, name: 'Standard (60 min)' },
+      premium: { minutes: 120, name: 'Premium (120 min)' },
+      unlimited: { minutes: 300, name: 'Unlimited (300 min)' },
+    };
+    const aiCosts = { basic: 1.80, standard: 3.60, premium: 7.20, unlimited: 18.00 };
+
+    Object.entries(incomeSimulator.aiTutor).forEach(([option, quantity]) => {
+      if (quantity > 0) {
+        const details = aiTutorDetails[option];
+        const cost = aiCosts[option];
+        const price = licensePricing.aiTutorPrices[option];
+        const totalCost = cost * quantity;
+        const totalRevenue = price * quantity;
+        const totalProfit = totalRevenue - totalCost;
+
+        results.aiTutor.items.push({
+          option: details.name,
+          quantity,
+          pricePerUnit: price,
+          costPerUnit: cost,
+          totalCost,
+          totalRevenue,
+          totalProfit,
+          margin: ((totalProfit / totalRevenue) * 100).toFixed(1),
+        });
+
+        results.aiTutor.subtotalCost += totalCost;
+        results.aiTutor.subtotalRevenue += totalRevenue;
+        results.aiTutor.subtotalProfit += totalProfit;
+      }
+    });
+
+    // Calculate Test Packages income
+    const testPackageDetails = [
+      { id: 'writing', name: 'Writing Tests', cost: licensePricing.writingTestCost, price: licensePricing.writingTestPrice },
+      { id: 'speaking', name: 'Speaking Tests', cost: licensePricing.speakingTestCost, price: licensePricing.speakingTestPrice },
+      { id: 'mockExams', name: 'Mock Exams', cost: licensePricing.baseCostPerExam, price: licensePricing.mockExamPrice },
+    ];
+
+    testPackageDetails.forEach((pkg) => {
+      const quantity = incomeSimulator.testPackages[pkg.id];
+      if (quantity > 0) {
+        const totalCost = pkg.cost * quantity;
+        const totalRevenue = pkg.price * quantity;
+        const totalProfit = totalRevenue - totalCost;
+
+        results.testPackages.items.push({
+          name: pkg.name,
+          quantity,
+          pricePerUnit: pkg.price,
+          costPerUnit: pkg.cost,
+          totalCost,
+          totalRevenue,
+          totalProfit,
+          margin: ((totalProfit / totalRevenue) * 100).toFixed(1),
+        });
+
+        results.testPackages.subtotalCost += totalCost;
+        results.testPackages.subtotalRevenue += totalRevenue;
+        results.testPackages.subtotalProfit += totalProfit;
+      }
+    });
+
+    // Calculate grand totals
+    results.grandTotal.cost = results.licenses.subtotalCost + results.aiTutor.subtotalCost + results.testPackages.subtotalCost;
+    results.grandTotal.revenue = results.licenses.subtotalRevenue + results.aiTutor.subtotalRevenue + results.testPackages.subtotalRevenue;
+    results.grandTotal.profit = results.licenses.subtotalProfit + results.aiTutor.subtotalProfit + results.testPackages.subtotalProfit;
+    results.grandTotal.margin = results.grandTotal.revenue > 0 
+      ? ((results.grandTotal.profit / results.grandTotal.revenue) * 100).toFixed(1) 
+      : 0;
+
+    setIncomeResults(results);
+  };
+
   useEffect(() => {
     calculateAllROI();
   }, [licensePricing]);
