@@ -543,14 +543,15 @@ export default function Landing() {
                         if (!isNaN(val) && val >= 1 && val <= 100000) {
                           setNumLicenses(val);
                         } else if (e.target.value === '') {
-                          setNumLicenses(1);
+                          // Allow empty while typing
                         }
                       }}
                       onBlur={(e) => {
                         const val = parseInt(e.target.value) || 1;
                         setNumLicenses(Math.min(100000, Math.max(1, val)));
                       }}
-                      className="w-32 text-right text-2xl font-extrabold text-[#58CC02] bg-white border-2 border-gray-200 rounded-lg px-3 py-1 focus:border-[#58CC02] outline-none"
+                      onFocus={(e) => e.target.select()}
+                      className="w-36 text-right text-2xl font-extrabold text-[#58CC02] bg-white border-2 border-gray-200 rounded-lg px-3 py-2 focus:border-[#58CC02] outline-none"
                       min={1}
                       max={100000}
                     />
