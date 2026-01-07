@@ -29,7 +29,7 @@ export default function Landing() {
   const [roiResults, setRoiResults] = useState(null);
   const [calculating, setCalculating] = useState(false);
   
-  // NEW: Pricing model state
+  // Pricing model state
   const [pricingData, setPricingData] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState('plan_10');
   const [withAI, setWithAI] = useState(false);
@@ -38,12 +38,25 @@ export default function Landing() {
   const [calculatedPrice, setCalculatedPrice] = useState(null);
   const [calculatingPrice, setCalculatingPrice] = useState(false);
   
+  // Exam types selection (doesn't affect price, just configuration)
+  const [selectedExamTypes, setSelectedExamTypes] = useState(['all']);
+  const availableExamTypes = [
+    { id: 'all', label: 'All Exams' },
+    { id: 'toefl', label: 'TOEFL' },
+    { id: 'ielts', label: 'IELTS' },
+    { id: 'cambridge', label: 'Cambridge' },
+    { id: 'pte', label: 'PTE' },
+    { id: 'oet', label: 'OET' }
+  ];
+  
   // Monetization calculator state
   const [monetizationValues, setMonetizationValues] = useState({
     writingTests: 100,
     speakingTests: 50,
+    mockExams: 50,
     writingSellPrice: 5.0,
-    speakingSellPrice: 7.0
+    speakingSellPrice: 7.0,
+    mockExamSellPrice: 10.0
   });
   const [monetizationResult, setMonetizationResult] = useState(null);
 
