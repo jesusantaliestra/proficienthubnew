@@ -6,10 +6,12 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
+import { Slider } from '../components/ui/slider';
 import { 
   Settings, Users, DollarSign, Key, BarChart3, 
   LogOut, Save, Eye, EyeOff, Database, Activity,
-  TrendingUp, AlertTriangle, CheckCircle, RefreshCw, Brain
+  TrendingUp, AlertTriangle, CheckCircle, RefreshCw, Brain,
+  Calculator, Percent, BookOpen, Mic, GraduationCap
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
