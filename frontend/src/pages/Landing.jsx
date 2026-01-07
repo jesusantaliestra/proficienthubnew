@@ -102,44 +102,62 @@ export default function Landing() {
     return () => clearTimeout(debounceTimer);
   }, [selectedPlan, numLicenses, withAI, selectedAiOption, calculatePricing]);
 
-  const calculateMonetization = async () => {
-    try {
-      const response = await axios.post(
-        `${API_URL}/pricing/monetization-calculator?writing_tests=${monetizationValues.writingTests}&speaking_tests=${monetizationValues.speakingTests}&writing_sell_price=${monetizationValues.writingSellPrice}&speaking_sell_price=${monetizationValues.speakingSellPrice}`
-      );
-      setMonetizationResult(response.data);
-    } catch (error) {
-      console.error('Monetization calculation error:', error);
-      // Fallback local calculation
-      const writingCostPerTest = 0.05;
-      const speakingCostPerTest = 0.85;
-      const writingCost = monetizationValues.writingTests * writingCostPerTest;
-      const speakingCost = monetizationValues.speakingTests * speakingCostPerTest;
-      const writingRevenue = monetizationValues.writingTests * monetizationValues.writingSellPrice;
-      const speakingRevenue = monetizationValues.speakingTests * monetizationValues.speakingSellPrice;
-      
-      setMonetizationResult({
-        writing: {
-          profit: Math.round(writingRevenue - writingCost),
-          cost: writingCost.toFixed(2),
-          revenue: writingRevenue.toFixed(2)
-        },
-        speaking: {
-          profit: Math.round(speakingRevenue - speakingCost),
-          cost: speakingCost.toFixed(2),
-          revenue: speakingRevenue.toFixed(2)
-        },
-        totals: {
-          investment: (writingCost + speakingCost).toFixed(2),
-          profit: Math.round((writingRevenue - writingCost) + (speakingRevenue - speakingCost)),
-          roi_percent: Math.round(((writingRevenue + speakingRevenue) / (writingCost + speakingCost) - 1) * 100)
-        },
-        subscription_recovery: {
-          writing_tests_needed: Math.ceil(500 / (monetizationValues.writingSellPrice - writingCostPerTest)),
-          speaking_tests_needed: Math.ceil(500 / (monetizationValues.speakingSellPrice - speakingCostPerTest))
-        }
-      });
-    }
+  // Calculate monetization with Writing, Speaking, and Mock Exams
+  const calculateMonetization = () => {
+    // Cost prices (what institution pays)
+    const writingCostPerTest = 1.10;  // Based on 1000 tier
+    const speakingCostPerTest = 2.70; // Based on 1000 tier
+    const mockExamCostPerTest = 2.20; // Based on 1000 tier
+    
+    // Calculate costs
+    const writingCost = monetizationValues.writingTests * writingCostPerTest;
+    const speakingCost = monetizationValues.speakingTests * speakingCostPerTest;
+    const mockExamCost = monetizationValues.mockExams * mockExamCostPerTest;
+    
+    // Calculate revenues
+    const writingRevenue = monetizationValues.writingTests * monetizationValues.writingSellPrice;
+    const speakingRevenue = monetizationValues.speakingTests * monetizationValues.speakingSellPrice;
+    const mockExamRevenue = monetizationValues.mockExams * monetizationValues.mockExamSellPrice;
+    
+    // Calculate profits
+    const writingProfit = writingRevenue - writingCost;
+    const speakingProfit = speakingRevenue - speakingCost;
+    const mockExamProfit = mockExamRevenue - mockExamCost;
+    
+    const totalCost = writingCost + speakingCost + mockExamCost;
+    const totalRevenue = writingRevenue + speakingRevenue + mockExamRevenue;
+    const totalProfit = writingProfit + speakingProfit + mockExamProfit;
+    const roiPercent = totalCost > 0 ? ((totalRevenue / totalCost - 1) * 100) : 0;
+    
+    setMonetizationResult({
+      writing: {
+        quantity: monetizationValues.writingTests,
+        cost: writingCost.toFixed(2),
+        revenue: writingRevenue.toFixed(2),
+        profit: writingProfit.toFixed(2),
+        margin: writingRevenue > 0 ? ((writingProfit / writingRevenue) * 100).toFixed(0) : 0
+      },
+      speaking: {
+        quantity: monetizationValues.speakingTests,
+        cost: speakingCost.toFixed(2),
+        revenue: speakingRevenue.toFixed(2),
+        profit: speakingProfit.toFixed(2),
+        margin: speakingRevenue > 0 ? ((speakingProfit / speakingRevenue) * 100).toFixed(0) : 0
+      },
+      mockExams: {
+        quantity: monetizationValues.mockExams,
+        cost: mockExamCost.toFixed(2),
+        revenue: mockExamRevenue.toFixed(2),
+        profit: mockExamProfit.toFixed(2),
+        margin: mockExamRevenue > 0 ? ((mockExamProfit / mockExamRevenue) * 100).toFixed(0) : 0
+      },
+      totals: {
+        cost: totalCost.toFixed(2),
+        revenue: totalRevenue.toFixed(2),
+        profit: totalProfit.toFixed(2),
+        roi_percent: roiPercent.toFixed(0)
+      }
+    });
   };
 
   const calculateROI = async () => {
