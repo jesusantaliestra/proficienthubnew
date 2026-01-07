@@ -386,7 +386,8 @@ export default function AdminPanel() {
 
   useEffect(() => {
     calculateAllROI();
-  }, [licensePricing]);
+    calculateIncomeSimulation();
+  }, [licensePricing, incomeSimulator]);
 
   return (
     <div className="min-h-screen bg-gray-50">
