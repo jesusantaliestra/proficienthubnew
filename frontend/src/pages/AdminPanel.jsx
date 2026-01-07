@@ -387,6 +387,298 @@ export default function AdminPanel() {
           </div>
         )}
 
+        {/* ROI Calculator Tab */}
+        {activeTab === 'roi' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">ROI Calculator</h2>
+                <p className="text-gray-500">Adjust selling prices to analyze profitability</p>
+              </div>
+              <Button onClick={calculateAllROI} className="bg-[#58CC02] hover:bg-green-600">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Recalculate All
+              </Button>
+            </div>
+
+            {/* License Pricing by Volume Tier */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5 text-blue-600" />
+                  License Pricing - Volume Multipliers
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500 mb-4">
+                  Base cost per 10 exams: ${licensePricing.baseCostPerExam * 10} | Adjust multipliers to change selling prices
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 font-semibold text-gray-600">Tier</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-600">Multiplier</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-600">Cost</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-600">Sell Price</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-600">Profit</th>
+                        <th className="text-right py-3 px-4 font-semibold text-gray-600">Margin %</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(licensePricing.volumeMultipliers).map(([tier, multiplier]) => (
+                        <tr key={tier} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4 font-medium">{tier.replace('tier_', '').replace('_', '-')} licenses</td>
+                          <td className="py-3 px-4 text-center">
+                            <input
+                              type="number"
+                              step="0.05"
+                              value={multiplier}
+                              onChange={(e) => setLicensePricing(prev => ({
+                                ...prev,
+                                volumeMultipliers: {
+                                  ...prev.volumeMultipliers,
+                                  [tier]: parseFloat(e.target.value) || 1
+                                }
+                              }))}
+                              className="w-20 text-center border rounded px-2 py-1"
+                            />
+                          </td>
+                          <td className="py-3 px-4 text-center text-red-600">${roiResults?.licenses[tier]?.cost}</td>
+                          <td className="py-3 px-4 text-center text-blue-600 font-bold">${roiResults?.licenses[tier]?.price}</td>
+                          <td className="py-3 px-4 text-center text-green-600">${roiResults?.licenses[tier]?.profit}</td>
+                          <td className="py-3 px-4 text-right">
+                            <Badge className={`${parseFloat(roiResults?.licenses[tier]?.margin) >= 40 ? 'bg-green-100 text-green-700' : parseFloat(roiResults?.licenses[tier]?.margin) >= 30 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                              {roiResults?.licenses[tier]?.margin}%
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* AI Tutor Pricing */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="w-5 h-5 text-purple-600" />
+                  AI Tutor Add-on Pricing
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 font-semibold text-gray-600">Option</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-600">Minutes</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-600">Sell Price ($)</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-600">Cost</th>
+                        <th className="text-center py-3 px-4 font-semibold text-gray-600">Profit</th>
+                        <th className="text-right py-3 px-4 font-semibold text-gray-600">Margin %</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { id: 'basic', label: 'Basic', minutes: 30 },
+                        { id: 'standard', label: 'Standard', minutes: 60 },
+                        { id: 'premium', label: 'Premium', minutes: 120 },
+                        { id: 'unlimited', label: 'Unlimited', minutes: 300 },
+                      ].map((option) => (
+                        <tr key={option.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4 font-medium">{option.label}</td>
+                          <td className="py-3 px-4 text-center">{option.minutes} min</td>
+                          <td className="py-3 px-4 text-center">
+                            <input
+                              type="number"
+                              step="0.5"
+                              value={licensePricing.aiTutorPrices[option.id]}
+                              onChange={(e) => setLicensePricing(prev => ({
+                                ...prev,
+                                aiTutorPrices: {
+                                  ...prev.aiTutorPrices,
+                                  [option.id]: parseFloat(e.target.value) || 0
+                                }
+                              }))}
+                              className="w-20 text-center border rounded px-2 py-1"
+                            />
+                          </td>
+                          <td className="py-3 px-4 text-center text-red-600">${roiResults?.aiTutor[option.id]?.cost}</td>
+                          <td className="py-3 px-4 text-center text-green-600">${roiResults?.aiTutor[option.id]?.profit}</td>
+                          <td className="py-3 px-4 text-right">
+                            <Badge className={`${parseFloat(roiResults?.aiTutor[option.id]?.margin) >= 50 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                              {roiResults?.aiTutor[option.id]?.margin}%
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Test Packages Pricing */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-orange-600" />
+                  Test Packages Pricing (per unit)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-3 gap-6">
+                  {/* Writing Tests */}
+                  <div className="border rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <BookOpen className="w-5 h-5 text-blue-600" />
+                      <h4 className="font-bold text-gray-900">Writing Tests</h4>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-sm text-gray-500">Internal Cost</Label>
+                        <p className="text-lg font-bold text-red-600">${licensePricing.writingTestCost}/test</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-gray-500">Sell Price (per test)</Label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={licensePricing.writingTestPrice}
+                          onChange={(e) => setLicensePricing(prev => ({
+                            ...prev,
+                            writingTestPrice: parseFloat(e.target.value) || 0
+                          }))}
+                          className="w-full border rounded px-3 py-2 text-lg font-bold text-blue-600"
+                        />
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-sm text-gray-500">Per 1,000 tests:</p>
+                        <p className="text-sm">Cost: <span className="text-red-600">${roiResults?.writingTests?.costPer1000}</span></p>
+                        <p className="text-sm">Revenue: <span className="text-blue-600">${roiResults?.writingTests?.pricePer1000}</span></p>
+                        <p className="text-sm">Profit: <span className="text-green-600 font-bold">${roiResults?.writingTests?.profitPer1000}</span></p>
+                        <Badge className="mt-2 bg-green-100 text-green-700">{roiResults?.writingTests?.margin}% margin</Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Speaking Tests */}
+                  <div className="border rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Mic className="w-5 h-5 text-purple-600" />
+                      <h4 className="font-bold text-gray-900">Speaking Tests</h4>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-sm text-gray-500">Internal Cost</Label>
+                        <p className="text-lg font-bold text-red-600">${licensePricing.speakingTestCost}/test</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-gray-500">Sell Price (per test)</Label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={licensePricing.speakingTestPrice}
+                          onChange={(e) => setLicensePricing(prev => ({
+                            ...prev,
+                            speakingTestPrice: parseFloat(e.target.value) || 0
+                          }))}
+                          className="w-full border rounded px-3 py-2 text-lg font-bold text-purple-600"
+                        />
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-sm text-gray-500">Per 1,000 tests:</p>
+                        <p className="text-sm">Cost: <span className="text-red-600">${roiResults?.speakingTests?.costPer1000}</span></p>
+                        <p className="text-sm">Revenue: <span className="text-purple-600">${roiResults?.speakingTests?.pricePer1000}</span></p>
+                        <p className="text-sm">Profit: <span className="text-green-600 font-bold">${roiResults?.speakingTests?.profitPer1000}</span></p>
+                        <Badge className={`mt-2 ${parseFloat(roiResults?.speakingTests?.margin) >= 50 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                          {roiResults?.speakingTests?.margin}% margin
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mock Exams */}
+                  <div className="border rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <GraduationCap className="w-5 h-5 text-green-600" />
+                      <h4 className="font-bold text-gray-900">Mock Exams</h4>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-sm text-gray-500">Internal Cost</Label>
+                        <p className="text-lg font-bold text-red-600">${licensePricing.baseCostPerExam}/exam</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-gray-500">Sell Price (per exam)</Label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={licensePricing.mockExamPrice}
+                          onChange={(e) => setLicensePricing(prev => ({
+                            ...prev,
+                            mockExamPrice: parseFloat(e.target.value) || 0
+                          }))}
+                          className="w-full border rounded px-3 py-2 text-lg font-bold text-green-600"
+                        />
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-sm text-gray-500">Per 1,000 exams:</p>
+                        <p className="text-sm">Cost: <span className="text-red-600">${roiResults?.mockExams?.costPer1000}</span></p>
+                        <p className="text-sm">Revenue: <span className="text-green-600">${roiResults?.mockExams?.pricePer1000}</span></p>
+                        <p className="text-sm">Profit: <span className="text-green-600 font-bold">${roiResults?.mockExams?.profitPer1000}</span></p>
+                        <Badge className={`mt-2 ${parseFloat(roiResults?.mockExams?.margin) >= 50 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                          {roiResults?.mockExams?.margin}% margin
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Summary */}
+            <Card className="bg-gradient-to-r from-green-50 to-blue-50">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Margin Summary</h3>
+                <div className="grid md:grid-cols-5 gap-4">
+                  <div className="bg-white rounded-xl p-4 text-center">
+                    <p className="text-sm text-gray-500">Licenses (avg)</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {roiResults?.licenses ? 
+                        (Object.values(roiResults.licenses).reduce((sum, t) => sum + parseFloat(t.margin), 0) / Object.values(roiResults.licenses).length).toFixed(1) 
+                        : 0}%
+                    </p>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 text-center">
+                    <p className="text-sm text-gray-500">AI Tutor (avg)</p>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {roiResults?.aiTutor ?
+                        (Object.values(roiResults.aiTutor).reduce((sum, t) => sum + parseFloat(t.margin), 0) / Object.values(roiResults.aiTutor).length).toFixed(1)
+                        : 0}%
+                    </p>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 text-center">
+                    <p className="text-sm text-gray-500">Writing Tests</p>
+                    <p className="text-2xl font-bold text-blue-600">{roiResults?.writingTests?.margin || 0}%</p>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 text-center">
+                    <p className="text-sm text-gray-500">Speaking Tests</p>
+                    <p className="text-2xl font-bold text-purple-600">{roiResults?.speakingTests?.margin || 0}%</p>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 text-center">
+                    <p className="text-sm text-gray-500">Mock Exams</p>
+                    <p className="text-2xl font-bold text-green-600">{roiResults?.mockExams?.margin || 0}%</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Costs Tab - Internal Pricing Analysis */}
         {activeTab === 'costs' && (
           <div className="space-y-6">
