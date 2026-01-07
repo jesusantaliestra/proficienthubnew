@@ -539,6 +539,14 @@ export default function Landing() {
                       type="number"
                       value={numLicenses}
                       onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (!isNaN(val) && val >= 1 && val <= 100000) {
+                          setNumLicenses(val);
+                        } else if (e.target.value === '') {
+                          setNumLicenses(1);
+                        }
+                      }}
+                      onBlur={(e) => {
                         const val = parseInt(e.target.value) || 1;
                         setNumLicenses(Math.min(100000, Math.max(1, val)));
                       }}
@@ -547,22 +555,27 @@ export default function Landing() {
                       max={100000}
                     />
                   </div>
-                  <input
-                    type="range"
-                    value={numLicenses}
-                    onChange={(e) => setNumLicenses(parseInt(e.target.value))}
-                    min={1}
-                    max={100000}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#58CC02]"
-                  />
-                  <div className="flex justify-between text-xs text-gray-400 mt-2">
-                    <span>1</span>
-                    <span>100</span>
-                    <span>500</span>
-                    <span>1,000</span>
-                    <span>5,000</span>
-                    <span>10,000</span>
-                    <span>100,000</span>
+                  
+                  {/* Quick selection buttons */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {[1, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 50000, 100000].map((val) => (
+                      <button
+                        key={val}
+                        onClick={() => setNumLicenses(val)}
+                        className={`px-3 py-1 rounded-lg text-sm font-semibold transition-all ${
+                          numLicenses === val
+                            ? 'bg-[#58CC02] text-white'
+                            : 'bg-white border border-gray-200 text-gray-600 hover:border-[#58CC02]'
+                        }`}
+                      >
+                        {val.toLocaleString()}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>Min: 1</span>
+                    <span>Max: 100,000</span>
                   </div>
                 </div>
               </div>
