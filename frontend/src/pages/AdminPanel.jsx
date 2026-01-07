@@ -838,6 +838,323 @@ export default function AdminPanel() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* ========== INCOME SIMULATOR ========== */}
+            <Card className="border-2 border-blue-200">
+              <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-xl">
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <TrendingUp className="w-6 h-6" />
+                  Income Simulator - Total Revenue Projection
+                </CardTitle>
+                <p className="text-blue-100 text-sm mt-1">
+                  Adjust quantities to simulate total income, costs, and profit
+                </p>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                
+                {/* License Sales Input */}
+                <div>
+                  <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <GraduationCap className="w-5 h-5 text-blue-600" />
+                    License Sales by Plan
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {Object.entries(incomeSimulator.licenses).map(([planId, data]) => (
+                      <div key={planId} className="border rounded-lg p-3 text-center">
+                        <Label className="text-xs text-gray-500 block mb-1">
+                          {planId.replace('plan_', '')} Exams/License
+                        </Label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={data.quantity}
+                          onChange={(e) => setIncomeSimulator(prev => ({
+                            ...prev,
+                            licenses: {
+                              ...prev.licenses,
+                              [planId]: { ...data, quantity: parseInt(e.target.value) || 0 }
+                            }
+                          }))}
+                          className="w-full text-center border rounded px-2 py-1 font-bold"
+                        />
+                        <span className="text-xs text-gray-400">licenses</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* AI Tutor Add-ons Input */}
+                <div>
+                  <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <Brain className="w-5 h-5 text-purple-600" />
+                    AI Tutor Add-ons Sold
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[
+                      { id: 'basic', label: 'Basic (30 min)' },
+                      { id: 'standard', label: 'Standard (60 min)' },
+                      { id: 'premium', label: 'Premium (120 min)' },
+                      { id: 'unlimited', label: 'Unlimited (300 min)' },
+                    ].map((option) => (
+                      <div key={option.id} className="border rounded-lg p-3 text-center">
+                        <Label className="text-xs text-gray-500 block mb-1">{option.label}</Label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={incomeSimulator.aiTutor[option.id]}
+                          onChange={(e) => setIncomeSimulator(prev => ({
+                            ...prev,
+                            aiTutor: {
+                              ...prev.aiTutor,
+                              [option.id]: parseInt(e.target.value) || 0
+                            }
+                          }))}
+                          className="w-full text-center border rounded px-2 py-1 font-bold"
+                        />
+                        <span className="text-xs text-gray-400">units</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Test Packages Input */}
+                <div>
+                  <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-orange-600" />
+                    Test Packages Sold
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="border rounded-lg p-3 text-center">
+                      <Label className="text-xs text-gray-500 block mb-1">Writing Tests</Label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={incomeSimulator.testPackages.writing}
+                        onChange={(e) => setIncomeSimulator(prev => ({
+                          ...prev,
+                          testPackages: { ...prev.testPackages, writing: parseInt(e.target.value) || 0 }
+                        }))}
+                        className="w-full text-center border rounded px-2 py-1 font-bold"
+                      />
+                      <span className="text-xs text-gray-400">tests</span>
+                    </div>
+                    <div className="border rounded-lg p-3 text-center">
+                      <Label className="text-xs text-gray-500 block mb-1">Speaking Tests</Label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={incomeSimulator.testPackages.speaking}
+                        onChange={(e) => setIncomeSimulator(prev => ({
+                          ...prev,
+                          testPackages: { ...prev.testPackages, speaking: parseInt(e.target.value) || 0 }
+                        }))}
+                        className="w-full text-center border rounded px-2 py-1 font-bold"
+                      />
+                      <span className="text-xs text-gray-400">tests</span>
+                    </div>
+                    <div className="border rounded-lg p-3 text-center">
+                      <Label className="text-xs text-gray-500 block mb-1">Mock Exams</Label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={incomeSimulator.testPackages.mockExams}
+                        onChange={(e) => setIncomeSimulator(prev => ({
+                          ...prev,
+                          testPackages: { ...prev.testPackages, mockExams: parseInt(e.target.value) || 0 }
+                        }))}
+                        className="w-full text-center border rounded px-2 py-1 font-bold"
+                      />
+                      <span className="text-xs text-gray-400">exams</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Results Tables */}
+                {incomeResults && (
+                  <div className="space-y-4 mt-6">
+                    {/* Licenses Results */}
+                    {incomeResults.licenses.items.length > 0 && (
+                      <div className="border rounded-xl overflow-hidden">
+                        <div className="bg-blue-50 px-4 py-2 font-bold text-blue-800 flex justify-between items-center">
+                          <span>📚 License Sales</span>
+                          <span className="text-green-600">Profit: ${incomeResults.licenses.subtotalProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        </div>
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="text-left py-2 px-3">Plan</th>
+                              <th className="text-center py-2 px-3">Qty</th>
+                              <th className="text-center py-2 px-3">Unit Price</th>
+                              <th className="text-right py-2 px-3 text-red-600">Total Cost</th>
+                              <th className="text-right py-2 px-3 text-blue-600">Total Revenue</th>
+                              <th className="text-right py-2 px-3 text-green-600">Profit</th>
+                              <th className="text-center py-2 px-3">Margin</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {incomeResults.licenses.items.map((item, idx) => (
+                              <tr key={idx} className="border-t">
+                                <td className="py-2 px-3 font-medium">{item.plan}</td>
+                                <td className="text-center py-2 px-3">{item.quantity.toLocaleString()}</td>
+                                <td className="text-center py-2 px-3">${item.pricePerUnit.toFixed(2)}</td>
+                                <td className="text-right py-2 px-3 text-red-600">${item.totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td className="text-right py-2 px-3 text-blue-600">${item.totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td className="text-right py-2 px-3 text-green-600 font-bold">${item.totalProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td className="text-center py-2 px-3">
+                                  <Badge className="bg-green-100 text-green-700">{item.margin}%</Badge>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot className="bg-blue-50 font-bold">
+                            <tr>
+                              <td colSpan="3" className="py-2 px-3">Subtotal Licenses</td>
+                              <td className="text-right py-2 px-3 text-red-600">${incomeResults.licenses.subtotalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="text-right py-2 px-3 text-blue-600">${incomeResults.licenses.subtotalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="text-right py-2 px-3 text-green-600">${incomeResults.licenses.subtotalProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td></td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    )}
+
+                    {/* AI Tutor Results */}
+                    {incomeResults.aiTutor.items.length > 0 && (
+                      <div className="border rounded-xl overflow-hidden">
+                        <div className="bg-purple-50 px-4 py-2 font-bold text-purple-800 flex justify-between items-center">
+                          <span>🧠 AI Tutor Add-ons</span>
+                          <span className="text-green-600">Profit: ${incomeResults.aiTutor.subtotalProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        </div>
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="text-left py-2 px-3">Option</th>
+                              <th className="text-center py-2 px-3">Qty</th>
+                              <th className="text-center py-2 px-3">Unit Price</th>
+                              <th className="text-right py-2 px-3 text-red-600">Total Cost</th>
+                              <th className="text-right py-2 px-3 text-purple-600">Total Revenue</th>
+                              <th className="text-right py-2 px-3 text-green-600">Profit</th>
+                              <th className="text-center py-2 px-3">Margin</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {incomeResults.aiTutor.items.map((item, idx) => (
+                              <tr key={idx} className="border-t">
+                                <td className="py-2 px-3 font-medium">{item.option}</td>
+                                <td className="text-center py-2 px-3">{item.quantity.toLocaleString()}</td>
+                                <td className="text-center py-2 px-3">${item.pricePerUnit.toFixed(2)}</td>
+                                <td className="text-right py-2 px-3 text-red-600">${item.totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td className="text-right py-2 px-3 text-purple-600">${item.totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td className="text-right py-2 px-3 text-green-600 font-bold">${item.totalProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td className="text-center py-2 px-3">
+                                  <Badge className="bg-purple-100 text-purple-700">{item.margin}%</Badge>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot className="bg-purple-50 font-bold">
+                            <tr>
+                              <td colSpan="3" className="py-2 px-3">Subtotal AI Tutor</td>
+                              <td className="text-right py-2 px-3 text-red-600">${incomeResults.aiTutor.subtotalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="text-right py-2 px-3 text-purple-600">${incomeResults.aiTutor.subtotalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="text-right py-2 px-3 text-green-600">${incomeResults.aiTutor.subtotalProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td></td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    )}
+
+                    {/* Test Packages Results */}
+                    {incomeResults.testPackages.items.length > 0 && (
+                      <div className="border rounded-xl overflow-hidden">
+                        <div className="bg-orange-50 px-4 py-2 font-bold text-orange-800 flex justify-between items-center">
+                          <span>📝 Test Packages</span>
+                          <span className="text-green-600">Profit: ${incomeResults.testPackages.subtotalProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        </div>
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="text-left py-2 px-3">Package</th>
+                              <th className="text-center py-2 px-3">Qty</th>
+                              <th className="text-center py-2 px-3">Unit Price</th>
+                              <th className="text-right py-2 px-3 text-red-600">Total Cost</th>
+                              <th className="text-right py-2 px-3 text-orange-600">Total Revenue</th>
+                              <th className="text-right py-2 px-3 text-green-600">Profit</th>
+                              <th className="text-center py-2 px-3">Margin</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {incomeResults.testPackages.items.map((item, idx) => (
+                              <tr key={idx} className="border-t">
+                                <td className="py-2 px-3 font-medium">{item.name}</td>
+                                <td className="text-center py-2 px-3">{item.quantity.toLocaleString()}</td>
+                                <td className="text-center py-2 px-3">${item.pricePerUnit.toFixed(2)}</td>
+                                <td className="text-right py-2 px-3 text-red-600">${item.totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td className="text-right py-2 px-3 text-orange-600">${item.totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td className="text-right py-2 px-3 text-green-600 font-bold">${item.totalProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td className="text-center py-2 px-3">
+                                  <Badge className="bg-orange-100 text-orange-700">{item.margin}%</Badge>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot className="bg-orange-50 font-bold">
+                            <tr>
+                              <td colSpan="3" className="py-2 px-3">Subtotal Test Packages</td>
+                              <td className="text-right py-2 px-3 text-red-600">${incomeResults.testPackages.subtotalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="text-right py-2 px-3 text-orange-600">${incomeResults.testPackages.subtotalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="text-right py-2 px-3 text-green-600">${incomeResults.testPackages.subtotalProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td></td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    )}
+
+                    {/* GRAND TOTAL */}
+                    <Card className="bg-gradient-to-r from-gray-900 to-gray-800 text-white">
+                      <CardContent className="p-6">
+                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                          <DollarSign className="w-6 h-6 text-yellow-400" />
+                          GRAND TOTAL - Income Projection
+                        </h3>
+                        <div className="grid md:grid-cols-4 gap-6">
+                          <div className="bg-white/10 rounded-xl p-4 text-center">
+                            <p className="text-gray-300 text-sm mb-1">Total Cost</p>
+                            <p className="text-2xl font-bold text-red-400">
+                              ${incomeResults.grandTotal.cost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            </p>
+                          </div>
+                          <div className="bg-white/10 rounded-xl p-4 text-center">
+                            <p className="text-gray-300 text-sm mb-1">Total Revenue</p>
+                            <p className="text-2xl font-bold text-blue-400">
+                              ${incomeResults.grandTotal.revenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            </p>
+                          </div>
+                          <div className="bg-white/10 rounded-xl p-4 text-center">
+                            <p className="text-gray-300 text-sm mb-1">Total Profit</p>
+                            <p className="text-3xl font-bold text-green-400">
+                              ${incomeResults.grandTotal.profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            </p>
+                          </div>
+                          <div className="bg-white/10 rounded-xl p-4 text-center">
+                            <p className="text-gray-300 text-sm mb-1">Overall Margin</p>
+                            <p className="text-2xl font-bold text-yellow-400">
+                              {incomeResults.grandTotal.margin}%
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-white/20 text-center text-sm text-gray-400">
+                          Projection based on current pricing configuration. Adjust volumes above to simulate different scenarios.
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )}
 
