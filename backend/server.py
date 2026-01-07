@@ -2190,34 +2190,37 @@ async def get_pricing_analysis(current_user: dict = Depends(get_current_user)):
     if current_user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    # Tiers analysis
-    tier_analysis = []
-    for tier_id, tier in EXAM_PACKAGES.items():
-        margin = tier["margin"]
-        internal_cost = tier["internal_cost_per_license"]
-        price = tier["price_per_license"]
-        profit = price - internal_cost
-        
-        tier_analysis.append({
+    # Volume pricing analysis
+    volume_analysis = []
+    for tier_id, tier in VOLUME_PRICING.items():
+        volume_analysis.append({
             "tier_id": tier_id,
-            "licenses_range": f"{tier['min_licenses']}-{tier['max_licenses']}",
-            "mock_tests_per_license": tier["mock_tests_per_license"],
-            "price_per_license": price,
-            "price_per_exam": tier["price_per_exam"],
+            "student_range": f"{tier['min']}-{tier['max']} estudiantes",
+            "price_multiplier": tier["price_multiplier"],
             "discount": tier["discount"],
-            "internal_cost": internal_cost,
-            "profit_per_license": round(profit, 2),
-            "margin_percentage": f"{int(margin * 100)}%"
+            "estimated_margin": f"{int((1 - 1/tier['price_multiplier']) * 100)}%"
         })
     
-    # AI Tutor add-on analysis
+    # Exam plans analysis
+    plan_analysis = []
+    for plan_id, plan in EXAM_PLANS.items():
+        plan_analysis.append({
+            "plan_id": plan_id,
+            "exams": plan["exams"],
+            "base_cost": plan["base_cost"],
+            "cost_per_exam": round(plan["base_cost"] / plan["exams"], 2),
+            "label": plan["label"]
+        })
+    
+    # AI Tutor options analysis
     tutor_analysis = []
-    for addon_id, addon in AI_TUTOR_ADDON["packages"].items():
-        tutor_analysis.append({
-            "addon_id": addon_id,
-            "minutes": addon["minutes"],
-            "internal_cost": addon["internal_cost"],
-            "price": addon["price"],
+    for option_id, option in AI_TUTOR_OPTIONS.items():
+        if option["minutes"] > 0:
+            tutor_analysis.append({
+                "option_id": option_id,
+                "minutes": option["minutes"],
+                "internal_cost": option["cost"],
+                "price": option["price"],
             "profit": round(addon["price"] - addon["internal_cost"], 2),
             "margin": f"{int(addon['margin'] * 100)}%"
         })
