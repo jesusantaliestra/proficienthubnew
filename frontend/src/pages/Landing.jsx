@@ -328,320 +328,256 @@ export default function Landing() {
 
       {/* Pricing Section */}
       <section id="pricing" className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Planes por Número de Exámenes</h2>
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Planes y Precios B2B</h2>
             <p className="text-xl text-gray-600 mb-8">
-              Elige cuántos mock exams necesitas por estudiante. Más estudiantes = Mejor precio. Márgenes saludables garantizados.
+              Configura tu plan: exámenes por licencia + AI opcional + volumen de licencias
             </p>
           </div>
           
-          {/* 6 Exam Plan Cards */}
-          {pricingData && (
-            <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4 mb-12">
-              {pricingData.exam_plans.map((plan, index) => (
-                <div 
-                  key={plan.id} 
-                  onClick={() => {
-                    setSelectedPlan(plan.id);
-                    document.getElementById('price-calculator').scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className={`bg-white rounded-2xl border-2 p-5 cursor-pointer transition-all hover:shadow-lg ${
-                    selectedPlan === plan.id 
-                      ? 'border-[#58CC02] ring-4 ring-green-100 scale-105' 
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  data-testid={`plan-${plan.id}`}
-                >
-                  {plan.id === 'plan_20' && (
-                    <Badge className="bg-[#58CC02] text-white border-0 mb-3 text-xs">Popular</Badge>
-                  )}
-                  <div className="text-center">
-                    <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mb-3">
-                      <GraduationCap className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="text-2xl font-extrabold text-gray-900">{plan.exams}</h3>
-                    <p className="text-sm text-gray-500 mb-2">Mock Exams</p>
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <span className="text-xs text-gray-500">Coste base</span>
-                      <p className="font-bold text-[#58CC02]">${plan.base_cost.toFixed(2)}</p>
-                    </div>
-                  </div>
+          {/* Step-by-step Pricing Calculator */}
+          <Card className="bg-white border-2 border-gray-200 rounded-3xl overflow-hidden shadow-xl">
+            <div className="p-8">
+              {/* STEP 1: Select Exam Plan */}
+              <div className="mb-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-full bg-[#58CC02] flex items-center justify-center text-white font-bold text-lg">1</div>
+                  <h3 className="text-2xl font-bold text-gray-900">Selecciona Exámenes por Licencia</h3>
                 </div>
-              ))}
-            </div>
-          )}
-          
-          {/* Volume Pricing Info */}
-          {pricingData && (
-            <div className="bg-white rounded-2xl border-2 border-gray-200 p-6 mb-8 max-w-4xl mx-auto">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">
-                📊 Descuentos por Volumen de Estudiantes
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {pricingData.volume_pricing.map((tier) => (
-                  <div key={tier.id} className="text-center p-3 bg-gray-50 rounded-xl">
-                    <p className="text-sm font-semibold text-gray-700">{tier.label}</p>
-                    <p className="text-xs text-gray-500">Descuento: <span className="font-bold text-[#58CC02]">{tier.discount}</span></p>
-                    <p className="text-xs text-gray-400">Margen: ~{Math.round((1 - 1/tier.price_multiplier) * 100)}%</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* AI Tutor Add-on */}
-          {pricingData && (
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-6 max-w-4xl mx-auto mb-8">
-              <div className="flex items-center gap-3 mb-4">
-                <Brain className="w-8 h-8 text-purple-600" />
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">AI Tutor Add-on (Opcional)</h3>
-                  <p className="text-gray-600">Añade tutorías con voz a cada licencia</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {pricingData.ai_tutor_options.filter(opt => opt.minutes > 0).map((option) => (
-                  <div 
-                    key={option.id}
-                    onClick={() => setSelectedAiOption(option.id)}
-                    className={`bg-white rounded-xl p-3 text-center cursor-pointer transition-all ${
-                      selectedAiOption === option.id 
-                        ? 'ring-2 ring-purple-500 bg-purple-50' 
-                        : 'hover:bg-purple-50'
-                    }`}
-                  >
-                    <div className="font-bold text-gray-900">{option.minutes} min</div>
-                    <div className="text-purple-600 font-bold">+${option.price}/lic</div>
-                    <div className="text-xs text-gray-400">Coste: ${option.cost}</div>
-                  </div>
-                ))}
-              </div>
-              <button 
-                onClick={() => setSelectedAiOption('none')}
-                className={`mt-3 text-sm ${selectedAiOption === 'none' ? 'text-purple-700 font-bold' : 'text-gray-500'}`}
-              >
-                {selectedAiOption === 'none' ? '✓ Sin AI Tutor seleccionado' : 'Sin AI Tutor'}
-              </button>
-            </div>
-          )}
-          
-          {/* Cost breakdown */}
-          <div className="bg-gray-50 rounded-2xl p-6 max-w-4xl mx-auto">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Calculator className="w-5 h-5 text-[#58CC02]" />
-              Tu coste interno por tipo de examen
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {examTypes.map((exam) => (
-                <div key={exam.id} className="text-center">
-                  <div className={`w-12 h-12 ${exam.color} rounded-xl mx-auto mb-2 flex items-center justify-center`}>
-                    <GraduationCap className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="font-bold text-gray-900">{exam.name}</div>
-                  <div className="text-sm text-[#58CC02] font-semibold">{exam.cost}</div>
-                </div>
-              ))}
-            </div>
-            <p className="text-center text-gray-500 mt-4 text-sm">
-              Promedio: <strong>${pricingData?.base_costs?.mock_test || '0.94'}</strong> por mock test
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Interactive Price Calculator */}
-      <section id="price-calculator" className="py-20">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-4 py-2 mb-6 text-sm font-semibold">
-              <Calculator className="w-4 h-4 mr-2" />
-              Calculadora de Precios en Tiempo Real
-            </Badge>
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Calcula tu Precio Final</h2>
-            <p className="text-xl text-gray-600">Selecciona plan, número de estudiantes y ve tu precio al instante</p>
-          </div>
-          
-          <Card className="bg-white border-2 border-gray-200 rounded-3xl overflow-hidden">
-            <div className="grid lg:grid-cols-2">
-              {/* Inputs */}
-              <div className="p-8 border-r border-gray-200">
-                <h3 className="text-xl font-bold text-gray-900 mb-6">Configura tu pedido</h3>
                 
-                <div className="space-y-6">
-                  {/* Plan Selection */}
-                  <div>
-                    <Label className="text-gray-700 font-semibold block mb-3">Plan de Exámenes</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {pricingData?.exam_plans.map((plan) => (
+                {pricingData && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {pricingData.exam_plans.map((plan) => (
+                      <button
+                        key={plan.id}
+                        onClick={() => setSelectedPlan(plan.id)}
+                        className={`p-5 rounded-2xl border-2 transition-all text-center ${
+                          selectedPlan === plan.id
+                            ? 'border-[#58CC02] bg-green-50 ring-4 ring-green-100'
+                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                        }`}
+                        data-testid={`plan-${plan.id}`}
+                      >
+                        <div className="text-3xl font-extrabold text-gray-900 mb-1">{plan.exams}</div>
+                        <div className="text-sm text-gray-500">Mock Exams</div>
+                        {plan.id === 'plan_20' && (
+                          <Badge className="bg-[#58CC02] text-white border-0 mt-2 text-xs">Popular</Badge>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* STEP 2: AI Tutor Option */}
+              <div className="mb-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-full bg-[#58CC02] flex items-center justify-center text-white font-bold text-lg">2</div>
+                  <h3 className="text-2xl font-bold text-gray-900">¿Añadir AI Tutor?</h3>
+                </div>
+                
+                <div className="flex flex-col gap-4">
+                  {/* AI Toggle */}
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => { setWithAI(false); setSelectedAiOption('none'); }}
+                      className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                        !withAI
+                          ? 'border-[#58CC02] bg-green-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="font-bold text-gray-900">Sin AI Tutor</div>
+                      <div className="text-sm text-gray-500">Solo exámenes mock</div>
+                    </button>
+                    <button
+                      onClick={() => { setWithAI(true); setSelectedAiOption('standard'); }}
+                      className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                        withAI
+                          ? 'border-purple-500 bg-purple-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="font-bold text-gray-900 flex items-center gap-2">
+                        <Brain className="w-5 h-5 text-purple-600" />
+                        Incluir AI Tutor
+                      </div>
+                      <div className="text-sm text-gray-500">Tutorías con voz inteligente</div>
+                    </button>
+                  </div>
+                  
+                  {/* AI Options (if AI selected) */}
+                  {withAI && pricingData && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                      {pricingData.ai_tutor_options.filter(opt => opt.minutes > 0).map((option) => (
                         <button
-                          key={plan.id}
-                          onClick={() => setSelectedPlan(plan.id)}
-                          className={`p-3 rounded-xl text-center transition-all ${
-                            selectedPlan === plan.id
-                              ? 'bg-[#58CC02] text-white'
-                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                          key={option.id}
+                          onClick={() => setSelectedAiOption(option.id)}
+                          className={`p-3 rounded-xl border-2 text-center transition-all ${
+                            selectedAiOption === option.id
+                              ? 'border-purple-500 bg-purple-50'
+                              : 'border-gray-200 hover:border-purple-300'
                           }`}
                         >
-                          <div className="font-bold">{plan.exams}</div>
-                          <div className="text-xs">exams</div>
+                          <div className="font-bold text-gray-900">{option.minutes} min</div>
+                          <div className="text-purple-600 font-semibold">+${option.price}/lic</div>
                         </button>
                       ))}
                     </div>
-                  </div>
-                  
-                  {/* Number of Students */}
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <Label className="text-gray-700 font-semibold">Número de Estudiantes</Label>
-                      <span className="text-[#58CC02] font-bold text-lg">{numStudents.toLocaleString()}</span>
+                  )}
+                </div>
+              </div>
+              
+              {/* STEP 3: Number of Licenses */}
+              <div className="mb-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-full bg-[#58CC02] flex items-center justify-center text-white font-bold text-lg">3</div>
+                  <h3 className="text-2xl font-bold text-gray-900">¿Cuántas Licencias Necesitas?</h3>
+                </div>
+                
+                {/* Volume Tiers */}
+                {pricingData && (
+                  <div className="mb-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                      {pricingData.volume_pricing.map((tier) => {
+                        const isSelected = numLicenses >= tier.min && numLicenses <= tier.max;
+                        return (
+                          <button
+                            key={tier.id}
+                            onClick={() => setNumLicenses(tier.min)}
+                            className={`p-3 rounded-xl border-2 text-center transition-all ${
+                              isSelected
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'border-gray-200 hover:border-blue-300'
+                            }`}
+                          >
+                            <div className="text-sm font-bold text-gray-700">{tier.label}</div>
+                            {tier.discount !== "0%" && (
+                              <Badge className="bg-orange-100 text-orange-700 border-0 mt-1 text-xs">
+                                {tier.discount} desc.
+                              </Badge>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
-                    <Slider
-                      value={[numStudents]}
-                      onValueChange={([v]) => setNumStudents(v)}
-                      max={10000}
-                      min={1}
-                      step={numStudents < 100 ? 1 : numStudents < 1000 ? 10 : 100}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-gray-400 mt-1">
-                      <span>1</span>
-                      <span>100</span>
-                      <span>500</span>
-                      <span>2,000</span>
-                      <span>10,000</span>
-                    </div>
                   </div>
-                  
-                  {/* AI Tutor Option */}
-                  <div>
-                    <Label className="text-gray-700 font-semibold block mb-2">AI Tutor (opcional)</Label>
-                    <select
-                      value={selectedAiOption}
-                      onChange={(e) => setSelectedAiOption(e.target.value)}
-                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#58CC02] outline-none"
-                    >
-                      {pricingData?.ai_tutor_options.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.label} {option.price > 0 ? `(+$${option.price}/estudiante)` : ''}
-                        </option>
-                      ))}
-                    </select>
+                )}
+                
+                {/* License Slider */}
+                <div className="bg-gray-50 rounded-xl p-6">
+                  <div className="flex justify-between mb-3">
+                    <Label className="text-gray-700 font-semibold">Número exacto de licencias</Label>
+                    <span className="text-2xl font-extrabold text-[#58CC02]">{numLicenses.toLocaleString()}</span>
                   </div>
-                  
-                  {/* Resale Price */}
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <Label className="text-gray-700 font-semibold">Tu precio de reventa ($/estudiante)</Label>
-                      <span className="text-blue-600 font-bold">${resalePrice}</span>
-                    </div>
-                    <Slider
-                      value={[resalePrice]}
-                      onValueChange={([v]) => setResalePrice(v)}
-                      max={150}
-                      min={10}
-                      step={5}
-                      className="w-full"
-                    />
+                  <Slider
+                    value={[numLicenses]}
+                    onValueChange={([v]) => setNumLicenses(v)}
+                    max={100000}
+                    min={1}
+                    step={numLicenses < 100 ? 1 : numLicenses < 1000 ? 10 : numLicenses < 10000 ? 100 : 1000}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400 mt-2">
+                    <span>1</span>
+                    <span>100</span>
+                    <span>500</span>
+                    <span>1,000</span>
+                    <span>5,000</span>
+                    <span>10,000</span>
+                    <span>100,000</span>
                   </div>
                 </div>
               </div>
               
-              {/* Results */}
-              <div className="p-8 bg-gradient-to-br from-green-50 to-white">
-                <h3 className="text-xl font-bold text-gray-900 mb-6">Tu Cotización</h3>
+              {/* RESULT: Final Price */}
+              <div className="border-t-2 border-gray-100 pt-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center text-white">
+                    <Check className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900">Tu Precio Final</h3>
+                </div>
                 
                 {calculatingPrice ? (
-                  <div className="text-center py-12 text-gray-400">
+                  <div className="text-center py-8 text-gray-400">
                     <Calculator className="w-12 h-12 mx-auto mb-4 animate-pulse" />
                     <p>Calculando...</p>
                   </div>
                 ) : calculatedPrice ? (
-                  <div className="space-y-4" data-testid="pricing-results">
+                  <div className="grid lg:grid-cols-2 gap-6" data-testid="pricing-results">
                     {/* Summary */}
-                    <div className="bg-white rounded-xl p-4 border border-gray-200">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-500">Plan:</span>
-                          <span className="font-bold ml-2">{calculatedPrice.plan.label}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Estudiantes:</span>
-                          <span className="font-bold ml-2">{calculatedPrice.volume_tier.students.toLocaleString()}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Tier:</span>
-                          <span className="font-bold ml-2 text-[#58CC02]">{calculatedPrice.volume_tier.discount} desc.</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">AI Tutor:</span>
-                          <span className="font-bold ml-2">{calculatedPrice.ai_tutor.label}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Per Student */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-red-50 rounded-xl p-4 border border-red-200">
-                        <div className="text-sm text-gray-500">TU COSTE / Estudiante</div>
-                        <div className="text-2xl font-extrabold text-red-600">${calculatedPrice.pricing.cost_per_student}</div>
-                      </div>
-                      <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                        <div className="text-sm text-gray-500">PRECIO / Estudiante</div>
-                        <div className="text-2xl font-extrabold text-blue-600">${calculatedPrice.pricing.price_per_student}</div>
-                      </div>
-                    </div>
-                    
-                    {/* Totals */}
-                    <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-5 text-white">
-                      <div className="grid grid-cols-3 gap-4 text-center mb-4">
-                        <div>
-                          <div className="text-green-100 text-xs">Tu Inversión</div>
-                          <div className="text-lg font-bold">${calculatedPrice.pricing.total_cost.toLocaleString()}</div>
-                        </div>
-                        <div>
-                          <div className="text-green-100 text-xs">Precio Total</div>
-                          <div className="text-lg font-bold">${calculatedPrice.pricing.total_price.toLocaleString()}</div>
-                        </div>
-                        <div>
-                          <div className="text-green-100 text-xs">Tu Ganancia</div>
-                          <div className="text-lg font-bold">${calculatedPrice.pricing.profit.toLocaleString()}</div>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center pt-3 border-t border-green-400">
-                        <span className="text-green-100">Margen ProficientHub</span>
-                        <span className="text-2xl font-extrabold">{calculatedPrice.pricing.margin_percentage}%</span>
-                      </div>
-                    </div>
-                    
-                    {/* Customer ROI */}
-                    <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                      <div className="flex items-start gap-3">
-                        <TrendingUp className="w-5 h-5 text-blue-600 mt-0.5" />
-                        <div>
-                          <div className="font-bold text-blue-800">Tu ROI si revendes a ${resalePrice}/estudiante</div>
-                          <div className="text-sm text-blue-600">
-                            Ingresos: ${calculatedPrice.customer_roi.customer_revenue.toLocaleString()} · 
-                            Ganancia: ${calculatedPrice.customer_roi.customer_profit.toLocaleString()} · 
-                            ROI: <strong>{calculatedPrice.customer_roi.customer_roi_percentage}%</strong>
+                    <div className="space-y-4">
+                      <div className="bg-gray-50 rounded-xl p-5">
+                        <div className="text-sm text-gray-500 mb-3">Tu configuración:</div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Plan:</span>
+                            <span className="font-bold">{calculatedPrice.plan.label}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">AI Tutor:</span>
+                            <span className="font-bold">{calculatedPrice.ai_tutor.label}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Volumen:</span>
+                            <span className="font-bold text-blue-600">{calculatedPrice.volume_tier.label}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Licencias:</span>
+                            <span className="font-bold">{calculatedPrice.volume_tier.num_licenses.toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
+                      
+                      {calculatedPrice.pricing.savings_per_license > 0 && (
+                        <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+                          <div className="flex items-center gap-2 text-orange-700">
+                            <TrendingUp className="w-5 h-5" />
+                            <span className="font-bold">¡Ahorras ${calculatedPrice.pricing.total_savings.toLocaleString()}!</span>
+                          </div>
+                          <div className="text-sm text-orange-600 mt-1">
+                            ${calculatedPrice.pricing.savings_per_license}/licencia gracias a tu volumen
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
-                    {/* Recommendation */}
-                    <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
-                      <div className="text-sm text-yellow-800">{calculatedPrice.recommendation}</div>
+                    {/* Price Card */}
+                    <div className="bg-gradient-to-br from-[#58CC02] to-green-600 rounded-2xl p-6 text-white">
+                      <div className="text-center mb-4">
+                        <div className="text-green-100 text-sm mb-1">Precio por Licencia</div>
+                        <div className="text-5xl font-extrabold">${calculatedPrice.pricing.price_per_license}</div>
+                        {calculatedPrice.pricing.full_price_per_license > calculatedPrice.pricing.price_per_license && (
+                          <div className="text-green-200 line-through text-lg mt-1">
+                            ${calculatedPrice.pricing.full_price_per_license}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="border-t border-green-400 pt-4 mt-4">
+                        <div className="flex justify-between text-lg">
+                          <span className="text-green-100">Total del Pedido:</span>
+                          <span className="font-extrabold text-2xl">${calculatedPrice.pricing.total_order_price.toLocaleString()}</span>
+                        </div>
+                        <div className="text-green-200 text-sm mt-2">
+                          {calculatedPrice.summary}
+                        </div>
+                      </div>
+                      
+                      <button 
+                        className="w-full mt-6 bg-white text-[#58CC02] font-bold py-4 rounded-xl hover:bg-green-50 transition-colors text-lg"
+                        onClick={() => navigate('/register')}
+                      >
+                        Solicitar Demo
+                      </button>
                     </div>
-                    
-                    <button className="btn-duo w-full py-4 text-lg" onClick={() => navigate('/register')}>
-                      Comenzar Ahora
-                    </button>
                   </div>
                 ) : (
-                  <div className="text-center py-12 text-gray-400">
+                  <div className="text-center py-8 text-gray-400">
                     <Calculator className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                    <p className="font-semibold">Selecciona un plan para ver precios</p>
+                    <p className="font-semibold">Configura tu plan para ver el precio</p>
                   </div>
                 )}
               </div>
