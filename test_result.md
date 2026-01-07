@@ -219,6 +219,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ VERIFIED: Both Writing Test Packages and Speaking Test Packages tables are displayed correctly with costs, suggested resale prices, and profit calculations. Tables show multiple package tiers with proper cost breakdowns."
+      - working: true
+        agent: "testing"
+        comment: "✅ UPDATED B2B TEST PACKAGES VERIFIED: Both Writing and Speaking Test Packages tables working perfectly with correct B2B structure. Headers show only client-facing columns: 'Cantidad', 'Precio', 'Por Test' ✅. Writing packages: 100-10,000 tests with 500 tests having 'Popular' badge ✅. Speaking packages: Same structure with 500 tests 'Popular' badge ✅. CRITICAL: NO forbidden cost columns visible (no 'Tu Coste', 'Tu Ganancia', 'Reventa Sugerida') - properly hidden from clients ✅. All pricing displayed in client-friendly format without internal cost breakdowns."
 
   - task: "Monetization Calculator"
     implemented: true
