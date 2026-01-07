@@ -330,9 +330,9 @@ export default function Landing() {
       <section id="pricing" className="py-20 bg-gray-50">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Planes y Precios B2B</h2>
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">B2B Plans & Pricing</h2>
             <p className="text-xl text-gray-600 mb-8">
-              Configura tu plan: exámenes por licencia + AI opcional + volumen de licencias
+              Configure your plan: exams per license + optional AI + license volume
             </p>
           </div>
           
@@ -343,7 +343,7 @@ export default function Landing() {
               <div className="mb-10">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-full bg-[#58CC02] flex items-center justify-center text-white font-bold text-lg">1</div>
-                  <h3 className="text-2xl font-bold text-gray-900">Selecciona Exámenes por Licencia</h3>
+                  <h3 className="text-2xl font-bold text-gray-900">Select Exams Per License</h3>
                 </div>
                 
                 {pricingData && (
@@ -374,7 +374,7 @@ export default function Landing() {
               <div className="mb-10">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-full bg-[#58CC02] flex items-center justify-center text-white font-bold text-lg">2</div>
-                  <h3 className="text-2xl font-bold text-gray-900">¿Añadir AI Tutor?</h3>
+                  <h3 className="text-2xl font-bold text-gray-900">Add AI Tutor?</h3>
                 </div>
                 
                 <div className="flex flex-col gap-4">
@@ -388,8 +388,8 @@ export default function Landing() {
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <div className="font-bold text-gray-900">Sin AI Tutor</div>
-                      <div className="text-sm text-gray-500">Solo exámenes mock</div>
+                      <div className="font-bold text-gray-900">No AI Tutor</div>
+                      <div className="text-sm text-gray-500">Mock exams only</div>
                     </button>
                     <button
                       onClick={() => { setWithAI(true); setSelectedAiOption('standard'); }}
@@ -401,9 +401,9 @@ export default function Landing() {
                     >
                       <div className="font-bold text-gray-900 flex items-center gap-2">
                         <Brain className="w-5 h-5 text-purple-600" />
-                        Incluir AI Tutor
+                        Include AI Tutor
                       </div>
-                      <div className="text-sm text-gray-500">Tutorías con voz inteligente</div>
+                      <div className="text-sm text-gray-500">Voice-powered tutoring</div>
                     </button>
                   </div>
                   
@@ -433,7 +433,7 @@ export default function Landing() {
               <div className="mb-10">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-full bg-[#58CC02] flex items-center justify-center text-white font-bold text-lg">3</div>
-                  <h3 className="text-2xl font-bold text-gray-900">¿Cuántas Licencias Necesitas?</h3>
+                  <h3 className="text-2xl font-bold text-gray-900">How Many Licenses?</h3>
                 </div>
                 
                 {/* Volume Tiers */}
@@ -452,10 +452,10 @@ export default function Landing() {
                                 : 'border-gray-200 hover:border-blue-300'
                             }`}
                           >
-                            <div className="text-sm font-bold text-gray-700">{tier.label}</div>
+                            <div className="text-sm font-bold text-gray-700">{tier.min.toLocaleString()}-{tier.max.toLocaleString()}</div>
                             {tier.discount !== "0%" && (
                               <Badge className="bg-orange-100 text-orange-700 border-0 mt-1 text-xs">
-                                {tier.discount} desc.
+                                {tier.discount} off
                               </Badge>
                             )}
                           </button>
@@ -465,10 +465,10 @@ export default function Landing() {
                   </div>
                 )}
                 
-                {/* License Input + Slider */}
+                {/* License Input */}
                 <div className="bg-gray-50 rounded-xl p-6">
                   <div className="flex justify-between items-center mb-4">
-                    <Label className="text-gray-700 font-semibold">Número exacto de licencias</Label>
+                    <Label className="text-gray-700 font-semibold">Exact number of licenses</Label>
                     <input
                       type="number"
                       value={numLicenses}
@@ -481,13 +481,13 @@ export default function Landing() {
                       max={100000}
                     />
                   </div>
-                  <Slider
-                    value={[numLicenses]}
-                    onValueChange={([v]) => setNumLicenses(v)}
-                    max={100000}
+                  <input
+                    type="range"
+                    value={numLicenses}
+                    onChange={(e) => setNumLicenses(parseInt(e.target.value))}
                     min={1}
-                    step={1}
-                    className="w-full"
+                    max={100000}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#58CC02]"
                   />
                   <div className="flex justify-between text-xs text-gray-400 mt-2">
                     <span>1</span>
