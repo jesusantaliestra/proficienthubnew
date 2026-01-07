@@ -2221,26 +2221,25 @@ async def get_pricing_analysis(current_user: dict = Depends(get_current_user)):
                 "minutes": option["minutes"],
                 "internal_cost": option["cost"],
                 "price": option["price"],
-            "profit": round(addon["price"] - addon["internal_cost"], 2),
-            "margin": f"{int(addon['margin'] * 100)}%"
-        })
+                "profit": round(option["price"] - option["cost"], 2),
+                "margin": f"{int((option['price'] - option['cost']) / option['price'] * 100)}%"
+            })
     
     return {
-        "pricing_model": "per_license_volume_discount",
+        "pricing_model": "exam_plans_with_volume_pricing",
         "base_cost_per_exam": AVG_MOCK_TEST_COST,
-        "exam_costs": {k: {"description": v["description"], "internal_cost": v["internal_cost"]} for k, v in EXAM_COSTS.items()},
-        "individual_test_costs": INDIVIDUAL_TEST_COSTS,
-        "avg_mock_test_cost": AVG_MOCK_TEST_COST,
-        "tier_analysis": tier_analysis,
-        "ai_tutor_addon_analysis": tutor_analysis,
+        "ai_tutor_cost_per_minute": AI_TUTOR_COST_PER_MIN,
+        "exam_plans": plan_analysis,
+        "volume_pricing": volume_analysis,
+        "ai_tutor_options": tutor_analysis,
         "margin_summary": {
-            "tier_1_20": "51% margen",
-            "tier_21_100": "41% margen", 
-            "tier_101_500": "33% margen",
-            "tier_500_plus": "25% margen (mínimo enterprise)",
-            "ai_tutor": "64-70% margen"
+            "tier_1_100": "50% margen base",
+            "tier_101_500": "45% margen", 
+            "tier_501_2000": "40% margen",
+            "tier_2001_10000": "35% margen (enterprise)",
+            "ai_tutor": "Hasta 67% margen"
         },
-        "note": "Márgenes saludables en todos los tiers. El descuento va por volumen de licencias, no por exámenes."
+        "note": "Nuevo modelo: Planes por número de exámenes + descuento por volumen de estudiantes + AI opcional"
     }
 
 @api_router.post("/pricing/calculate-roi-legacy")
