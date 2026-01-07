@@ -686,20 +686,6 @@ export default function Landing() {
       </section>
 
       {/* ROI Calculator Section - Operations */}
-                ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-gray-400 py-8">
-                    <TrendingUp className="w-12 h-12 mb-3 opacity-30" />
-                    <p className="font-semibold">Ajusta valores y calcula</p>
-                    <p className="text-sm">para ver tus ganancias potenciales</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* ROI Calculator Section - Operations */}
       <section id="calculator-ops" className="py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
