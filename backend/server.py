@@ -1741,10 +1741,6 @@ async def calculate_pricing(
         },
         "summary": f"{num_licenses:,} licencias × ${final_price_per_license}/licencia = ${total_order_price:,.2f}"
     }
-    elif customer_roi < 30:
-        return "💡 ROI del cliente bajo. Considera descuentos o servicios premium incluidos"
-    else:
-        return "👍 Pricing balanceado. Monitorea competencia y satisfacción del cliente"
 
 @api_router.get("/pricing/bulk-products")
 async def get_bulk_product_pricing(
