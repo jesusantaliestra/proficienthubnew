@@ -800,6 +800,167 @@ export default function Landing() {
               </div>
             </Card>
           </div>
+          
+          {/* ROI Calculator for Test Packages */}
+          <Card className="border-2 border-[#58CC02] rounded-2xl overflow-hidden mt-8" data-testid="monetization-calculator">
+            <div className="bg-green-50 p-6 border-b border-green-200">
+              <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <TrendingUp className="w-7 h-7 text-[#58CC02]" />
+                ROI Calculator - Additional Test Packages
+              </h3>
+              <p className="text-gray-600 mt-1">Calculate your potential profit when reselling tests to your students</p>
+            </div>
+            
+            <div className="grid lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
+              {/* Inputs */}
+              <div className="p-6 space-y-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-700 font-semibold block mb-2">Writing Tests (qty)</Label>
+                    <input
+                      type="number"
+                      value={monetizationValues.writingTests}
+                      onChange={(e) => setMonetizationValues(prev => ({ ...prev, writingTests: parseInt(e.target.value) || 0 }))}
+                      className="w-full p-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 outline-none"
+                      min={0}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-gray-700 font-semibold block mb-2">Your Sell Price ($)</Label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={monetizationValues.writingSellPrice}
+                      onChange={(e) => setMonetizationValues(prev => ({ ...prev, writingSellPrice: parseFloat(e.target.value) || 0 }))}
+                      className="w-full p-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 outline-none"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-700 font-semibold block mb-2">Speaking Tests (qty)</Label>
+                    <input
+                      type="number"
+                      value={monetizationValues.speakingTests}
+                      onChange={(e) => setMonetizationValues(prev => ({ ...prev, speakingTests: parseInt(e.target.value) || 0 }))}
+                      className="w-full p-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 outline-none"
+                      min={0}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-gray-700 font-semibold block mb-2">Your Sell Price ($)</Label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={monetizationValues.speakingSellPrice}
+                      onChange={(e) => setMonetizationValues(prev => ({ ...prev, speakingSellPrice: parseFloat(e.target.value) || 0 }))}
+                      className="w-full p-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 outline-none"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-700 font-semibold block mb-2">Mock Exams (qty)</Label>
+                    <input
+                      type="number"
+                      value={monetizationValues.mockExams}
+                      onChange={(e) => setMonetizationValues(prev => ({ ...prev, mockExams: parseInt(e.target.value) || 0 }))}
+                      className="w-full p-2 border-2 border-gray-200 rounded-lg focus:border-green-500 outline-none"
+                      min={0}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-gray-700 font-semibold block mb-2">Your Sell Price ($)</Label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={monetizationValues.mockExamSellPrice}
+                      onChange={(e) => setMonetizationValues(prev => ({ ...prev, mockExamSellPrice: parseFloat(e.target.value) || 0 }))}
+                      className="w-full p-2 border-2 border-gray-200 rounded-lg focus:border-green-500 outline-none"
+                    />
+                  </div>
+                </div>
+                
+                <button 
+                  className="btn-duo w-full py-3 mt-4" 
+                  onClick={calculateMonetization}
+                  data-testid="calculate-monetization-btn"
+                >
+                  Calculate Profit
+                </button>
+              </div>
+              
+              {/* Results */}
+              <div className="p-6 bg-gradient-to-br from-green-50 to-white">
+                {monetizationResult ? (
+                  <div className="space-y-4" data-testid="monetization-results">
+                    {/* Per Product Results */}
+                    <div className="space-y-3">
+                      <div className="bg-white rounded-xl p-3 border border-blue-200">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Writing Tests ({monetizationResult.writing.quantity})</span>
+                          <span className="font-bold text-blue-600">${monetizationResult.writing.profit} profit</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          Cost: ${monetizationResult.writing.cost} | Revenue: ${monetizationResult.writing.revenue} | Margin: {monetizationResult.writing.margin}%
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white rounded-xl p-3 border border-purple-200">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Speaking Tests ({monetizationResult.speaking.quantity})</span>
+                          <span className="font-bold text-purple-600">${monetizationResult.speaking.profit} profit</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          Cost: ${monetizationResult.speaking.cost} | Revenue: ${monetizationResult.speaking.revenue} | Margin: {monetizationResult.speaking.margin}%
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white rounded-xl p-3 border border-green-200">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Mock Exams ({monetizationResult.mockExams.quantity})</span>
+                          <span className="font-bold text-green-600">${monetizationResult.mockExams.profit} profit</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          Cost: ${monetizationResult.mockExams.cost} | Revenue: ${monetizationResult.mockExams.revenue} | Margin: {monetizationResult.mockExams.margin}%
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Totals */}
+                    <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-5 text-white">
+                      <div className="grid grid-cols-3 gap-4 text-center mb-3">
+                        <div>
+                          <div className="text-green-100 text-xs">Your Cost</div>
+                          <div className="text-lg font-bold">${monetizationResult.totals.cost}</div>
+                        </div>
+                        <div>
+                          <div className="text-green-100 text-xs">Your Revenue</div>
+                          <div className="text-lg font-bold">${monetizationResult.totals.revenue}</div>
+                        </div>
+                        <div>
+                          <div className="text-green-100 text-xs">Your Profit</div>
+                          <div className="text-lg font-bold">${monetizationResult.totals.profit}</div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center pt-3 border-t border-green-400">
+                        <span className="text-green-100">Return on Investment</span>
+                        <span className="text-2xl font-extrabold">{monetizationResult.totals.roi_percent}% ROI</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-gray-400 py-8">
+                    <TrendingUp className="w-12 h-12 mb-3 opacity-30" />
+                    <p className="font-semibold">Enter quantities and prices</p>
+                    <p className="text-sm">to see your potential profit</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
         </div>
       </section>
 
