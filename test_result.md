@@ -119,6 +119,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ VERIFIED: Calculator endpoint working perfectly. Tested all scenarios: plan_10 (50 students, no AI) = $9.40 cost/$18.80 price (50% margin), plan_20 (200 students, basic AI) = tier_101_500, plan_100 (1000 students, premium AI) = tier_501_2000, plan_20 (5000 students, standard AI) = tier_2001_10000. All calculations accurate, volume tier assignments correct, response structure complete with pricing, customer_roi, and recommendations."
+      - working: true
+        agent: "testing"
+        comment: "✅ UPDATED B2B MODEL VERIFIED: Calculator endpoint updated to new B2B pricing model working perfectly. Tested specific scenarios from review request: plan_10 (100 licenses, no AI) = $18.80/license (tier_100), plan_40 (500 licenses, standard AI) with 7% discount (tier_500), plan_20 (5000 licenses, premium AI) with 25% discount (tier_5000). All 7 volume tiers working correctly (tier_100 to tier_100000). Response structure matches expected format with NO internal costs visible (cost_per_student, margin_percentage, profit properly hidden). All pricing calculations accurate."
 
   - task: "Platform Plans Endpoint"
     implemented: true
@@ -134,6 +137,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ VERIFIED: Platform plans endpoint working perfectly. Returns all 6 exam plans (plan_5, plan_10, plan_20, plan_40, plan_60, plan_100), all 4 volume pricing tiers (tier_1_100, tier_101_500, tier_501_2000, tier_2001_10000), and all 5 AI tutor options (none, basic, standard, premium, unlimited). Structure complete with base costs and labels."
+      - working: true
+        agent: "testing"
+        comment: "✅ UPDATED B2B MODEL VERIFIED: Platform plans endpoint updated to new B2B pricing model working perfectly. Returns all 6 exam plans (plan_5, plan_10, plan_20, plan_40, plan_60, plan_100), all 7 volume pricing tiers (tier_100, tier_500, tier_1000, tier_2000, tier_5000, tier_10000, tier_100000), and all 5 AI tutor options (none, basic, standard, premium, unlimited). CRITICAL: NO internal costs or margins visible in any response - properly hidden from clients. All tier assignments working correctly for license ranges 1-100,000."
 
   - task: "Admin Pricing Analysis Endpoint"
     implemented: true
