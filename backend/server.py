@@ -1941,22 +1941,22 @@ class SubscriptionCheckoutRequest(BaseModel):
 
 @api_router.post("/checkout/subscription")
 async def create_subscription_checkout(request: SubscriptionCheckoutRequest, http_request: Request):
-    """Create Stripe checkout session for subscription"""
+    """Create Stripe checkout session for subscription using new pricing model"""
     try:
-        # Use package-based pricing instead of per-student
-        # Map old parameters to new package system
-        if request.students <= 20:
-            package_id = "starter_20_ai" if request.exams > 1 else "starter_20"
-        elif request.students <= 40:
-            package_id = "growth_40_ai" if request.exams > 1 else "growth_40"
-        else:
-            package_id = "scale_100_ai" if request.exams > 1 else "scale_100"
+        # Map old parameters to new pricing model
+        # Default to plan_10 for backward compatibility
+        exam_plan = "plan_10"
+        ai_tutor_option = "basic" if request.exams > 1 else "none"
         
-        if package_id not in EXAM_PACKAGES:
-            raise HTTPException(status_code=400, detail="Invalid package configuration")
+        # Get pricing calculation
+        pricing_calc = await calculate_pricing(
+            exam_plan=exam_plan,
+            num_students=request.students,
+            ai_tutor_option=ai_tutor_option,
+            resale_price_per_student=25.0
+        )
         
-        package = EXAM_PACKAGES[package_id]
-        amount = package["price"]
+        amount = pricing_calc["pricing"]["total_price"]
         
         if request.billing_cycle == "yearly":
             # 10 months for the price of 12 (17% discount)
@@ -1973,9 +1973,9 @@ async def create_subscription_checkout(request: SubscriptionCheckoutRequest, htt
         # Metadata for tracking
         metadata = {
             "type": "subscription",
-            "package_id": package_id,
-            "mock_tests": str(package["mock_tests"]),
-            "ai_tutor_minutes": str(package["ai_tutor_minutes"]),
+            "exam_plan": exam_plan,
+            "students": str(request.students),
+            "ai_tutor_option": ai_tutor_option,
             "billing_cycle": request.billing_cycle,
             "price": str(amount)
         }
