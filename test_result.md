@@ -157,11 +157,14 @@ frontend:
     file: "/app/frontend/src/pages/Landing.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Muestra 6 tarjetas de planes (5,10,20,40,60,100 exámenes) con costes base correctos"
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: All 6 exam plan cards are visible and functional. Found cards for 5, 10, 20, 40, 60, 100 Mock Exams with proper cost display. Plan_20 has 'Popular' badge as expected. All cards show exam numbers, 'Mock Exams' labels, and base costs correctly. Cards are clickable and navigate to price calculator."
 
   - task: "Volume Pricing Tiers Display"
     implemented: true
@@ -169,11 +172,14 @@ frontend:
     file: "/app/frontend/src/pages/Landing.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Muestra 4 tiers de descuento por volumen (1-100, 101-500, 501-2000, 2001-10000 estudiantes)"
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Volume Pricing Info section displays all 4 tiers correctly (1-100, 101-500, 501-2000, 2001-10000 estudiantes) with discount percentages (0%, 9%, 17%, 23%) and margin information. Section is properly labeled 'Descuentos por Volumen de Estudiantes'."
 
   - task: "Interactive Price Calculator"
     implemented: true
@@ -181,11 +187,14 @@ frontend:
     file: "/app/frontend/src/pages/Landing.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Calculadora interactiva con selector de plan, slider de estudiantes (1-10000), selector AI Tutor, slider de reventa. Calcula precios en tiempo real"
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Interactive Price Calculator working perfectly. Plan selection (6 buttons) functional, AI Tutor dropdown works with all options (none, basic, standard, premium), real-time pricing calculations display correctly. Shows TU COSTE/Estudiante, PRECIO/Estudiante, Tu Inversión, Precio Total, Tu Ganancia, Margen ProficientHub %, and Tu ROI calculations. Minor: Student slider and resale price slider selectors need adjustment but functionality works via other inputs."
 
   - task: "Writing/Speaking Packages Display"
     implemented: true
@@ -193,11 +202,14 @@ frontend:
     file: "/app/frontend/src/pages/Landing.jsx"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Tablas de paquetes con costes, reventa sugerida y ganancias para Writing y Speaking tests hasta 10,000 unidades"
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Both Writing Test Packages and Speaking Test Packages tables are displayed correctly with costs, suggested resale prices, and profit calculations. Tables show multiple package tiers with proper cost breakdowns."
 
   - task: "Monetization Calculator"
     implemented: true
@@ -205,11 +217,14 @@ frontend:
     file: "/app/frontend/src/pages/Landing.jsx"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Calculadora de monetización para writing/speaking tests con ROI y recuperación de suscripción"
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Monetization Calculator fully functional. Writing/Speaking test sliders work, custom price inputs functional, 'Calcular Ganancia' button works correctly. Results display Ganancia Writing, Ganancia Speaking, Ganancia Mensual Total, and ROI percentage. Subscription recovery information also displayed correctly."
 
   - task: "Admin Panel Costs Tab"
     implemented: true
@@ -217,11 +232,14 @@ frontend:
     file: "/app/frontend/src/pages/AdminPanel.jsx"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Tab Costes muestra exam_costs, individual_test_costs, tier_analysis con márgenes, ai_tutor_addon_analysis"
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Admin Panel Costs Tab working perfectly. Successfully logged in with santaliestralimited@gmail.com / Admin123!. 'Análisis de Costes Internos' heading displayed, 'Coste por Tipo de Examen' table shows all 5 exam types (TOEFL, IELTS, CAMBRIDGE, PTE, OET), 'Costes Individuales' section shows Writing Test, Speaking Test, and AI Tutor costs, 'Tiers por Volumen de Licencias' table displays all required columns, and 'AI Tutor Add-on' analysis table is present."
 
 metadata:
   created_by: "main_agent"
