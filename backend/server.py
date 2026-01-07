@@ -1446,15 +1446,15 @@ from emergentintegrations.payments.stripe.checkout import StripeCheckout, Checko
 stripe_api_key = os.environ.get('STRIPE_API_KEY', 'sk_test_emergent')
 
 # ==================== PRICING ENDPOINTS ====================
-# MODELO B2B: Planes por número de exámenes + descuento por volumen de estudiantes
+# MODELO B2B: Planes por número de exámenes por licencia + descuento por volumen de licencias
 # Cada plan puede tener AI Tutor o no
 
-# Costes base
+# Costes base (INTERNO - NO MOSTRAR A CLIENTES)
 AVG_MOCK_TEST_COST = 0.94  # Coste interno por mock test
 AI_TUTOR_COST_PER_MIN = 0.06  # Coste interno por minuto AI
 
-# ==================== PLANES POR NÚMERO DE EXÁMENES ====================
-# El cliente elige cuántos mock exams incluye cada licencia
+# ==================== PLANES POR NÚMERO DE EXÁMENES POR LICENCIA ====================
+# El cliente elige cuántos mock exams incluye cada licencia que compre
 EXAM_PLANS = {
     "plan_5": {"exams": 5, "base_cost": 4.70, "label": "5 Mock Exams"},
     "plan_10": {"exams": 10, "base_cost": 9.40, "label": "10 Mock Exams"},
@@ -1464,37 +1464,51 @@ EXAM_PLANS = {
     "plan_100": {"exams": 100, "base_cost": 94.00, "label": "100 Mock Exams"},
 }
 
-# ==================== PRECIOS POR VOLUMEN DE ESTUDIANTES ====================
-# Más estudiantes = mejor precio por estudiante
-# Márgenes saludables: 40-55%
+# ==================== DESCUENTOS POR VOLUMEN DE LICENCIAS ====================
+# Más licencias compradas = mejor precio por licencia
+# Tiers: 100, 500, 1000, 2000, 5000, 10000, 100000
 VOLUME_PRICING = {
-    # Tier 1: 1-100 estudiantes (margen ~50%)
-    "tier_1_100": {
+    "tier_100": {
         "min": 1, "max": 100,
-        "price_multiplier": 2.00,  # 2x coste = 50% margen
+        "price_multiplier": 2.00,
         "discount": "0%",
-        "label": "1-100 estudiantes"
+        "label": "1-100 licencias"
     },
-    # Tier 2: 101-500 estudiantes (margen ~45%)
-    "tier_101_500": {
+    "tier_500": {
         "min": 101, "max": 500,
-        "price_multiplier": 1.82,  # ~45% margen
-        "discount": "9%",
-        "label": "101-500 estudiantes"
+        "price_multiplier": 1.85,
+        "discount": "7%",
+        "label": "101-500 licencias"
     },
-    # Tier 3: 501-2000 estudiantes (margen ~40%)
-    "tier_501_2000": {
-        "min": 501, "max": 2000,
-        "price_multiplier": 1.67,  # ~40% margen
-        "discount": "17%",
-        "label": "501-2,000 estudiantes"
+    "tier_1000": {
+        "min": 501, "max": 1000,
+        "price_multiplier": 1.72,
+        "discount": "14%",
+        "label": "501-1,000 licencias"
     },
-    # Tier 4: 2001-10000 estudiantes (margen ~35%)
-    "tier_2001_10000": {
-        "min": 2001, "max": 10000,
-        "price_multiplier": 1.54,  # ~35% margen
-        "discount": "23%",
-        "label": "2,001-10,000 estudiantes"
+    "tier_2000": {
+        "min": 1001, "max": 2000,
+        "price_multiplier": 1.60,
+        "discount": "20%",
+        "label": "1,001-2,000 licencias"
+    },
+    "tier_5000": {
+        "min": 2001, "max": 5000,
+        "price_multiplier": 1.50,
+        "discount": "25%",
+        "label": "2,001-5,000 licencias"
+    },
+    "tier_10000": {
+        "min": 5001, "max": 10000,
+        "price_multiplier": 1.42,
+        "discount": "29%",
+        "label": "5,001-10,000 licencias"
+    },
+    "tier_100000": {
+        "min": 10001, "max": 100000,
+        "price_multiplier": 1.35,
+        "discount": "32%",
+        "label": "10,001-100,000 licencias"
     },
 }
 
