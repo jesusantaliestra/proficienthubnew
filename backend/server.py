@@ -1717,6 +1717,7 @@ async def calculate_pricing(
             "label": plan["label"]
         },
         "volume_tier": {
+            "id": volume_tier_id,
             "label": volume_tier["label"],
             "discount": volume_tier["discount"],
             "students": num_students
