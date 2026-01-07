@@ -590,6 +590,7 @@ class ProficientHubAPITester:
         # Run test suites in order
         self.test_health_endpoints()
         self.test_pricing_endpoints()
+        self.test_b2b_pricing_model()  # New B2B pricing tests
         self.test_exam_endpoints()
         
         # Authentication tests
@@ -600,6 +601,9 @@ class ProficientHubAPITester:
             self.test_library_features()
             self.test_exam_practice_protected()
             self.test_ai_tutor()
+        
+        # Admin tests (separate authentication)
+        self.test_admin_pricing_analysis()
         
         self.test_language_support()
         self.test_unauthorized_access()
