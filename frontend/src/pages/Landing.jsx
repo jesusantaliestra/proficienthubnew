@@ -32,9 +32,9 @@ export default function Landing() {
   // NEW: Pricing model state
   const [pricingData, setPricingData] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState('plan_10');
-  const [numStudents, setNumStudents] = useState(50);
+  const [withAI, setWithAI] = useState(false);
   const [selectedAiOption, setSelectedAiOption] = useState('none');
-  const [resalePrice, setResalePrice] = useState(30);
+  const [numLicenses, setNumLicenses] = useState(100);
   const [calculatedPrice, setCalculatedPrice] = useState(null);
   const [calculatingPrice, setCalculatingPrice] = useState(false);
   
@@ -64,12 +64,13 @@ export default function Landing() {
 
   // Calculate pricing when inputs change
   const calculatePricing = useCallback(async () => {
-    if (!selectedPlan || numStudents < 1) return;
+    if (!selectedPlan || numLicenses < 1) return;
     
     setCalculatingPrice(true);
     try {
+      const aiOption = withAI ? selectedAiOption : 'none';
       const response = await axios.get(
-        `${API_URL}/pricing/calculator?exam_plan=${selectedPlan}&num_students=${numStudents}&ai_tutor_option=${selectedAiOption}&resale_price_per_student=${resalePrice}`
+        `${API_URL}/pricing/calculator?exam_plan=${selectedPlan}&num_licenses=${numLicenses}&ai_tutor_option=${aiOption}`
       );
       setCalculatedPrice(response.data);
     } catch (error) {
@@ -77,16 +78,16 @@ export default function Landing() {
     } finally {
       setCalculatingPrice(false);
     }
-  }, [selectedPlan, numStudents, selectedAiOption, resalePrice]);
+  }, [selectedPlan, numLicenses, withAI, selectedAiOption]);
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
-      if (selectedPlan && numStudents > 0) {
+      if (selectedPlan && numLicenses > 0) {
         calculatePricing();
       }
     }, 300);
     return () => clearTimeout(debounceTimer);
-  }, [selectedPlan, numStudents, selectedAiOption, resalePrice, calculatePricing]);
+  }, [selectedPlan, numLicenses, withAI, selectedAiOption, calculatePricing]);
 
   const calculateMonetization = async () => {
     try {
