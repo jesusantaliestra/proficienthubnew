@@ -101,3 +101,135 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Implementar nuevo modelo de precios B2B con planes por número de exámenes (5,10,20,40,60,100), descuentos por volumen de estudiantes (hasta 10,000), AI Tutor opcional, y calculadoras de ROI interactivas"
+
+backend:
+  - task: "Pricing Calculator Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Endpoint /api/pricing/calculator funciona correctamente con exam_plan, num_students, ai_tutor_option, resale_price_per_student"
+
+  - task: "Platform Plans Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Endpoint /api/pricing/platform-plans devuelve exam_plans (6 planes), volume_pricing (4 tiers), ai_tutor_options"
+
+  - task: "Admin Pricing Analysis Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Endpoint /api/admin/pricing-analysis devuelve exam_costs, tier_analysis, ai_tutor_addon_analysis para admin panel"
+
+frontend:
+  - task: "Pricing Plans Display (6 exam plans)"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Landing.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Muestra 6 tarjetas de planes (5,10,20,40,60,100 exámenes) con costes base correctos"
+
+  - task: "Volume Pricing Tiers Display"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Landing.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Muestra 4 tiers de descuento por volumen (1-100, 101-500, 501-2000, 2001-10000 estudiantes)"
+
+  - task: "Interactive Price Calculator"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Landing.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Calculadora interactiva con selector de plan, slider de estudiantes (1-10000), selector AI Tutor, slider de reventa. Calcula precios en tiempo real"
+
+  - task: "Writing/Speaking Packages Display"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Landing.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Tablas de paquetes con costes, reventa sugerida y ganancias para Writing y Speaking tests hasta 10,000 unidades"
+
+  - task: "Monetization Calculator"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Landing.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Calculadora de monetización para writing/speaking tests con ROI y recuperación de suscripción"
+
+  - task: "Admin Panel Costs Tab"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/AdminPanel.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Tab Costes muestra exam_costs, individual_test_costs, tier_analysis con márgenes, ai_tutor_addon_analysis"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "Interactive Price Calculator"
+    - "Pricing Plans Display"
+    - "Volume Pricing Tiers"
+    - "Admin Panel Costs Tab"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Implementé el nuevo modelo de precios B2B completo. Backend tiene endpoints funcionando. Frontend muestra planes, tiers, calculadora interactiva y admin panel. Por favor verificar: 1) Pricing plans cards (6 planes), 2) Calculator interactivo con cálculos en tiempo real, 3) Monetization calculator, 4) Admin panel costs tab. Credenciales admin: santaliestralimited@gmail.com / Admin123!"
