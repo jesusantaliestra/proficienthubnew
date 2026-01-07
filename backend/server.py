@@ -1513,13 +1513,13 @@ VOLUME_PRICING = {
 }
 
 # ==================== AI TUTOR ADD-ON ====================
-# Minutos de AI Tutor por estudiante (opcional)
+# Minutos de AI Tutor por licencia (opcional)
 AI_TUTOR_OPTIONS = {
     "none": {"minutes": 0, "cost": 0, "price": 0, "label": "Sin AI Tutor"},
-    "basic": {"minutes": 30, "cost": 1.80, "price": 4.00, "label": "30 min AI Tutor"},
-    "standard": {"minutes": 60, "cost": 3.60, "price": 7.00, "label": "60 min AI Tutor"},
-    "premium": {"minutes": 120, "cost": 7.20, "price": 12.00, "label": "120 min AI Tutor"},
-    "unlimited": {"minutes": 300, "cost": 18.00, "price": 30.00, "label": "300 min AI Tutor"},
+    "basic": {"minutes": 30, "cost": 1.80, "price": 5.00, "label": "30 min AI Tutor"},
+    "standard": {"minutes": 60, "cost": 3.60, "price": 9.00, "label": "60 min AI Tutor"},
+    "premium": {"minutes": 120, "cost": 7.20, "price": 15.00, "label": "120 min AI Tutor"},
+    "unlimited": {"minutes": 300, "cost": 18.00, "price": 35.00, "label": "300 min AI Tutor"},
 }
 
 # ==================== PRODUCTOS EXTRA PARA REVENTA ====================
