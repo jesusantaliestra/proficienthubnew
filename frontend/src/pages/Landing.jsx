@@ -96,27 +96,33 @@ export default function Landing() {
       setMonetizationResult(response.data);
     } catch (error) {
       console.error('Monetization calculation error:', error);
-      // Fallback local calculation with new costs
-      const writingCost = monetizationValues.writingTests * 1.05;  // $1.05 per test from package
-      const speakingCost = monetizationValues.speakingTests * 5.55; // $5.55 per test from package
+      // Fallback local calculation
+      const writingCostPerTest = 0.05;
+      const speakingCostPerTest = 0.85;
+      const writingCost = monetizationValues.writingTests * writingCostPerTest;
+      const speakingCost = monetizationValues.speakingTests * speakingCostPerTest;
       const writingRevenue = monetizationValues.writingTests * monetizationValues.writingSellPrice;
       const speakingRevenue = monetizationValues.speakingTests * monetizationValues.speakingSellPrice;
       
       setMonetizationResult({
         writing: {
           profit: Math.round(writingRevenue - writingCost),
-          cost: writingCost,
-          revenue: writingRevenue
+          cost: writingCost.toFixed(2),
+          revenue: writingRevenue.toFixed(2)
         },
         speaking: {
           profit: Math.round(speakingRevenue - speakingCost),
-          cost: speakingCost,
-          revenue: speakingRevenue
+          cost: speakingCost.toFixed(2),
+          revenue: speakingRevenue.toFixed(2)
         },
         totals: {
-          investment: writingCost + speakingCost,
+          investment: (writingCost + speakingCost).toFixed(2),
           profit: Math.round((writingRevenue - writingCost) + (speakingRevenue - speakingCost)),
           roi_percent: Math.round(((writingRevenue + speakingRevenue) / (writingCost + speakingCost) - 1) * 100)
+        },
+        subscription_recovery: {
+          writing_tests_needed: Math.ceil(500 / (monetizationValues.writingSellPrice - writingCostPerTest)),
+          speaking_tests_needed: Math.ceil(500 / (monetizationValues.speakingSellPrice - speakingCostPerTest))
         }
       });
     }
