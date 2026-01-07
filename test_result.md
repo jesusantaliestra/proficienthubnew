@@ -253,6 +253,18 @@ frontend:
         agent: "testing"
         comment: "✅ VERIFIED: Admin Panel Costs Tab working perfectly. Successfully logged in with santaliestralimited@gmail.com / Admin123!. 'Análisis de Costes Internos' heading displayed, 'Coste por Tipo de Examen' table shows all 5 exam types (TOEFL, IELTS, CAMBRIDGE, PTE, OET), 'Costes Individuales' section shows Writing Test, Speaking Test, and AI Tutor costs, 'Tiers por Volumen de Licencias' table displays all required columns, and 'AI Tutor Add-on' analysis table is present."
 
+  - task: "Admin Panel ROI Calculator Tab"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/AdminPanel.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ VERIFIED: ROI Calculator tab in Admin Panel working perfectly. Features: 1) License Pricing - Volume Multipliers table with editable multipliers for all 7 tiers (100-100000 licenses), shows Cost, Sell Price, Profit, and Margin%. 2) AI Tutor Add-on Pricing table with editable sell prices for all 4 options (Basic 30min, Standard 60min, Premium 120min, Unlimited 300min). 3) Test Packages Pricing with editable sell prices for Writing Tests ($0.05 cost), Speaking Tests ($0.85 cost), and Mock Exams ($0.94 cost). 4) Margin Summary showing average margins for all categories. Real-time calculations work perfectly - tested changing multiplier from 2.0 to 2.5 and values updated correctly (Sell Price $18.80→$23.50, Profit $9.40→$14.10, Margin 50%→60%)."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
