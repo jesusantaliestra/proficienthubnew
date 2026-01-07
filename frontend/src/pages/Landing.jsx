@@ -604,47 +604,49 @@ export default function Landing() {
               <Coins className="w-4 h-4 mr-2" />
               Servicios Extra
             </Badge>
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Paquetes de Writing & Speaking</h2>
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Paquetes de Tests Adicionales</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Compra tests individuales y ofrécelos a tus estudiantes como servicio adicional.
             </p>
           </div>
           
           {/* Package Tables */}
-          <div className="grid lg:grid-cols-2 gap-8 mb-12">
+          <div className="grid lg:grid-cols-3 gap-6 mb-12">
             {/* Writing Tests */}
             <Card className="border-2 border-blue-200 rounded-2xl overflow-hidden">
               <div className="bg-blue-50 p-4 border-b border-blue-200">
                 <h3 className="text-xl font-bold text-blue-800 flex items-center gap-2">
                   <BookOpen className="w-5 h-5" />
-                  Writing Test Packages
+                  Writing Tests
                 </h3>
-                <p className="text-sm text-blue-600">AI-graded essays con feedback detallado</p>
+                <p className="text-sm text-blue-600">AI-graded essays</p>
               </div>
               <div className="p-4">
                 <table className="w-full">
                   <thead>
                     <tr className="text-left text-sm text-gray-500 border-b">
                       <th className="pb-2">Cantidad</th>
-                      <th className="pb-2 text-center">Precio</th>
-                      <th className="pb-2 text-center">Por Test</th>
+                      <th className="pb-2 text-right">Precio</th>
+                      <th className="pb-2 text-right">Por Test</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm">
                     {[
                       { tests: 100, price: 150, perTest: 1.50 },
-                      { tests: 500, price: 625, perTest: 1.25, popular: true },
-                      { tests: 1000, price: 1100, perTest: 1.10 },
+                      { tests: 500, price: 625, perTest: 1.25 },
+                      { tests: 1000, price: 1100, perTest: 1.10, popular: true },
                       { tests: 5000, price: 4750, perTest: 0.95 },
-                      { tests: 10000, price: 8500, perTest: 0.85 }
+                      { tests: 10000, price: 8500, perTest: 0.85 },
+                      { tests: 50000, price: 37500, perTest: 0.75 },
+                      { tests: 100000, price: 65000, perTest: 0.65 }
                     ].map((pkg) => (
                       <tr key={pkg.tests} className={`border-b ${pkg.popular ? 'bg-blue-50' : ''}`}>
-                        <td className="py-3 font-semibold">
-                          {pkg.tests.toLocaleString()} tests 
-                          {pkg.popular && <Badge className="ml-2 bg-blue-500 text-white border-0 text-xs">Popular</Badge>}
+                        <td className="py-2 font-semibold">
+                          {pkg.tests.toLocaleString()}
+                          {pkg.popular && <Badge className="ml-1 bg-blue-500 text-white border-0 text-xs">Popular</Badge>}
                         </td>
-                        <td className="py-3 text-center font-bold text-blue-600">${pkg.price.toLocaleString()}</td>
-                        <td className="py-3 text-center text-gray-600">${pkg.perTest}/test</td>
+                        <td className="py-2 text-right font-bold text-blue-600">${pkg.price.toLocaleString()}</td>
+                        <td className="py-2 text-right text-gray-600">${pkg.perTest}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -657,34 +659,78 @@ export default function Landing() {
               <div className="bg-purple-50 p-4 border-b border-purple-200">
                 <h3 className="text-xl font-bold text-purple-800 flex items-center gap-2">
                   <Mic className="w-5 h-5" />
-                  Speaking Test Packages
+                  Speaking Tests
                 </h3>
-                <p className="text-sm text-purple-600">AI-powered con feedback de pronunciación</p>
+                <p className="text-sm text-purple-600">AI pronunciation feedback</p>
               </div>
               <div className="p-4">
                 <table className="w-full">
                   <thead>
                     <tr className="text-left text-sm text-gray-500 border-b">
                       <th className="pb-2">Cantidad</th>
-                      <th className="pb-2 text-center">Precio</th>
-                      <th className="pb-2 text-center">Por Test</th>
+                      <th className="pb-2 text-right">Precio</th>
+                      <th className="pb-2 text-right">Por Test</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm">
                     {[
                       { tests: 100, price: 350, perTest: 3.50 },
-                      { tests: 500, price: 1500, perTest: 3.00, popular: true },
-                      { tests: 1000, price: 2700, perTest: 2.70 },
+                      { tests: 500, price: 1500, perTest: 3.00 },
+                      { tests: 1000, price: 2700, perTest: 2.70, popular: true },
                       { tests: 5000, price: 11500, perTest: 2.30 },
-                      { tests: 10000, price: 20000, perTest: 2.00 }
+                      { tests: 10000, price: 20000, perTest: 2.00 },
+                      { tests: 50000, price: 85000, perTest: 1.70 },
+                      { tests: 100000, price: 150000, perTest: 1.50 }
                     ].map((pkg) => (
                       <tr key={pkg.tests} className={`border-b ${pkg.popular ? 'bg-purple-50' : ''}`}>
-                        <td className="py-3 font-semibold">
-                          {pkg.tests.toLocaleString()} tests 
-                          {pkg.popular && <Badge className="ml-2 bg-purple-500 text-white border-0 text-xs">Popular</Badge>}
+                        <td className="py-2 font-semibold">
+                          {pkg.tests.toLocaleString()}
+                          {pkg.popular && <Badge className="ml-1 bg-purple-500 text-white border-0 text-xs">Popular</Badge>}
                         </td>
-                        <td className="py-3 text-center font-bold text-purple-600">${pkg.price.toLocaleString()}</td>
-                        <td className="py-3 text-center text-gray-600">${pkg.perTest}/test</td>
+                        <td className="py-2 text-right font-bold text-purple-600">${pkg.price.toLocaleString()}</td>
+                        <td className="py-2 text-right text-gray-600">${pkg.perTest}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+            
+            {/* Mock Exams */}
+            <Card className="border-2 border-green-200 rounded-2xl overflow-hidden">
+              <div className="bg-green-50 p-4 border-b border-green-200">
+                <h3 className="text-xl font-bold text-green-800 flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5" />
+                  Mock Exams
+                </h3>
+                <p className="text-sm text-green-600">Full practice exams</p>
+              </div>
+              <div className="p-4">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-sm text-gray-500 border-b">
+                      <th className="pb-2">Cantidad</th>
+                      <th className="pb-2 text-right">Precio</th>
+                      <th className="pb-2 text-right">Por Exam</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm">
+                    {[
+                      { tests: 100, price: 280, perTest: 2.80 },
+                      { tests: 500, price: 1250, perTest: 2.50 },
+                      { tests: 1000, price: 2200, perTest: 2.20, popular: true },
+                      { tests: 5000, price: 9500, perTest: 1.90 },
+                      { tests: 10000, price: 17000, perTest: 1.70 },
+                      { tests: 50000, price: 75000, perTest: 1.50 },
+                      { tests: 100000, price: 130000, perTest: 1.30 }
+                    ].map((pkg) => (
+                      <tr key={pkg.tests} className={`border-b ${pkg.popular ? 'bg-green-50' : ''}`}>
+                        <td className="py-2 font-semibold">
+                          {pkg.tests.toLocaleString()}
+                          {pkg.popular && <Badge className="ml-1 bg-green-500 text-white border-0 text-xs">Popular</Badge>}
+                        </td>
+                        <td className="py-2 text-right font-bold text-green-600">${pkg.price.toLocaleString()}</td>
+                        <td className="py-2 text-right text-gray-600">${pkg.perTest}</td>
                       </tr>
                     ))}
                   </tbody>
