@@ -1739,7 +1739,7 @@ async def calculate_pricing(
             "savings_per_license": savings_per_license,
             "total_savings": total_savings
         },
-        "summary": f"{num_licenses:,} licencias × ${final_price_per_license}/licencia = ${total_order_price:,.2f}"
+        "summary": f"{num_licenses:,} licenses × ${final_price_per_license}/license = ${total_order_price:,.2f}"
     }
 
 @api_router.get("/pricing/bulk-products")
