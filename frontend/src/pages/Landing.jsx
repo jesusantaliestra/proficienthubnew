@@ -507,20 +507,20 @@ export default function Landing() {
                   <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center text-white">
                     <Check className="w-6 h-6" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900">Tu Precio Final</h3>
+                  <h3 className="text-2xl font-bold text-gray-900">Your Final Price</h3>
                 </div>
                 
                 {calculatingPrice ? (
                   <div className="text-center py-8 text-gray-400">
                     <Calculator className="w-12 h-12 mx-auto mb-4 animate-pulse" />
-                    <p>Calculando...</p>
+                    <p>Calculating...</p>
                   </div>
                 ) : calculatedPrice ? (
                   <div className="grid lg:grid-cols-2 gap-6" data-testid="pricing-results">
                     {/* Summary */}
                     <div className="space-y-4">
                       <div className="bg-gray-50 rounded-xl p-5">
-                        <div className="text-sm text-gray-500 mb-3">Tu configuración:</div>
+                        <div className="text-sm text-gray-500 mb-3">Your configuration:</div>
                         <div className="space-y-2">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Plan:</span>
@@ -531,12 +531,8 @@ export default function Landing() {
                             <span className="font-bold">{calculatedPrice.ai_tutor.label}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Volumen:</span>
-                            <span className="font-bold text-blue-600">{calculatedPrice.volume_tier.label}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Licencias:</span>
-                            <span className="font-bold">{calculatedPrice.volume_tier.num_licenses.toLocaleString()}</span>
+                            <span className="text-gray-600">Volume Tier:</span>
+                            <span className="font-bold text-blue-600">{calculatedPrice.volume_tier.num_licenses.toLocaleString()} licenses</span>
                           </div>
                         </div>
                       </div>
@@ -545,10 +541,10 @@ export default function Landing() {
                         <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
                           <div className="flex items-center gap-2 text-orange-700">
                             <TrendingUp className="w-5 h-5" />
-                            <span className="font-bold">¡Ahorras ${calculatedPrice.pricing.total_savings.toLocaleString()}!</span>
+                            <span className="font-bold">You save ${calculatedPrice.pricing.total_savings.toLocaleString()}!</span>
                           </div>
                           <div className="text-sm text-orange-600 mt-1">
-                            ${calculatedPrice.pricing.savings_per_license}/licencia gracias a tu volumen
+                            ${calculatedPrice.pricing.savings_per_license}/license with volume discount
                           </div>
                         </div>
                       )}
@@ -557,7 +553,7 @@ export default function Landing() {
                     {/* Price Card */}
                     <div className="bg-gradient-to-br from-[#58CC02] to-green-600 rounded-2xl p-6 text-white">
                       <div className="text-center mb-4">
-                        <div className="text-green-100 text-sm mb-1">Precio por Licencia</div>
+                        <div className="text-green-100 text-sm mb-1">Price Per License</div>
                         <div className="text-5xl font-extrabold">${calculatedPrice.pricing.price_per_license}</div>
                         {calculatedPrice.pricing.full_price_per_license > calculatedPrice.pricing.price_per_license && (
                           <div className="text-green-200 line-through text-lg mt-1">
@@ -568,7 +564,7 @@ export default function Landing() {
                       
                       <div className="border-t border-green-400 pt-4 mt-4">
                         <div className="flex justify-between text-lg">
-                          <span className="text-green-100">Total del Pedido:</span>
+                          <span className="text-green-100">Order Total:</span>
                           <span className="font-extrabold text-2xl">${calculatedPrice.pricing.total_order_price.toLocaleString()}</span>
                         </div>
                         <div className="text-green-200 text-sm mt-2">
@@ -580,14 +576,14 @@ export default function Landing() {
                         className="w-full mt-6 bg-white text-[#58CC02] font-bold py-4 rounded-xl hover:bg-green-50 transition-colors text-lg"
                         onClick={() => navigate('/register')}
                       >
-                        Solicitar Demo
+                        Request Demo
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-400">
                     <Calculator className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                    <p className="font-semibold">Configura tu plan para ver el precio</p>
+                    <p className="font-semibold">Configure your plan to see pricing</p>
                   </div>
                 )}
               </div>
