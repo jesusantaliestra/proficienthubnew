@@ -1660,94 +1660,132 @@ async def get_test_packages():
         ]
     }
 
-@api_router.get("/pricing/roi-calculator")
-async def calculate_roi(
-    num_licenses: int,
-    price_per_student: float = 30.0,
-    ai_tutor_minutes_per_license: int = 0
+@api_router.get("/pricing/calculator")
+async def calculate_pricing(
+    exam_plan: str,  # plan_5, plan_10, plan_20, plan_40, plan_60, plan_100
+    num_students: int,
+    ai_tutor_option: str = "none",  # none, basic, standard, premium, unlimited
+    resale_price_per_student: float = 25.0
 ):
-    """Calculate ROI based on number of licenses contracted"""
+    """Calculate pricing based on exam plan, student volume, and AI tutor option"""
     
-    # Find the right tier based on num_licenses
-    selected_tier = None
-    tier_id = None
-    for tid, tier in EXAM_PACKAGES.items():
-        if tier["min_licenses"] <= num_licenses <= tier["max_licenses"]:
-            selected_tier = tier
-            tier_id = tid
+    # Validate inputs
+    if exam_plan not in EXAM_PLANS:
+        raise HTTPException(status_code=400, detail="Invalid exam plan")
+    if ai_tutor_option not in AI_TUTOR_OPTIONS:
+        raise HTTPException(status_code=400, detail="Invalid AI tutor option")
+    
+    # Get plan details
+    plan = EXAM_PLANS[exam_plan]
+    ai_option = AI_TUTOR_OPTIONS[ai_tutor_option]
+    
+    # Find volume pricing tier
+    volume_tier = None
+    for tier_id, tier in VOLUME_PRICING.items():
+        if tier["min"] <= num_students <= tier["max"]:
+            volume_tier = tier
             break
     
-    if not selected_tier:
-        # Default to highest tier for 500+
-        tier_id = "tier_500_plus"
-        selected_tier = EXAM_PACKAGES[tier_id]
+    if not volume_tier:
+        raise HTTPException(status_code=400, detail="Student count out of range (1-10,000)")
     
     # Calculate costs
-    license_cost = selected_tier["price_per_license"]
-    total_license_cost = license_cost * num_licenses
+    base_cost_per_student = plan["base_cost"]
+    ai_cost_per_student = ai_option["cost"]
+    total_cost_per_student = base_cost_per_student + ai_cost_per_student
     
-    # Add AI Tutor cost if selected
-    ai_tutor_cost_per_license = 0
-    if ai_tutor_minutes_per_license > 0:
-        ai_tutor_cost_per_license = ai_tutor_minutes_per_license * AI_TUTOR_ADDON["price_per_minute"]
+    # Apply volume pricing
+    price_per_student = (plan["base_cost"] + ai_option["price"]) * volume_tier["price_multiplier"]
     
-    total_ai_tutor_cost = ai_tutor_cost_per_license * num_licenses
-    total_investment = total_license_cost + total_ai_tutor_cost
-    cost_per_license = license_cost + ai_tutor_cost_per_license
+    # Calculate totals
+    total_cost = total_cost_per_student * num_students
+    total_price = price_per_student * num_students
+    profit = total_price - total_cost
+    margin = (profit / total_price) * 100 if total_price > 0 else 0
     
-    # Revenue from selling to students
-    revenue = price_per_student * num_licenses
-    profit = revenue - total_investment
-    roi_percentage = (profit / total_investment) * 100 if total_investment > 0 else 0
-    margin_percentage = ((price_per_student - cost_per_license) / price_per_student) * 100 if price_per_student > 0 else 0
+    # Customer ROI calculation
+    customer_revenue = resale_price_per_student * num_students
+    customer_profit = customer_revenue - total_price
+    customer_roi = (customer_profit / total_price) * 100 if total_price > 0 else 0
     
     return {
-        "tier": {
-            "id": tier_id,
-            "description": selected_tier["description"],
-            "price_per_license": license_cost,
-            "price_per_exam": selected_tier["price_per_exam"],
-            "mock_tests_per_license": selected_tier["mock_tests_per_license"],
-            "discount": selected_tier["discount"],
-            "your_margin": f"{int(selected_tier['margin'] * 100)}%"
+        "plan": {
+            "id": exam_plan,
+            "exams_per_student": plan["exams"],
+            "label": plan["label"]
         },
-        "licenses": num_licenses,
-        "ai_tutor_addon": {
-            "minutes_per_license": ai_tutor_minutes_per_license,
-            "cost_per_license": ai_tutor_cost_per_license,
-            "total_cost": total_ai_tutor_cost
+        "volume_tier": {
+            "label": volume_tier["label"],
+            "discount": volume_tier["discount"],
+            "students": num_students
         },
-        "per_license": {
-            "your_cost": round(cost_per_license, 2),
-            "your_price": price_per_student,
-            "your_margin": round(margin_percentage, 1),
-            "mock_tests": selected_tier["mock_tests_per_license"],
-            "ai_tutor_minutes": ai_tutor_minutes_per_license
+        "ai_tutor": {
+            "option": ai_tutor_option,
+            "label": ai_option["label"],
+            "minutes_per_student": ai_option["minutes"]
         },
-        "totals": {
-            "your_investment": round(total_investment, 2),
-            "your_revenue": round(revenue, 2),
-            "your_profit": round(profit, 2),
-            "roi_percentage": round(roi_percentage, 1)
+        "pricing": {
+            "cost_per_student": round(total_cost_per_student, 2),
+            "price_per_student": round(price_per_student, 2),
+            "total_cost": round(total_cost, 2),
+            "total_price": round(total_price, 2),
+            "profit": round(profit, 2),
+            "margin_percentage": round(margin, 1)
         },
-        "recommendation": get_roi_recommendation(roi_percentage, num_licenses, selected_tier["mock_tests_per_license"])
+        "customer_roi": {
+            "resale_price_per_student": resale_price_per_student,
+            "customer_revenue": round(customer_revenue, 2),
+            "customer_profit": round(customer_profit, 2),
+            "customer_roi_percentage": round(customer_roi, 1)
+        },
+        "recommendation": get_pricing_recommendation(margin, customer_roi, num_students)
     }
 
-def get_roi_recommendation(roi: float, students: int, tests_per_student: float) -> str:
-    if tests_per_student < 1:
-        return "⚠️ Considera un paquete más pequeño o más estudiantes para mejor aprovechamiento"
-    if roi > 200:
-        return "🚀 Excelente ROI! Margen muy saludable para tu negocio"
-    if roi > 100:
-        return "✅ Buen ROI. Tienes margen para ofertas o servicios adicionales"
-    if roi > 50:
-        return "👍 ROI aceptable. Considera aumentar precio o agregar servicios premium"
-    return "⚡ ROI bajo. Evalúa aumentar estudiantes o ajustar precios"
+def get_pricing_recommendation(margin: float, customer_roi: float, students: int) -> str:
+    if margin > 45 and customer_roi > 100:
+        return "🚀 Excelente negocio para ambos! Márgenes saludables y ROI atractivo"
+    elif margin > 35 and customer_roi > 50:
+        return "✅ Buen equilibrio. Considera servicios adicionales para mayor valor"
+    elif margin < 30:
+        return "⚠️ Margen bajo. Evalúa aumentar volumen de estudiantes o plan superior"
+    elif customer_roi < 30:
+        return "💡 ROI del cliente bajo. Considera descuentos o servicios premium incluidos"
+    else:
+        return "👍 Pricing balanceado. Monitorea competencia y satisfacción del cliente"
 
-@api_router.get("/pricing/exam-costs")
-async def get_exam_cost_breakdown():
-    """Get detailed cost breakdown per exam type (for internal use)"""
+@api_router.get("/pricing/bulk-products")
+async def get_bulk_product_pricing(
+    product_type: str,  # writing, speaking, mock_exam, ai_tutor_minutes
+    quantity: int
+):
+    """Calculate bulk pricing for individual products (up to 100,000 units)"""
+    
+    if quantity < 1 or quantity > 100000:
+        raise HTTPException(status_code=400, detail="Quantity must be between 1 and 100,000")
+    
+    # Define base costs for each product type
+    base_costs = {
+        "writing": 0.05,
+        "speaking": 0.85,
+        "mock_exam": AVG_MOCK_TEST_COST,
+        "ai_tutor_minutes": AI_TUTOR_COST_PER_MIN
+    }
+    
+    if product_type not in base_costs:
+        raise HTTPException(status_code=400, detail="Invalid product type")
+    
+    cost_per_unit = base_costs[product_type]
+    pricing_data = get_bulk_pricing(quantity, cost_per_unit)
+    
+    # Add resale suggestions
+    if product_type in RESALE_SUGGESTIONS:
+        pricing_data["resale_suggestions"] = RESALE_SUGGESTIONS[product_type]
+    
     return {
+        "product_type": product_type,
+        "pricing": pricing_data,
+        "note": f"Precios para reventa de {product_type}. Márgenes incluyen descuentos por volumen."
+    }
         "exam_costs": {
             k: {
                 "description": v["description"],
