@@ -238,7 +238,7 @@ export default function AdminPanel() {
                 <Settings className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Panel de Administración</h1>
+                <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
                 <p className="text-sm text-gray-500">ProficientHub</p>
               </div>
             </div>
@@ -250,7 +250,7 @@ export default function AdminPanel() {
               <span className="text-sm text-gray-600">{user?.email}</span>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="w-4 h-4 mr-2" />
-                Salir
+                Logout
               </Button>
             </div>
           </div>
