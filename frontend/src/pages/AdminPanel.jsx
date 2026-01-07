@@ -141,12 +141,91 @@ export default function AdminPanel() {
   };
 
   const tabs = [
-    { id: 'overview', label: 'Resumen', icon: BarChart3 },
-    { id: 'costs', label: 'Costes', icon: DollarSign },
-    { id: 'users', label: 'Usuarios', icon: Users },
-    { id: 'revenue', label: 'Ingresos', icon: TrendingUp },
+    { id: 'overview', label: 'Overview', icon: BarChart3 },
+    { id: 'roi', label: 'ROI Calculator', icon: Calculator },
+    { id: 'costs', label: 'Costs Analysis', icon: DollarSign },
+    { id: 'users', label: 'Users', icon: Users },
+    { id: 'revenue', label: 'Revenue', icon: TrendingUp },
     { id: 'settings', label: 'API Keys', icon: Key },
   ];
+
+  // Calculate ROI for all products
+  const calculateAllROI = () => {
+    const results = {
+      licenses: {},
+      aiTutor: {},
+      writingTests: {},
+      speakingTests: {},
+      mockExams: {},
+    };
+
+    // License ROI by tier (for 10 exams plan)
+    const baseExamCost = licensePricing.baseCostPerExam * 10;
+    Object.entries(licensePricing.volumeMultipliers).forEach(([tier, multiplier]) => {
+      const sellPrice = baseExamCost * multiplier;
+      const profit = sellPrice - baseExamCost;
+      const margin = (profit / sellPrice) * 100;
+      results.licenses[tier] = {
+        cost: baseExamCost.toFixed(2),
+        price: sellPrice.toFixed(2),
+        profit: profit.toFixed(2),
+        margin: margin.toFixed(1),
+      };
+    });
+
+    // AI Tutor ROI
+    const aiCosts = { basic: 1.80, standard: 3.60, premium: 7.20, unlimited: 18.00 };
+    Object.entries(licensePricing.aiTutorPrices).forEach(([option, price]) => {
+      const cost = aiCosts[option];
+      const profit = price - cost;
+      const margin = (profit / price) * 100;
+      results.aiTutor[option] = {
+        cost: cost.toFixed(2),
+        price: price.toFixed(2),
+        profit: profit.toFixed(2),
+        margin: margin.toFixed(1),
+      };
+    });
+
+    // Writing Tests ROI (per 1000)
+    const writingCost = licensePricing.writingTestCost * 1000;
+    const writingRevenue = licensePricing.writingTestPrice * 1000;
+    const writingProfit = writingRevenue - writingCost;
+    results.writingTests = {
+      costPer1000: writingCost.toFixed(2),
+      pricePer1000: writingRevenue.toFixed(2),
+      profitPer1000: writingProfit.toFixed(2),
+      margin: ((writingProfit / writingRevenue) * 100).toFixed(1),
+    };
+
+    // Speaking Tests ROI (per 1000)
+    const speakingCost = licensePricing.speakingTestCost * 1000;
+    const speakingRevenue = licensePricing.speakingTestPrice * 1000;
+    const speakingProfit = speakingRevenue - speakingCost;
+    results.speakingTests = {
+      costPer1000: speakingCost.toFixed(2),
+      pricePer1000: speakingRevenue.toFixed(2),
+      profitPer1000: speakingProfit.toFixed(2),
+      margin: ((speakingProfit / speakingRevenue) * 100).toFixed(1),
+    };
+
+    // Mock Exams ROI (per 1000)
+    const mockCost = licensePricing.baseCostPerExam * 1000;
+    const mockRevenue = licensePricing.mockExamPrice * 1000;
+    const mockProfit = mockRevenue - mockCost;
+    results.mockExams = {
+      costPer1000: mockCost.toFixed(2),
+      pricePer1000: mockRevenue.toFixed(2),
+      profitPer1000: mockProfit.toFixed(2),
+      margin: ((mockProfit / mockRevenue) * 100).toFixed(1),
+    };
+
+    setRoiResults(results);
+  };
+
+  useEffect(() => {
+    calculateAllROI();
+  }, [licensePricing]);
 
   return (
     <div className="min-h-screen bg-gray-50">
