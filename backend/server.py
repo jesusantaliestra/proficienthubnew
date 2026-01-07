@@ -1670,94 +1670,77 @@ async def get_test_packages():
 @api_router.get("/pricing/calculator")
 async def calculate_pricing(
     exam_plan: str,  # plan_5, plan_10, plan_20, plan_40, plan_60, plan_100
-    num_students: int,
+    num_licenses: int,  # Número de licencias a comprar
     ai_tutor_option: str = "none",  # none, basic, standard, premium, unlimited
-    resale_price_per_student: float = 25.0
 ):
-    """Calculate pricing based on exam plan, student volume, and AI tutor option"""
+    """Calculate final price per license based on: exam plan + AI option + volume of licenses"""
     
     # Validate inputs
     if exam_plan not in EXAM_PLANS:
         raise HTTPException(status_code=400, detail="Invalid exam plan")
     if ai_tutor_option not in AI_TUTOR_OPTIONS:
         raise HTTPException(status_code=400, detail="Invalid AI tutor option")
+    if num_licenses < 1 or num_licenses > 100000:
+        raise HTTPException(status_code=400, detail="License count must be between 1 and 100,000")
     
     # Get plan details
     plan = EXAM_PLANS[exam_plan]
     ai_option = AI_TUTOR_OPTIONS[ai_tutor_option]
     
-    # Find volume pricing tier
+    # Find volume pricing tier based on number of LICENSES (not students)
     volume_tier = None
     volume_tier_id = None
     for tier_id, tier in VOLUME_PRICING.items():
-        if tier["min"] <= num_students <= tier["max"]:
+        if tier["min"] <= num_licenses <= tier["max"]:
             volume_tier = tier
             volume_tier_id = tier_id
             break
     
     if not volume_tier:
-        raise HTTPException(status_code=400, detail="Student count out of range (1-10,000)")
+        raise HTTPException(status_code=400, detail="License count out of range")
     
-    # Calculate costs
-    base_cost_per_student = plan["base_cost"]
-    ai_cost_per_student = ai_option["cost"]
-    total_cost_per_student = base_cost_per_student + ai_cost_per_student
+    # Calculate base price per license (before volume discount)
+    base_price_per_license = (plan["base_cost"] * volume_tier["price_multiplier"]) + ai_option["price"]
     
-    # Apply volume pricing
-    price_per_student = (plan["base_cost"] + ai_option["price"]) * volume_tier["price_multiplier"]
+    # Final price per license (with volume discount already applied via multiplier)
+    final_price_per_license = round(base_price_per_license, 2)
     
-    # Calculate totals
-    total_cost = total_cost_per_student * num_students
-    total_price = price_per_student * num_students
-    profit = total_price - total_cost
-    margin = (profit / total_price) * 100 if total_price > 0 else 0
+    # Total order price
+    total_order_price = round(final_price_per_license * num_licenses, 2)
     
-    # Customer ROI calculation
-    customer_revenue = resale_price_per_student * num_students
-    customer_profit = customer_revenue - total_price
-    customer_roi = (customer_profit / total_price) * 100 if total_price > 0 else 0
+    # Calculate savings vs base price (tier_100 price)
+    base_tier = VOLUME_PRICING["tier_100"]
+    full_price_per_license = round((plan["base_cost"] * base_tier["price_multiplier"]) + ai_option["price"], 2)
+    savings_per_license = round(full_price_per_license - final_price_per_license, 2)
+    total_savings = round(savings_per_license * num_licenses, 2)
     
     return {
         "plan": {
             "id": exam_plan,
-            "exams_per_student": plan["exams"],
+            "exams_per_license": plan["exams"],
             "label": plan["label"]
+        },
+        "ai_tutor": {
+            "option": ai_tutor_option,
+            "label": ai_option["label"],
+            "minutes_per_license": ai_option["minutes"],
+            "price_per_license": ai_option["price"]
         },
         "volume_tier": {
             "id": volume_tier_id,
             "label": volume_tier["label"],
             "discount": volume_tier["discount"],
-            "students": num_students
-        },
-        "ai_tutor": {
-            "option": ai_tutor_option,
-            "label": ai_option["label"],
-            "minutes_per_student": ai_option["minutes"]
+            "num_licenses": num_licenses
         },
         "pricing": {
-            "cost_per_student": round(total_cost_per_student, 2),
-            "price_per_student": round(price_per_student, 2),
-            "total_cost": round(total_cost, 2),
-            "total_price": round(total_price, 2),
-            "profit": round(profit, 2),
-            "margin_percentage": round(margin, 1)
+            "price_per_license": final_price_per_license,
+            "total_order_price": total_order_price,
+            "full_price_per_license": full_price_per_license,
+            "savings_per_license": savings_per_license,
+            "total_savings": total_savings
         },
-        "customer_roi": {
-            "resale_price_per_student": resale_price_per_student,
-            "customer_revenue": round(customer_revenue, 2),
-            "customer_profit": round(customer_profit, 2),
-            "customer_roi_percentage": round(customer_roi, 1)
-        },
-        "recommendation": get_pricing_recommendation(margin, customer_roi, num_students)
+        "summary": f"{num_licenses:,} licencias × ${final_price_per_license}/licencia = ${total_order_price:,.2f}"
     }
-
-def get_pricing_recommendation(margin: float, customer_roi: float, students: int) -> str:
-    if margin > 45 and customer_roi > 100:
-        return "🚀 Excelente negocio para ambos! Márgenes saludables y ROI atractivo"
-    elif margin > 35 and customer_roi > 50:
-        return "✅ Buen equilibrio. Considera servicios adicionales para mayor valor"
-    elif margin < 30:
-        return "⚠️ Margen bajo. Evalúa aumentar volumen de estudiantes o plan superior"
     elif customer_roi < 30:
         return "💡 ROI del cliente bajo. Considera descuentos o servicios premium incluidos"
     else:
