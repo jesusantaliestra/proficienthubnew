@@ -103,6 +103,12 @@ function AppRoutes() {
         } 
       />
       
+      {/* Income Calculator - Dedicated page */}
+      <Route 
+        path="/income-calculator" 
+        element={<IncomeCalculator />} 
+      />
+      
       {/* Institution Routes */}
       <Route 
         path="/institution/dashboard" 
