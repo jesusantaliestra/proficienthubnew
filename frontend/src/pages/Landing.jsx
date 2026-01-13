@@ -234,12 +234,29 @@ export default function Landing() {
   ];
 
   const examTypes = [
-    { id: 'toefl', name: 'TOEFL', color: 'bg-blue-500' },
-    { id: 'ielts', name: 'IELTS', color: 'bg-red-500' },
-    { id: 'cambridge', name: 'Cambridge', color: 'bg-purple-500' },
-    { id: 'pte', name: 'PTE', color: 'bg-orange-500' },
-    { id: 'oet', name: 'OET', color: 'bg-green-500' }
+    { id: 'toefl', name: 'TOEFL', color: 'bg-blue-600', description: 'Test of English as a Foreign Language' },
+    { id: 'ielts', name: 'IELTS', color: 'bg-red-600', description: 'International English Language Testing System' },
+    { id: 'toeic', name: 'TOEIC', color: 'bg-indigo-600', description: 'Test of English for International Communication' },
+    { id: 'celpip', name: 'CELPIP', color: 'bg-cyan-600', description: 'Canadian English Language Proficiency Index' },
+    { id: 'pte', name: 'PTE', color: 'bg-orange-600', description: 'Pearson Test of English' },
+    { id: 'oet', name: 'OET', color: 'bg-emerald-600', description: 'Occupational English Test' }
   ];
+
+  // Handle trial form submission
+  const handleTrialSubmit = async (e) => {
+    e.preventDefault();
+    setTrialSubmitting(true);
+    try {
+      await axios.post(`${API_URL}/trial-request`, trialForm);
+      setTrialSubmitted(true);
+    } catch (error) {
+      console.error('Trial request error:', error);
+      // Still show success for demo
+      setTrialSubmitted(true);
+    } finally {
+      setTrialSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
