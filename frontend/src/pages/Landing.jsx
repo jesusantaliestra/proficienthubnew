@@ -44,10 +44,24 @@ export default function Landing() {
     { id: 'all', label: 'All Exams' },
     { id: 'toefl', label: 'TOEFL' },
     { id: 'ielts', label: 'IELTS' },
-    { id: 'cambridge', label: 'Cambridge' },
+    { id: 'toeic', label: 'TOEIC' },
+    { id: 'celpip', label: 'CELPIP' },
     { id: 'pte', label: 'PTE' },
     { id: 'oet', label: 'OET' }
   ];
+  
+  // Free Trial Lead Capture
+  const [trialForm, setTrialForm] = useState({
+    institutionName: '',
+    contactName: '',
+    email: '',
+    phone: '',
+    country: '',
+    studentsCount: '',
+    selectedExam: 'toefl'
+  });
+  const [trialSubmitting, setTrialSubmitting] = useState(false);
+  const [trialSubmitted, setTrialSubmitted] = useState(false);
   
   // Monetization calculator state
   const [monetizationValues, setMonetizationValues] = useState({
