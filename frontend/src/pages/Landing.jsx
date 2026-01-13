@@ -403,21 +403,34 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Exams Section */}
-      <section id="exams" className="py-20">
+      {/* Exams Section - Premium */}
+      <section id="exams" className="py-24 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">All Major English Proficiency Exams</h2>
-            <p className="text-xl text-gray-600">One platform, complete preparation with real exam conditions</p>
+            <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-4 py-2 mb-6">
+              6 Major Exams Supported
+            </Badge>
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">All Major English Proficiency Exams</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">One platform, complete preparation with real exam conditions and AI-powered feedback</p>
           </div>
           
-          <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {examTypes.map((exam) => (
-              <Card key={exam.id} className="card-duo text-center p-6">
-                <div className={`w-16 h-16 mx-auto rounded-2xl ${exam.color} flex items-center justify-center mb-4`}>
-                  <GraduationCap className="w-8 h-8 text-white" />
+              <Card key={exam.id} className="group bg-white border-2 border-gray-100 hover:border-gray-200 rounded-2xl overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1">
+                <div className={`h-2 ${exam.color}`}></div>
+                <div className="p-8">
+                  <div className={`w-16 h-16 rounded-2xl ${exam.color} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
+                    <GraduationCap className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{exam.name}</h3>
+                  <p className="text-gray-500 mb-4">{exam.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className="text-xs">Reading</Badge>
+                    <Badge variant="outline" className="text-xs">Writing</Badge>
+                    <Badge variant="outline" className="text-xs">Listening</Badge>
+                    <Badge variant="outline" className="text-xs">Speaking</Badge>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">{exam.name}</h3>
               </Card>
             ))}
           </div>
