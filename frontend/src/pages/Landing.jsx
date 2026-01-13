@@ -260,87 +260,123 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      {/* Premium Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/98 backdrop-blur-xl border-b border-gray-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-[#58CC02] flex items-center justify-center">
-                <GraduationCap className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#58CC02] to-[#46a302] flex items-center justify-center shadow-lg shadow-green-200">
+                <GraduationCap className="w-7 h-7 text-white" />
               </div>
-              <span className="text-xl font-extrabold text-gray-800">ProficientHub</span>
+              <div>
+                <span className="text-2xl font-black text-gray-900 tracking-tight">ProficientHub</span>
+                <span className="hidden md:inline text-xs text-gray-400 ml-2 font-medium">Enterprise</span>
+              </div>
             </div>
             
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-gray-600 hover:text-gray-900 font-semibold">Features</a>
-              <a href="#exams" className="text-gray-600 hover:text-gray-900 font-semibold">Exams</a>
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-semibold">Pricing</a>
-              <a href="#calculator" className="text-gray-600 hover:text-gray-900 font-semibold">ROI Calculator</a>
+            <div className="hidden lg:flex items-center gap-10">
+              <a href="#features" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">Features</a>
+              <a href="#exams" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">Exams</a>
+              <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">Pricing</a>
+              <a href="#trial" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">Free Trial</a>
+              <a href="#calculator" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">ROI Calculator</a>
             </div>
             
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" className="text-gray-600 font-semibold" onClick={() => navigate('/login')} data-testid="nav-login-btn">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" className="text-gray-600 font-semibold hover:bg-gray-100" onClick={() => navigate('/login')} data-testid="nav-login-btn">
                 Log In
               </Button>
-              <button className="btn-duo px-6 py-2.5 text-sm" onClick={() => navigate('/register')} data-testid="nav-get-started-btn">
-                Get Started
+              <button className="bg-gradient-to-r from-[#58CC02] to-[#46a302] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-green-200 hover:shadow-xl hover:shadow-green-300 transition-all transform hover:-translate-y-0.5" onClick={() => document.getElementById('trial').scrollIntoView({ behavior: 'smooth' })} data-testid="nav-get-started-btn">
+                Request Demo
               </button>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative pt-28 pb-20 overflow-hidden">
-        <div className="absolute top-20 right-0 w-96 h-96 bg-green-100 rounded-full blur-3xl opacity-50"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
+      {/* Premium Hero Section */}
+      <section className="relative pt-32 pb-24 overflow-hidden bg-gradient-to-b from-gray-50 to-white">
+        {/* Background Elements */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-green-100 to-blue-50 rounded-full blur-3xl opacity-60 -translate-y-1/2 translate-x-1/4"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-purple-50 to-green-50 rounded-full blur-3xl opacity-60 translate-y-1/2 -translate-x-1/4"></div>
+        <div className="absolute top-1/2 left-1/2 w-[800px] h-[800px] bg-gradient-to-r from-green-50 to-transparent rounded-full blur-3xl opacity-30 -translate-x-1/2 -translate-y-1/2"></div>
         
         <div className="relative max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-4xl mx-auto mb-16">
-            <Badge className="bg-green-100 text-green-700 border-green-200 px-4 py-2 mb-6 text-sm font-semibold">
-              <Building className="w-4 h-4 mr-2" />
-              For Language Schools & Institutions
-            </Badge>
+          <div className="text-center max-w-5xl mx-auto mb-20">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-100 to-blue-100 text-gray-700 px-5 py-2.5 rounded-full mb-8 shadow-sm">
+              <Building className="w-4 h-4 text-green-600" />
+              <span className="font-semibold text-sm">B2B Platform for Language Institutions</span>
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            </div>
             
-            <h1 className="text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
-              Scale Your Academy{' '}
-              <span className="text-[#58CC02]">10x</span>{' '}
-              With AI-Powered Learning
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-[1.1] mb-8 tracking-tight">
+              Scale Your Academy
+              <span className="block bg-gradient-to-r from-[#58CC02] to-[#1cb0f6] bg-clip-text text-transparent">
+                10x With AI
+              </span>
             </h1>
             
-            <p className="text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto mb-8">
-              Your current teachers can handle 10x more students with AI tutors, instant feedback, and premium analytics. 
-              No new hires needed. Prepare students for TOEFL, IELTS, Cambridge, PTE, and OET.
+            <p className="text-xl md:text-2xl text-gray-600 leading-relaxed max-w-3xl mx-auto mb-10">
+              Your current teachers can handle <strong className="text-gray-900">10x more students</strong> with AI tutors, 
+              instant feedback, and premium analytics. Prepare students for 
+              <span className="font-semibold text-blue-600"> TOEFL</span>,
+              <span className="font-semibold text-red-600"> IELTS</span>,
+              <span className="font-semibold text-indigo-600"> TOEIC</span>,
+              <span className="font-semibold text-cyan-600"> CELPIP</span>,
+              <span className="font-semibold text-orange-600"> PTE</span>, and
+              <span className="font-semibold text-emerald-600"> OET</span>.
             </p>
             
-            <div className="flex flex-wrap justify-center gap-4 mb-12">
-              <button className="btn-duo px-8 py-4 text-lg flex items-center gap-2" onClick={() => navigate('/register')} data-testid="hero-cta-btn">
+            <div className="flex flex-wrap justify-center gap-4 mb-16">
+              <button 
+                className="group bg-gradient-to-r from-[#58CC02] to-[#46a302] text-white px-10 py-5 rounded-2xl font-bold text-lg shadow-xl shadow-green-200 hover:shadow-2xl hover:shadow-green-300 transition-all transform hover:-translate-y-1 flex items-center gap-3" 
+                onClick={() => document.getElementById('trial').scrollIntoView({ behavior: 'smooth' })}
+                data-testid="hero-cta-btn"
+              >
                 Start Free Trial
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button className="btn-duo-outline px-8 py-4 text-lg" onClick={() => document.getElementById('calculator').scrollIntoView({ behavior: 'smooth' })}>
+              <button 
+                className="group bg-white text-gray-900 px-10 py-5 rounded-2xl font-bold text-lg border-2 border-gray-200 hover:border-gray-300 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex items-center gap-3"
+                onClick={() => document.getElementById('calculator').scrollIntoView({ behavior: 'smooth' })}
+              >
+                <Calculator className="w-5 h-5 text-green-600" />
                 Calculate Your ROI
               </button>
             </div>
             
-            <div className="flex flex-wrap justify-center gap-12">
-              <div className="text-center">
-                <div className="text-4xl font-extrabold text-gray-900">10x</div>
-                <div className="text-gray-500 font-semibold">Student Capacity</div>
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                <div className="text-4xl font-black text-gray-900 mb-1">10x</div>
+                <div className="text-gray-500 font-medium text-sm">Student Capacity</div>
               </div>
-              <div className="text-center">
-                <div className="text-4xl font-extrabold text-[#58CC02]">+23%</div>
-                <div className="text-gray-500 font-semibold">Pass Rate Increase</div>
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                <div className="text-4xl font-black text-[#58CC02] mb-1">+23%</div>
+                <div className="text-gray-500 font-medium text-sm">Pass Rate Increase</div>
               </div>
-              <div className="text-center">
-                <div className="text-4xl font-extrabold text-gray-900">-60%</div>
-                <div className="text-gray-500 font-semibold">No-Show Reduction</div>
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                <div className="text-4xl font-black text-gray-900 mb-1">-60%</div>
+                <div className="text-gray-500 font-medium text-sm">No-Show Reduction</div>
               </div>
-              <div className="text-center">
-                <div className="text-4xl font-extrabold text-gray-900">500+</div>
-                <div className="text-gray-500 font-semibold">Partner Institutions</div>
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                <div className="text-4xl font-black text-gray-900 mb-1">500+</div>
+                <div className="text-gray-500 font-medium text-sm">Partner Institutions</div>
               </div>
             </div>
+          </div>
+          
+          {/* Exam Logos Row */}
+          <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
+            <span className="text-sm text-gray-400 font-medium">Prepare for:</span>
+            {examTypes.map((exam) => (
+              <div key={exam.id} className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-lg ${exam.color} flex items-center justify-center`}>
+                  <GraduationCap className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-bold text-gray-700">{exam.name}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
