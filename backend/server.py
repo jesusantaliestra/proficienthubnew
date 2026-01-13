@@ -2408,6 +2408,50 @@ SUPPORTED_LANGUAGES = {
 async def get_supported_languages():
     return {"languages": SUPPORTED_LANGUAGES}
 
+# ==================== TRIAL REQUEST (LEAD CAPTURE) ====================
+
+class TrialRequest(BaseModel):
+    institutionName: str
+    contactName: str
+    email: str
+    phone: str
+    country: str
+    studentsCount: str
+    selectedExam: str
+
+@api_router.post("/trial-request")
+async def submit_trial_request(request: TrialRequest):
+    """Capture institution lead for free trial verification"""
+    trial_data = {
+        "id": str(uuid4()),
+        "institution_name": request.institutionName,
+        "contact_name": request.contactName,
+        "email": request.email,
+        "phone": request.phone,
+        "country": request.country,
+        "students_count": request.studentsCount,
+        "selected_exam": request.selectedExam,
+        "status": "pending_verification",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.trial_requests.insert_one(trial_data)
+    
+    return {
+        "success": True,
+        "message": "Trial request received. Our team will contact you within 24 hours.",
+        "request_id": trial_data["id"]
+    }
+
+@api_router.get("/admin/trial-requests")
+async def get_trial_requests(current_user: dict = Depends(get_current_user)):
+    """Get all trial requests for admin review"""
+    if current_user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    requests = await db.trial_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return {"trial_requests": requests}
+
 # ==================== HEALTH CHECK ====================
 
 @api_router.get("/")
