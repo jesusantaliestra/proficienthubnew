@@ -1058,6 +1058,201 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Free Trial Section - Lead Capture */}
+      <section id="trial" className="py-24 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-green-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+        
+        <div className="relative max-w-6xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left side - Info */}
+            <div className="text-white">
+              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 px-4 py-2 mb-6">
+                Exclusive for Institutions
+              </Badge>
+              <h2 className="text-4xl md:text-5xl font-black mb-6 leading-tight">
+                Start Your Free
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-400">
+                  Institution Trial
+                </span>
+              </h2>
+              <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+                Experience the full power of ProficientHub. Get access to:
+              </p>
+              
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+                    <Check className="w-5 h-5 text-green-400" />
+                  </div>
+                  <span className="text-lg text-gray-200">1 Complete Mock Exam of your choice</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+                    <Check className="w-5 h-5 text-green-400" />
+                  </div>
+                  <span className="text-lg text-gray-200">30 minutes AI Tutor conversation</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+                    <Check className="w-5 h-5 text-green-400" />
+                  </div>
+                  <span className="text-lg text-gray-200">Full analytics dashboard preview</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+                    <Check className="w-5 h-5 text-green-400" />
+                  </div>
+                  <span className="text-lg text-gray-200">Personalized demo with our team</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4 text-gray-400">
+                <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                <span className="text-sm">Available only for verified educational institutions</span>
+              </div>
+            </div>
+            
+            {/* Right side - Form */}
+            <Card className="bg-white/10 backdrop-blur-xl border-white/20 rounded-3xl overflow-hidden">
+              <div className="p-8">
+                {!trialSubmitted ? (
+                  <form onSubmit={handleTrialSubmit} className="space-y-5">
+                    <h3 className="text-2xl font-bold text-white mb-6">Request Your Free Trial</h3>
+                    
+                    <div>
+                      <Label className="text-gray-300 mb-2 block">Institution Name *</Label>
+                      <Input
+                        required
+                        placeholder="e.g., Oxford Language Academy"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 h-12"
+                        value={trialForm.institutionName}
+                        onChange={(e) => setTrialForm({...trialForm, institutionName: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-gray-300 mb-2 block">Contact Name *</Label>
+                        <Input
+                          required
+                          placeholder="Full name"
+                          className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 h-12"
+                          value={trialForm.contactName}
+                          onChange={(e) => setTrialForm({...trialForm, contactName: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-gray-300 mb-2 block">Phone *</Label>
+                        <Input
+                          required
+                          placeholder="+1 234 567 890"
+                          className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 h-12"
+                          value={trialForm.phone}
+                          onChange={(e) => setTrialForm({...trialForm, phone: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-gray-300 mb-2 block">Work Email *</Label>
+                      <Input
+                        required
+                        type="email"
+                        placeholder="you@institution.edu"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 h-12"
+                        value={trialForm.email}
+                        onChange={(e) => setTrialForm({...trialForm, email: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-gray-300 mb-2 block">Country *</Label>
+                        <Input
+                          required
+                          placeholder="Country"
+                          className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 h-12"
+                          value={trialForm.country}
+                          onChange={(e) => setTrialForm({...trialForm, country: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-gray-300 mb-2 block">Students Count *</Label>
+                        <Input
+                          required
+                          type="number"
+                          placeholder="e.g., 500"
+                          className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 h-12"
+                          value={trialForm.studentsCount}
+                          onChange={(e) => setTrialForm({...trialForm, studentsCount: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-gray-300 mb-2 block">Exam to Try *</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {examTypes.map((exam) => (
+                          <button
+                            key={exam.id}
+                            type="button"
+                            onClick={() => setTrialForm({...trialForm, selectedExam: exam.id})}
+                            className={`p-3 rounded-xl border-2 transition-all text-sm font-semibold ${
+                              trialForm.selectedExam === exam.id
+                                ? 'border-green-500 bg-green-500/20 text-green-400'
+                                : 'border-white/20 text-gray-400 hover:border-white/40'
+                            }`}
+                          >
+                            {exam.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <button
+                      type="submit"
+                      disabled={trialSubmitting}
+                      className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-xl font-bold text-lg hover:from-green-600 hover:to-green-700 transition-all shadow-lg shadow-green-500/30 disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {trialSubmitting ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          Request Free Trial
+                          <ArrowRight className="w-5 h-5" />
+                        </>
+                      )}
+                    </button>
+                    
+                    <p className="text-xs text-gray-500 text-center">
+                      By submitting, you agree to be contacted by our team for verification.
+                    </p>
+                  </form>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6">
+                      <Check className="w-10 h-10 text-green-400" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-4">Request Received!</h3>
+                    <p className="text-gray-300 mb-6">
+                      Our team will verify your institution and contact you within 24 hours to set up your free trial.
+                    </p>
+                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                      Check your email for confirmation
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* ROI Calculator Section - Operations */}
       <section id="calculator-ops" className="py-20">
         <div className="max-w-6xl mx-auto px-6">
