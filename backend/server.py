@@ -2452,6 +2452,204 @@ async def get_trial_requests(current_user: dict = Depends(get_current_user)):
     requests = await db.trial_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
     return {"trial_requests": requests}
 
+# ==================== EXAM BANK MANAGEMENT ====================
+
+class ExamQuestion(BaseModel):
+    question_id: str
+    question_type: str
+    question_text: str
+    options: Optional[List[str]] = None
+    correct_answer: str
+    topic: str
+    difficulty: str
+    validation_status: str = "draft"
+
+class ExamSection(BaseModel):
+    section_type: str
+    questions: List[Dict[str, Any]]
+
+class CreateExamRequest(BaseModel):
+    exam_type: str  # oet, ielts, toefl, etc.
+    profession: Optional[str] = "nursing"
+    topics: List[str]
+
+@api_router.get("/admin/exam-bank")
+async def get_exam_bank(
+    exam_type: Optional[str] = None,
+    status: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all exams in the bank with filtering options"""
+    if current_user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    query = {}
+    if exam_type:
+        query["exam_type"] = exam_type
+    if status:
+        query["validation_status"] = status
+    
+    exams = await db.exam_bank.find(query, {"_id": 0}).to_list(100)
+    
+    # Calculate summary stats
+    summary = {
+        "total_exams": len(exams),
+        "by_status": {},
+        "by_type": {},
+        "topics_coverage": {}
+    }
+    
+    for exam in exams:
+        status = exam.get("validation_status", "draft")
+        exam_type = exam.get("exam_type", "unknown")
+        
+        summary["by_status"][status] = summary["by_status"].get(status, 0) + 1
+        summary["by_type"][exam_type] = summary["by_type"].get(exam_type, 0) + 1
+        
+        for topic in exam.get("topics_covered", []):
+            summary["topics_coverage"][topic] = summary["topics_coverage"].get(topic, 0) + 1
+    
+    return {
+        "exams": exams,
+        "summary": summary
+    }
+
+@api_router.get("/admin/exam-bank/{exam_id}")
+async def get_exam_details(exam_id: str, current_user: dict = Depends(get_current_user)):
+    """Get detailed view of a single exam for admin review"""
+    if current_user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    exam = await db.exam_bank.find_one({"exam_id": exam_id}, {"_id": 0})
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+    
+    return exam
+
+@api_router.post("/admin/exam-bank/validate/{exam_id}")
+async def validate_exam(
+    exam_id: str,
+    action: str,  # approve, reject, request_changes
+    notes: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Human validation of an exam"""
+    if current_user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    exam = await db.exam_bank.find_one({"exam_id": exam_id})
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+    
+    new_status = {
+        "approve": "approved",
+        "reject": "rejected",
+        "request_changes": "needs_revision"
+    }.get(action, "pending_human_review")
+    
+    await db.exam_bank.update_one(
+        {"exam_id": exam_id},
+        {
+            "$set": {
+                "validation_status": new_status,
+                "validated_by": current_user["email"],
+                "validated_at": datetime.now(timezone.utc).isoformat()
+            },
+            "$push": {
+                "validation_history": {
+                    "action": action,
+                    "by": current_user["email"],
+                    "at": datetime.now(timezone.utc).isoformat(),
+                    "notes": notes
+                }
+            }
+        }
+    )
+    
+    return {"success": True, "new_status": new_status}
+
+@api_router.put("/admin/exam-bank/{exam_id}/question/{question_id}")
+async def update_question(
+    exam_id: str,
+    question_id: str,
+    updates: Dict[str, Any],
+    current_user: dict = Depends(get_current_user)
+):
+    """Update a specific question in an exam"""
+    if current_user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # This would update the specific question in the exam document
+    # Implementation depends on the exact structure
+    
+    await db.exam_bank.update_one(
+        {"exam_id": exam_id},
+        {
+            "$set": {
+                f"questions.{question_id}": updates,
+                "last_modified": datetime.now(timezone.utc).isoformat(),
+                "modified_by": current_user["email"]
+            }
+        }
+    )
+    
+    return {"success": True}
+
+@api_router.post("/admin/exam-bank/initialize-oet")
+async def initialize_oet_exams(current_user: dict = Depends(get_current_user)):
+    """Initialize the exam bank with OET sample exams"""
+    if current_user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Import the OET exam bank
+    from exam_schemas.oet_exam_bank import OET_EXAM_BANK
+    
+    # Insert each exam
+    for exam_key, exam_data in OET_EXAM_BANK.items():
+        exam_data["exam_type"] = "oet"
+        exam_data["created_at"] = datetime.now(timezone.utc).isoformat()
+        
+        # Check if already exists
+        existing = await db.exam_bank.find_one({"exam_id": exam_data["exam_id"]})
+        if not existing:
+            await db.exam_bank.insert_one(exam_data)
+    
+    return {"success": True, "message": "OET exams initialized"}
+
+@api_router.get("/admin/exam-overview")
+async def get_exam_overview(current_user: dict = Depends(get_current_user)):
+    """Get a quick overview of all exams for admin dashboard"""
+    if current_user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    pipeline = [
+        {
+            "$group": {
+                "_id": {
+                    "exam_type": "$exam_type",
+                    "validation_status": "$validation_status"
+                },
+                "count": {"$sum": 1},
+                "topics": {"$addToSet": "$topics_covered"}
+            }
+        }
+    ]
+    
+    results = await db.exam_bank.aggregate(pipeline).to_list(100)
+    
+    # Get topic distribution
+    all_exams = await db.exam_bank.find({}, {"topics_covered": 1, "_id": 0}).to_list(500)
+    topic_counts = {}
+    for exam in all_exams:
+        for topic in exam.get("topics_covered", []):
+            topic_counts[topic] = topic_counts.get(topic, 0) + 1
+    
+    return {
+        "by_type_and_status": results,
+        "topic_distribution": topic_counts,
+        "exam_types": ["oet", "ielts", "toefl", "toeic", "celpip", "pte"]
+    }
+
 # ==================== HEALTH CHECK ====================
 
 @api_router.get("/")
