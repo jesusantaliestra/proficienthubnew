@@ -110,6 +110,16 @@ function AppRoutes() {
         element={<IncomeCalculator />} 
       />
       
+      {/* Exam Bank Admin - Dedicated page */}
+      <Route 
+        path="/admin/exam-bank" 
+        element={
+          <ProtectedRoute allowedTypes={['admin']}>
+            <ExamBankAdmin />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Institution Routes */}
       <Route 
         path="/institution/dashboard" 
