@@ -17,6 +17,7 @@ import AdminPanel from './pages/AdminPanel';
 import StudentPortal from './pages/StudentPortal';
 import ChangePassword from './pages/ChangePassword';
 import IncomeCalculator from './pages/IncomeCalculator';
+import ExamBankAdmin from './pages/ExamBankAdmin';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
