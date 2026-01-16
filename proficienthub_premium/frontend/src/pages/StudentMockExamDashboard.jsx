@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { authFetch, authService, AuthenticationError } from '../utils/auth';
 
 // =============================================================================
 // TYPES
@@ -449,17 +450,21 @@ const StudentMockExamDashboard = ({ examType = 'ielts_academic' }) => {
   const fetchDashboard = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/v1/mock-exams/dashboard/${examType}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Failed to load dashboard');
-      
+      const response = await authFetch(`/api/v1/mock-exams/dashboard/${examType}`);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail?.error || 'Failed to load dashboard');
+      }
+
       const data = await response.json();
       setDashboard(data);
     } catch (err) {
+      if (err instanceof AuthenticationError) {
+        // Redirect to login
+        window.location.href = '/login';
+        return;
+      }
       setError(err.message);
     } finally {
       setLoading(false);
@@ -468,20 +473,25 @@ const StudentMockExamDashboard = ({ examType = 'ielts_academic' }) => {
   
   const handleCreateExam = async ({ mode, topic }) => {
     try {
-      const response = await fetch('/api/v1/mock-exams/create', {
+      const response = await authFetch('/api/v1/mock-exams/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
         body: JSON.stringify({ exam_type: examType, mode, topic })
       });
-      
-      if (!response.ok) throw new Error('Failed to create exam');
-      
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail?.error || 'Failed to create exam');
+      }
+
       await fetchDashboard();
     } catch (err) {
-      alert(err.message);
+      if (err instanceof AuthenticationError) {
+        window.location.href = '/login';
+        return;
+      }
+      // TODO: Replace alert with toast notification component
+      console.error('Create exam error:', err.message);
+      setError(err.message);
     }
   };
   

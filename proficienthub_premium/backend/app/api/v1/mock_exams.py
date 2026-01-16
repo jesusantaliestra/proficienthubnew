@@ -11,7 +11,7 @@ FLOW:
 """
 
 from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
@@ -19,9 +19,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_session as get_db_session
 from app.db.models import User
-from app.db.models_b2b import MockExamMode, MockExamStatus, SectionStatus
+from app.db.models_b2b import MockExamMode, MockExamStatus, SectionStatus, EXAM_TIME_CONFIG
 from app.auth.dependencies import get_current_user
 from app.services.mock_exam_service import MockExamService
+from app.exceptions import (
+    ProficientHubError, StudentNotFoundError, PlanNotFoundError,
+    InsufficientCreditsError, MockExamNotFoundError, MockExamAccessDeniedError,
+    SectionNotFoundError, SectionLockedError, SectionAlreadyCompletedError,
+    InvalidExamTypeError
+)
 
 router = APIRouter(prefix="/mock-exams", tags=["Mock Exams"])
 
@@ -52,6 +58,15 @@ class CreateMockExamRequest(BaseModel):
         description="Optional topic for exam content",
         example="Climate change and environmental policy"
     )
+
+    @field_validator('exam_type')
+    @classmethod
+    def validate_exam_type(cls, v: str) -> str:
+        """Validate exam_type against supported types"""
+        if v not in EXAM_TIME_CONFIG:
+            valid_types = list(EXAM_TIME_CONFIG.keys())
+            raise ValueError(f"Invalid exam_type '{v}'. Valid types: {valid_types}")
+        return v
 
     class Config:
         json_schema_extra = {
@@ -149,7 +164,7 @@ async def get_student_dashboard(
 ):
     """
     Get complete student dashboard for an exam type
-    
+
     Returns:
     - Credit status (remaining credits, exams available)
     - All mock exams with progress
@@ -157,13 +172,12 @@ async def get_student_dashboard(
     - Section-wise averages
     - Time configuration for the exam
     """
-    service = MockExamService(session)
-    dashboard = await service.get_student_dashboard(current_user.id, exam_type)
-    
-    if "error" in dashboard:
-        raise HTTPException(status_code=400, detail=dashboard["error"])
-    
-    return dashboard
+    try:
+        service = MockExamService(session)
+        dashboard = await service.get_student_dashboard(current_user.id, exam_type)
+        return dashboard
+    except ProficientHubError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.to_dict())
 
 
 @router.get("/credits/{exam_type}")
@@ -174,38 +188,43 @@ async def get_credit_status(
 ) -> Dict[str, Any]:
     """
     Get credit status for a specific exam type
-    
+
     Shows how many credits remain and how they can be used:
     - remaining_full_mocks: Number of complete exams available
     - remaining_sections: Number of individual sections available
     """
-    service = MockExamService(session)
-    credits = await service.get_student_credits(current_user.id, exam_type)
-    
-    if "error" in credits:
-        raise HTTPException(status_code=400, detail=credits["error"])
-    
-    return credits
+    try:
+        service = MockExamService(session)
+        credits = await service.get_student_credits(current_user.id, exam_type)
+        return credits
+    except ProficientHubError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.to_dict())
 
 
 @router.get("/list/{exam_type}")
 async def list_mock_exams(
     exam_type: str,
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(50, ge=1, le=100, description="Maximum records to return (max 100)"),
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session)
 ) -> Dict[str, Any]:
     """
-    List all mock exams for the student for a specific exam type
-    
-    Returns exams with their status and progress
+    List mock exams for the student with pagination
+
+    Returns exams with their status, progress, and pagination info
     """
     service = MockExamService(session)
-    exams = await service.get_student_mock_exams(current_user.id, exam_type)
-    
+    result = await service.get_student_mock_exams(
+        current_user.id,
+        exam_type,
+        skip=skip,
+        limit=limit
+    )
+
     return {
         "exam_type": exam_type,
-        "mock_exams": exams,
-        "total": len(exams)
+        **result
     }
 
 
@@ -217,31 +236,31 @@ async def create_mock_exam(
 ) -> Dict[str, Any]:
     """
     Create a new mock exam
-    
+
     Choose mode:
     - FULL_MOCK: Complete exam with all 4 sections in sequence (uses 1 credit)
     - SECTION: Individual sections that can be done in any order (0.25 credit each)
-    
+
     The mock exam is created with all sections, but:
     - FULL_MOCK: Only first section is available, rest unlock sequentially
     - SECTION: All sections available immediately
     """
-    service = MockExamService(session)
-    
-    # Convert enum
-    mode = MockExamMode.FULL_MOCK if request.mode == MockExamModeEnum.FULL_MOCK else MockExamMode.SECTION
-    
-    result = await service.create_mock_exam(
-        user_id=current_user.id,
-        exam_type=request.exam_type,
-        mode=mode,
-        topic=request.topic
-    )
-    
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
-    
-    return result
+    try:
+        service = MockExamService(session)
+
+        # Convert enum
+        mode = MockExamMode.FULL_MOCK if request.mode == MockExamModeEnum.FULL_MOCK else MockExamMode.SECTION
+
+        result = await service.create_mock_exam(
+            user_id=current_user.id,
+            exam_type=request.exam_type,
+            mode=mode,
+            topic=request.topic
+        )
+
+        return result
+    except ProficientHubError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.to_dict())
 
 
 @router.get("/{mock_exam_id}")
@@ -330,26 +349,26 @@ async def start_section(
     For FULL_MOCK mode:
     - Sections must be done in order
     - Credits consumed when exam is fully completed
-    
+
     For SECTION mode:
     - Any available section can be started
     - 0.25 credits consumed immediately
     """
-    service = MockExamService(session)
-    
-    result = await service.start_section(
-        mock_exam_id=mock_exam_id,
-        section_type=request.section_type,
-        user_id=current_user.id
-    )
-    
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
-    
-    # TODO: Add background task to generate exam content
-    # background_tasks.add_task(generate_section_content, result["id"])
-    
-    return result
+    try:
+        service = MockExamService(session)
+
+        result = await service.start_section(
+            mock_exam_id=mock_exam_id,
+            section_type=request.section_type,
+            user_id=current_user.id
+        )
+
+        # TODO: Add background task to generate exam content
+        # background_tasks.add_task(generate_section_content, result["id"])
+
+        return result
+    except ProficientHubError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.to_dict())
 
 
 @router.post("/{mock_exam_id}/complete-section")
@@ -372,20 +391,20 @@ async def complete_section(
     - Next section info (if applicable)
     - Overall results (if exam complete)
     """
-    service = MockExamService(session)
-    
-    result = await service.complete_section(
-        mock_exam_id=mock_exam_id,
-        section_type=request.section_type,
-        user_id=current_user.id,
-        time_elapsed_seconds=request.time_elapsed_seconds,
-        results=request.results
-    )
-    
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
-    
-    return result
+    try:
+        service = MockExamService(session)
+
+        result = await service.complete_section(
+            mock_exam_id=mock_exam_id,
+            section_type=request.section_type,
+            user_id=current_user.id,
+            time_elapsed_seconds=request.time_elapsed_seconds,
+            results=request.results
+        )
+
+        return result
+    except ProficientHubError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.to_dict())
 
 
 @router.post("/{mock_exam_id}/pause")

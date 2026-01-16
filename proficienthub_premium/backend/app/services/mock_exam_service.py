@@ -15,7 +15,7 @@ USAGE FLOW:
 """
 
 from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 import structlog
 
@@ -27,6 +27,12 @@ from app.db.models_b2b import (
     Academy, AcademyExamPlan, AcademyStudent, StudentMockExam, MockExamSection,
     MockExamMode, MockExamStatus, SectionStatus, ExamPlanStatus,
     get_exam_time_config, EXAM_TIME_CONFIG
+)
+from app.exceptions import (
+    StudentNotFoundError, PlanNotFoundError, PlanExpiredError,
+    InsufficientCreditsError, MockExamNotFoundError, MockExamAccessDeniedError,
+    SectionNotFoundError, SectionLockedError, SectionAlreadyCompletedError,
+    InvalidExamTypeError
 )
 
 logger = structlog.get_logger(__name__)
@@ -70,12 +76,12 @@ class MockExamService:
         # Find student's academy membership
         student = await self._get_student_by_user(user_id)
         if not student:
-            return {"error": "Student not found in any academy"}
-        
+            raise StudentNotFoundError(user_id)
+
         # Find active exam plan for this exam type
         plan = await self._get_active_plan(student.academy_id, exam_type)
         if not plan:
-            return {"error": f"No active plan for {exam_type}"}
+            raise PlanNotFoundError(exam_type, student.academy_id)
         
         remaining = plan.total_credits - plan.used_credits
         
@@ -105,9 +111,6 @@ class MockExamService:
         Returns:
             (success: bool, message: str)
         """
-        from datetime import timezone
-        from sqlalchemy import update
-        
         # First, check and update expiration if needed
         plan = await self.session.get(AcademyExamPlan, exam_plan_id)
         
@@ -164,24 +167,50 @@ class MockExamService:
     # =========================================================================
     
     async def get_student_mock_exams(
-        self, 
-        user_id: str, 
-        exam_type: str
-    ) -> List[Dict[str, Any]]:
+        self,
+        user_id: str,
+        exam_type: str,
+        skip: int = 0,
+        limit: int = 50
+    ) -> Dict[str, Any]:
         """
-        Get all mock exams for a student for a specific exam type
-        
-        Returns list of mock exams with their status and progress
+        Get mock exams for a student for a specific exam type with pagination
+
+        Args:
+            user_id: User ID
+            exam_type: Type of exam
+            skip: Number of records to skip (offset)
+            limit: Maximum number of records to return (max 100)
+
+        Returns:
+            Dict with mock_exams list, total count, and pagination info
         """
+        # Enforce max limit
+        limit = min(limit, 100)
+
         student = await self._get_student_by_user(user_id)
         if not student:
-            return []
-        
+            return {"mock_exams": [], "total": 0, "skip": skip, "limit": limit}
+
         plan = await self._get_active_plan(student.academy_id, exam_type)
         if not plan:
-            return []
-        
-        # Get all mock exams for this student and plan
+            return {"mock_exams": [], "total": 0, "skip": skip, "limit": limit}
+
+        # Get total count
+        from sqlalchemy import func
+        count_query = (
+            select(func.count(StudentMockExam.id))
+            .where(
+                and_(
+                    StudentMockExam.student_id == student.id,
+                    StudentMockExam.exam_plan_id == plan.id
+                )
+            )
+        )
+        total_result = await self.session.execute(count_query)
+        total = total_result.scalar() or 0
+
+        # Get paginated mock exams
         query = (
             select(StudentMockExam)
             .where(
@@ -191,9 +220,11 @@ class MockExamService:
                 )
             )
             .options(selectinload(StudentMockExam.sections))
-            .order_by(StudentMockExam.exam_number)
+            .order_by(StudentMockExam.exam_number.desc())
+            .offset(skip)
+            .limit(limit)
         )
-        
+
         result = await self.session.execute(query)
         mock_exams = result.scalars().all()
         
@@ -227,8 +258,14 @@ class MockExamService:
                 "completed_at": mock.completed_at.isoformat() if mock.completed_at else None,
                 "progress": self._calculate_progress(mock)
             })
-        
-        return exams_data
+
+        return {
+            "mock_exams": exams_data,
+            "total": total,
+            "skip": skip,
+            "limit": limit,
+            "has_more": (skip + limit) < total
+        }
     
     async def create_mock_exam(
         self,
@@ -248,22 +285,32 @@ class MockExamService:
             
         Returns:
             Created mock exam data
+
+        Raises:
+            StudentNotFoundError: Student not in any academy
+            PlanNotFoundError: No active plan for exam type
+            InsufficientCreditsError: Not enough credits
+            InvalidExamTypeError: Invalid exam type
         """
+        # Validate exam_type
+        if exam_type not in EXAM_TIME_CONFIG:
+            raise InvalidExamTypeError(exam_type, list(EXAM_TIME_CONFIG.keys()))
+
         # Validate student and plan
         student = await self._get_student_by_user(user_id)
         if not student:
-            return {"error": "Student not found in any academy"}
-        
+            raise StudentNotFoundError(user_id)
+
         plan = await self._get_active_plan(student.academy_id, exam_type)
         if not plan:
-            return {"error": f"No active plan for {exam_type}"}
-        
+            raise PlanNotFoundError(exam_type, student.academy_id)
+
         # Check credits
         remaining = plan.total_credits - plan.used_credits
         required = self.CREDIT_PER_FULL_MOCK if mode == MockExamMode.FULL_MOCK else self.CREDIT_PER_SECTION
-        
+
         if remaining < required:
-            return {"error": f"Insufficient credits: {remaining} available"}
+            raise InsufficientCreditsError(required, remaining)
         
         # Get next exam number
         query = (
@@ -375,23 +422,23 @@ class MockExamService:
         )
         result = await self.session.execute(query)
         mock_exam = result.scalar_one_or_none()
-        
+
         if not mock_exam:
-            return {"error": "Mock exam not found"}
-        
+            raise MockExamNotFoundError(mock_exam_id)
+
         if mock_exam.user_id != user_id:
-            return {"error": "Access denied"}
-        
+            raise MockExamAccessDeniedError(mock_exam_id, user_id)
+
         # Find the section
         section = next((s for s in mock_exam.sections if s.section_type == section_type), None)
         if not section:
-            return {"error": f"Section {section_type} not found"}
-        
+            raise SectionNotFoundError(section_type, mock_exam_id)
+
         if section.status == SectionStatus.COMPLETED:
-            return {"error": "Section already completed"}
-        
+            raise SectionAlreadyCompletedError(section_type)
+
         if section.status == SectionStatus.LOCKED:
-            return {"error": "Section is locked. Complete previous sections first."}
+            raise SectionLockedError(section_type)
         
         if section.status == SectionStatus.IN_PROGRESS:
             # Resume existing section
@@ -412,17 +459,17 @@ class MockExamService:
                 mock_exam.id
             )
             if not success:
-                return {"error": msg}
+                raise InsufficientCreditsError(self.CREDIT_PER_SECTION, 0)
             mock_exam.credits_used += self.CREDIT_PER_SECTION
         
         # Update section status
         section.status = SectionStatus.IN_PROGRESS
-        section.started_at = datetime.utcnow()
+        section.started_at = datetime.now(timezone.utc)
         
         # Update mock exam status if first section
         if mock_exam.status == MockExamStatus.NOT_STARTED:
             mock_exam.status = MockExamStatus.IN_PROGRESS
-            mock_exam.started_at = datetime.utcnow()
+            mock_exam.started_at = datetime.now(timezone.utc)
         
         # TODO: Generate exam content here using ExamGenerator
         # For now, we'll just mark it as ready
@@ -471,18 +518,21 @@ class MockExamService:
         )
         result = await self.session.execute(query)
         mock_exam = result.scalar_one_or_none()
-        
-        if not mock_exam or mock_exam.user_id != user_id:
-            return {"error": "Mock exam not found or access denied"}
-        
+
+        if not mock_exam:
+            raise MockExamNotFoundError(mock_exam_id)
+
+        if mock_exam.user_id != user_id:
+            raise MockExamAccessDeniedError(mock_exam_id, user_id)
+
         # Find the section
         section = next((s for s in mock_exam.sections if s.section_type == section_type), None)
         if not section:
-            return {"error": f"Section {section_type} not found"}
+            raise SectionNotFoundError(section_type, mock_exam_id)
         
         # Update section
         section.status = SectionStatus.COMPLETED
-        section.completed_at = datetime.utcnow()
+        section.completed_at = datetime.now(timezone.utc)
         section.time_elapsed_seconds = time_elapsed_seconds
         section.raw_score = results.get("raw_score")
         section.max_score = results.get("max_score")
@@ -505,7 +555,7 @@ class MockExamService:
         
         if all_complete:
             mock_exam.status = MockExamStatus.COMPLETED
-            mock_exam.completed_at = datetime.utcnow()
+            mock_exam.completed_at = datetime.now(timezone.utc)
             
             # Calculate overall results
             overall = self._calculate_overall_results(mock_exam.sections, mock_exam.exam_type)
@@ -575,12 +625,16 @@ class MockExamService:
         - Credit status
         - All mock exams with progress
         - Statistics and analytics
+
+        Raises:
+            StudentNotFoundError: Student not in any academy
+            PlanNotFoundError: No active plan for exam type
         """
+        # This will raise exceptions if student/plan not found
         credits = await self.get_student_credits(user_id, exam_type)
-        if "error" in credits:
-            return credits
-        
-        mock_exams = await self.get_student_mock_exams(user_id, exam_type)
+
+        mock_exams_result = await self.get_student_mock_exams(user_id, exam_type)
+        mock_exams = mock_exams_result.get("mock_exams", [])
         
         # Calculate statistics
         completed_exams = [e for e in mock_exams if e["status"] == "completed"]
