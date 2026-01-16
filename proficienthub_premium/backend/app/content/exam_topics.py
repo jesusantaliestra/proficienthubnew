@@ -865,3 +865,624 @@ def get_speaking_part2_topic(exam_type: str) -> Dict[str, Any]:
         }
 
     return {"topic": "Describe a memorable experience", "preparation_time": 60}
+
+
+# =============================================================================
+# PTE ACADEMIC TOPICS
+# =============================================================================
+
+PTE_TOPICS = {
+    "speaking_writing": {
+        "read_aloud": {
+            "description": "Read a text aloud with correct pronunciation and intonation",
+            "common_topics": [
+                "Scientific discoveries",
+                "Historical events",
+                "Business and economics",
+                "Environmental issues",
+                "Social phenomena",
+                "Technology advancement",
+                "Cultural studies",
+                "Educational theories"
+            ],
+            "scoring_criteria": ["content", "oral_fluency", "pronunciation"]
+        },
+        "repeat_sentence": {
+            "description": "Listen and repeat the sentence exactly",
+            "sentence_types": [
+                "Academic statements",
+                "Scientific facts",
+                "Historical information",
+                "Statistical data",
+                "Opinion statements"
+            ],
+            "scoring_criteria": ["content", "oral_fluency", "pronunciation"]
+        },
+        "describe_image": {
+            "description": "Describe an image in detail",
+            "image_types": [
+                {
+                    "type": "Line graph",
+                    "common_topics": ["Economic trends", "Population changes", "Temperature variations"]
+                },
+                {
+                    "type": "Bar chart",
+                    "common_topics": ["Comparisons between countries", "Survey results", "Sales data"]
+                },
+                {
+                    "type": "Pie chart",
+                    "common_topics": ["Budget allocation", "Market share", "Demographics"]
+                },
+                {
+                    "type": "Process diagram",
+                    "common_topics": ["Manufacturing", "Natural cycles", "Scientific processes"]
+                },
+                {
+                    "type": "Map",
+                    "common_topics": ["City development", "Migration patterns", "Geographic features"]
+                },
+                {
+                    "type": "Picture/Photo",
+                    "common_topics": ["Daily life", "Events", "Landscapes", "People"]
+                }
+            ],
+            "time_limit": 40,
+            "scoring_criteria": ["content", "oral_fluency", "pronunciation"]
+        },
+        "retell_lecture": {
+            "description": "Listen to a lecture and retell the main points",
+            "lecture_topics": [
+                "Biology and life sciences",
+                "Psychology and behavior",
+                "History and archaeology",
+                "Business and management",
+                "Environmental science",
+                "Technology and innovation",
+                "Arts and literature",
+                "Sociology and culture"
+            ],
+            "time_limit": 40,
+            "scoring_criteria": ["content", "oral_fluency", "pronunciation"]
+        },
+        "answer_short_question": {
+            "description": "Answer a question with one or a few words",
+            "question_categories": [
+                "General knowledge",
+                "Academic vocabulary",
+                "Scientific terms",
+                "Mathematical concepts",
+                "Geographic facts"
+            ]
+        },
+        "summarize_written_text": {
+            "description": "Write a one-sentence summary of the passage",
+            "text_topics": [
+                "Scientific research findings",
+                "Social studies",
+                "Economic theories",
+                "Historical events",
+                "Environmental issues",
+                "Technological developments"
+            ],
+            "word_limit": "5-75 words",
+            "time_limit": 10,
+            "scoring_criteria": ["content", "form", "grammar", "vocabulary"]
+        },
+        "essay": {
+            "description": "Write an argumentative essay",
+            "common_topics": [
+                {
+                    "category": "Education",
+                    "examples": [
+                        "Should university education be free?",
+                        "Is online learning as effective as traditional classroom?",
+                        "Should students be allowed to use calculators in exams?"
+                    ]
+                },
+                {
+                    "category": "Technology",
+                    "examples": [
+                        "Do the advantages of technology outweigh the disadvantages?",
+                        "Should children be limited in their use of social media?",
+                        "Will robots replace human workers?"
+                    ]
+                },
+                {
+                    "category": "Environment",
+                    "examples": [
+                        "Should governments impose taxes on carbon emissions?",
+                        "Is individual action effective in fighting climate change?",
+                        "Should plastic bags be banned completely?"
+                    ]
+                },
+                {
+                    "category": "Society",
+                    "examples": [
+                        "Should voting be compulsory?",
+                        "Is globalization beneficial for developing countries?",
+                        "Should there be a universal basic income?"
+                    ]
+                },
+                {
+                    "category": "Health",
+                    "examples": [
+                        "Should junk food advertising be banned?",
+                        "Is healthcare a right or a privilege?",
+                        "Should smoking be banned in all public places?"
+                    ]
+                }
+            ],
+            "word_limit": "200-300 words",
+            "time_limit": 20,
+            "scoring_criteria": ["content", "development_structure", "form", "grammar", "vocabulary", "spelling"]
+        }
+    },
+    "reading": {
+        "reading_writing_fill_blanks": {
+            "description": "Fill in the blanks by selecting words from a dropdown",
+            "text_topics": [
+                "Academic articles",
+                "Scientific papers",
+                "News reports",
+                "Historical texts",
+                "Business documents"
+            ],
+            "skills_tested": ["vocabulary", "grammar", "reading comprehension"]
+        },
+        "multiple_choice_single": {
+            "description": "Choose one correct answer",
+            "question_types": [
+                "Main idea",
+                "Supporting details",
+                "Inference",
+                "Author's purpose",
+                "Vocabulary in context"
+            ]
+        },
+        "multiple_choice_multiple": {
+            "description": "Choose multiple correct answers",
+            "question_types": [
+                "Supporting statements",
+                "Multiple facts",
+                "Different perspectives"
+            ]
+        },
+        "reorder_paragraphs": {
+            "description": "Arrange paragraphs in correct order",
+            "text_types": [
+                "Chronological narratives",
+                "Logical arguments",
+                "Process descriptions",
+                "Cause and effect texts"
+            ]
+        },
+        "reading_fill_blanks": {
+            "description": "Drag words into blanks",
+            "focus_areas": ["collocations", "grammar", "vocabulary"]
+        }
+    },
+    "listening": {
+        "summarize_spoken_text": {
+            "description": "Write a summary of the lecture",
+            "lecture_topics": [
+                "Academic lectures",
+                "Scientific presentations",
+                "Historical narratives",
+                "Business case studies"
+            ],
+            "word_limit": "50-70 words",
+            "time_limit": 10
+        },
+        "multiple_choice_single": {
+            "description": "Choose the correct answer based on the recording"
+        },
+        "multiple_choice_multiple": {
+            "description": "Choose multiple correct answers"
+        },
+        "fill_blanks": {
+            "description": "Fill in the blanks while listening"
+        },
+        "highlight_correct_summary": {
+            "description": "Choose the paragraph that best summarizes the recording"
+        },
+        "select_missing_word": {
+            "description": "Predict the missing word at the end of a recording"
+        },
+        "highlight_incorrect_words": {
+            "description": "Identify words that differ from the recording"
+        },
+        "write_from_dictation": {
+            "description": "Write exactly what you hear",
+            "sentence_types": [
+                "Academic statements",
+                "Factual information",
+                "Instructions",
+                "Definitions"
+            ]
+        }
+    }
+}
+
+
+# =============================================================================
+# OET (Occupational English Test) TOPICS - MEDICINE
+# =============================================================================
+
+OET_TOPICS = {
+    "professions": [
+        "Medicine", "Nursing", "Dentistry", "Pharmacy",
+        "Physiotherapy", "Occupational Therapy", "Dietetics",
+        "Speech Pathology", "Podiatry", "Optometry",
+        "Radiography", "Veterinary Science"
+    ],
+
+    "listening": {
+        "part_a": {
+            "name": "Consultation Extracts",
+            "description": "Two recorded health professional-patient consultations",
+            "duration": "5 minutes each",
+            "question_types": ["note completion", "gap fill"],
+            "common_scenarios": [
+                {
+                    "scenario": "Initial patient assessment",
+                    "topics": ["presenting complaint", "medical history", "symptoms"]
+                },
+                {
+                    "scenario": "Follow-up consultation",
+                    "topics": ["treatment progress", "medication review", "test results"]
+                },
+                {
+                    "scenario": "Specialist referral discussion",
+                    "topics": ["diagnosis explanation", "treatment options", "prognosis"]
+                },
+                {
+                    "scenario": "Discharge planning",
+                    "topics": ["home care instructions", "medication schedule", "follow-up appointments"]
+                }
+            ]
+        },
+        "part_b": {
+            "name": "Short Workplace Extracts",
+            "description": "Six short recordings of healthcare workplace communications",
+            "duration": "1 minute each",
+            "question_types": ["multiple choice"],
+            "communication_types": [
+                "Team briefings",
+                "Handover reports",
+                "Phone conversations",
+                "Patient instructions",
+                "Colleague discussions",
+                "Health presentations"
+            ]
+        },
+        "part_c": {
+            "name": "Presentation Extracts",
+            "description": "Two longer recordings (interviews, presentations)",
+            "duration": "5 minutes each",
+            "question_types": ["multiple choice"],
+            "content_types": [
+                "Health policy discussions",
+                "Medical research presentations",
+                "Patient care guidelines",
+                "Healthcare service updates"
+            ]
+        }
+    },
+
+    "reading": {
+        "part_a": {
+            "name": "Expeditious Reading",
+            "description": "Quick reading to locate specific information",
+            "time_limit": 15,
+            "text_types": [
+                "Patient information leaflets",
+                "Hospital guidelines",
+                "Medical device instructions",
+                "Healthcare facility procedures"
+            ],
+            "question_types": ["matching", "sentence completion", "short answer"]
+        },
+        "part_b": {
+            "name": "Careful Reading (Short Texts)",
+            "description": "Detailed reading of healthcare workplace texts",
+            "text_types": [
+                "Hospital policy documents",
+                "Clinical guidelines",
+                "Patient safety protocols",
+                "Professional development notices"
+            ],
+            "question_types": ["multiple choice", "matching headings"]
+        },
+        "part_c": {
+            "name": "Careful Reading (Long Texts)",
+            "description": "Two longer texts requiring detailed comprehension",
+            "text_types": [
+                "Medical journal articles",
+                "Research summaries",
+                "Healthcare editorials",
+                "Clinical case studies"
+            ],
+            "question_types": ["multiple choice"],
+            "skills_tested": [
+                "Understanding main ideas",
+                "Identifying supporting details",
+                "Making inferences",
+                "Understanding writer's opinion"
+            ]
+        }
+    },
+
+    "writing": {
+        "description": "Write a referral letter based on case notes",
+        "time_limit": 45,
+        "word_count": "180-200",
+        "letter_types": [
+            {
+                "type": "Referral letter",
+                "purpose": "Referring patient to specialist",
+                "common_scenarios": [
+                    "GP to specialist referral",
+                    "Hospital to community care",
+                    "Specialist to rehabilitation"
+                ]
+            },
+            {
+                "type": "Discharge letter",
+                "purpose": "Summarizing hospital stay and care plan",
+                "common_scenarios": [
+                    "Post-surgery discharge",
+                    "Chronic condition management",
+                    "Mental health care transfer"
+                ]
+            },
+            {
+                "type": "Transfer letter",
+                "purpose": "Transferring care between facilities",
+                "common_scenarios": [
+                    "Nursing home admission",
+                    "Rehabilitation facility transfer",
+                    "Palliative care referral"
+                ]
+            }
+        ],
+        "assessment_criteria": [
+            {
+                "criterion": "Purpose",
+                "weight": "high",
+                "description": "Clear communication of referral reason"
+            },
+            {
+                "criterion": "Content",
+                "weight": "high",
+                "description": "Relevant selection from case notes"
+            },
+            {
+                "criterion": "Conciseness and clarity",
+                "weight": "medium",
+                "description": "Appropriate length and clear expression"
+            },
+            {
+                "criterion": "Genre and style",
+                "weight": "medium",
+                "description": "Appropriate letter format and professional tone"
+            },
+            {
+                "criterion": "Organization and layout",
+                "weight": "medium",
+                "description": "Logical structure and paragraphing"
+            },
+            {
+                "criterion": "Language",
+                "weight": "high",
+                "description": "Grammar, vocabulary, spelling, punctuation"
+            }
+        ],
+        "common_medical_topics": [
+            {
+                "condition": "Cardiovascular",
+                "examples": ["Chest pain", "Hypertension", "Heart failure", "Arrhythmia"]
+            },
+            {
+                "condition": "Respiratory",
+                "examples": ["Asthma", "COPD", "Pneumonia", "Sleep apnea"]
+            },
+            {
+                "condition": "Musculoskeletal",
+                "examples": ["Back pain", "Arthritis", "Fractures", "Sports injuries"]
+            },
+            {
+                "condition": "Neurological",
+                "examples": ["Headaches", "Stroke", "Epilepsy", "Parkinson's"]
+            },
+            {
+                "condition": "Mental Health",
+                "examples": ["Depression", "Anxiety", "Dementia", "Substance abuse"]
+            },
+            {
+                "condition": "Endocrine",
+                "examples": ["Diabetes", "Thyroid disorders", "Obesity"]
+            },
+            {
+                "condition": "Gastrointestinal",
+                "examples": ["Abdominal pain", "IBD", "Liver disease", "Reflux"]
+            },
+            {
+                "condition": "Oncology",
+                "examples": ["Cancer screening", "Treatment planning", "Palliative care"]
+            }
+        ]
+    },
+
+    "speaking": {
+        "description": "Role-play with an interlocutor (simulated patient/carer)",
+        "time_limit": 20,
+        "structure": {
+            "warm_up": {
+                "duration": "2-3 minutes",
+                "purpose": "General conversation about profession and experience"
+            },
+            "role_plays": {
+                "number": 2,
+                "duration": "5 minutes each",
+                "preparation": "2-3 minutes to read role card"
+            }
+        },
+        "role_play_scenarios": [
+            {
+                "category": "Explaining diagnosis",
+                "scenarios": [
+                    "Breaking bad news sensitively",
+                    "Explaining test results",
+                    "Discussing treatment options"
+                ]
+            },
+            {
+                "category": "Gathering information",
+                "scenarios": [
+                    "Taking patient history",
+                    "Assessing pain levels",
+                    "Identifying symptoms"
+                ]
+            },
+            {
+                "category": "Providing instructions",
+                "scenarios": [
+                    "Medication instructions",
+                    "Pre-procedure preparation",
+                    "Post-operative care"
+                ]
+            },
+            {
+                "category": "Managing difficult situations",
+                "scenarios": [
+                    "Dealing with anxious patient",
+                    "Addressing non-compliance",
+                    "Handling complaints"
+                ]
+            },
+            {
+                "category": "Counseling and support",
+                "scenarios": [
+                    "Lifestyle advice",
+                    "Smoking cessation",
+                    "Mental health support"
+                ]
+            }
+        ],
+        "assessment_criteria": [
+            "Intelligibility",
+            "Fluency",
+            "Appropriateness of language",
+            "Resources of grammar and expression",
+            "Relationship building",
+            "Understanding and incorporating patient's perspective",
+            "Providing structure",
+            "Information gathering",
+            "Information giving"
+        ]
+    }
+}
+
+
+# =============================================================================
+# DUOLINGO ENGLISH TEST (DET) TOPICS
+# =============================================================================
+
+DUOLINGO_TOPICS = {
+    "adaptive_test": {
+        "description": "Computer-adaptive test that adjusts difficulty based on performance",
+        "duration": 60,
+        "sections": [
+            {
+                "name": "Read and Complete",
+                "description": "Fill in missing letters in words within sentences",
+                "skills": ["vocabulary", "grammar", "spelling"]
+            },
+            {
+                "name": "Read and Select",
+                "description": "Identify real English words from a list",
+                "skills": ["vocabulary recognition"]
+            },
+            {
+                "name": "Listen and Type",
+                "description": "Type what you hear",
+                "skills": ["listening", "spelling"]
+            },
+            {
+                "name": "Read Aloud",
+                "description": "Read a sentence aloud",
+                "skills": ["pronunciation", "fluency"]
+            },
+            {
+                "name": "Write About the Photo",
+                "description": "Describe an image in writing",
+                "skills": ["writing", "vocabulary"]
+            },
+            {
+                "name": "Speak About the Photo",
+                "description": "Describe an image verbally",
+                "skills": ["speaking", "vocabulary"]
+            },
+            {
+                "name": "Read, Then Write",
+                "description": "Read a prompt and write a response",
+                "skills": ["reading comprehension", "writing"]
+            },
+            {
+                "name": "Read, Then Speak",
+                "description": "Read a question and respond verbally",
+                "skills": ["reading", "speaking"]
+            },
+            {
+                "name": "Listen, Then Speak",
+                "description": "Listen to a question and respond",
+                "skills": ["listening", "speaking"]
+            },
+            {
+                "name": "Interactive Reading",
+                "description": "Complete sentences in a passage",
+                "skills": ["reading", "grammar"]
+            },
+            {
+                "name": "Interactive Listening",
+                "description": "Identify words and complete sentences from audio",
+                "skills": ["listening", "vocabulary"]
+            }
+        ]
+    },
+    "writing_sample_topics": [
+        "Describe an important tradition in your culture",
+        "What qualities make a good leader?",
+        "Should students have homework?",
+        "Describe your favorite place to relax",
+        "What is an important skill everyone should learn?"
+    ],
+    "speaking_sample_topics": [
+        "Describe your hometown",
+        "Talk about a person who has influenced you",
+        "What do you like to do in your free time?",
+        "Describe a challenging experience",
+        "What are your future goals?"
+    ]
+}
+
+
+# =============================================================================
+# COMPLETE TOPIC REGISTRY
+# =============================================================================
+
+ALL_EXAM_TOPICS = {
+    "ielts_academic": IELTS_TOPICS,
+    "ielts_general": IELTS_TOPICS,  # Uses same topics with different reading texts
+    "cambridge_b2_first": CAMBRIDGE_TOPICS["b2_first"],
+    "cambridge_c1_advanced": CAMBRIDGE_TOPICS["c1_advanced"],
+    "toefl_ibt": TOEFL_TOPICS,
+    "pte_academic": PTE_TOPICS,
+    "oet_medicine": OET_TOPICS,
+    "duolingo": DUOLINGO_TOPICS,
+}
+
+
+def get_all_topics_for_exam(exam_type: str) -> Dict[str, Any]:
+    """Obtiene todos los topics configurados para un tipo de examen"""
+    return ALL_EXAM_TOPICS.get(exam_type, IELTS_TOPICS)
