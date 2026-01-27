@@ -4985,6 +4985,570 @@ async def update_task(task_id: str, updates: dict, current_user: dict = Depends(
     await db.crm_tasks.update_one({"id": task_id, "institution_id": current_user["id"]}, {"$set": update_data})
     return {"message": "Task updated"}
 
+# ==================== INSTITUTION SETTINGS ====================
+
+class InstitutionZoomSettings(BaseModel):
+    zoom_account_id: str = ""
+    zoom_client_id: str = ""
+    zoom_client_secret: str = ""
+    zoom_enabled: bool = False
+
+class InstitutionEmailSettings(BaseModel):
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
+    smtp_from_name: str = ""
+    smtp_enabled: bool = False
+    smtp_use_tls: bool = True
+
+class InstitutionGamificationSettings(BaseModel):
+    gamification_enabled: bool = False
+    xp_per_exam: int = 50
+    xp_per_section: int = 20
+    xp_per_tutor_session: int = 15
+    xp_per_class: int = 30
+    streak_bonus_multiplier: float = 1.5
+    leaderboard_enabled: bool = True
+    badges_enabled: bool = True
+    challenges_enabled: bool = True
+    weekly_challenges_count: int = 3
+
+@api_router.get("/institution/settings")
+async def get_institution_settings(current_user: dict = Depends(get_current_user)):
+    """Get all institution settings"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can access settings")
+    
+    settings = await db.institution_settings.find_one({"institution_id": current_user["id"]}, {"_id": 0})
+    if not settings:
+        settings = {
+            "institution_id": current_user["id"],
+            "zoom": {},
+            "email": {},
+            "gamification": {"gamification_enabled": False}
+        }
+    return settings
+
+@api_router.post("/institution/settings/zoom")
+async def save_zoom_settings(settings: InstitutionZoomSettings, current_user: dict = Depends(get_current_user)):
+    """Save Zoom settings"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can modify settings")
+    
+    await db.institution_settings.update_one(
+        {"institution_id": current_user["id"]},
+        {"$set": {"zoom": settings.dict(), "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"message": "Zoom settings saved"}
+
+@api_router.post("/institution/settings/zoom/test")
+async def test_zoom_connection(settings: InstitutionZoomSettings, current_user: dict = Depends(get_current_user)):
+    """Test Zoom connection"""
+    if not settings.zoom_client_id or not settings.zoom_client_secret:
+        raise HTTPException(status_code=400, detail="Zoom credentials required")
+    
+    try:
+        import httpx
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://zoom.us/oauth/token",
+                params={
+                    "grant_type": "account_credentials",
+                    "account_id": settings.zoom_account_id
+                },
+                auth=(settings.zoom_client_id, settings.zoom_client_secret),
+                timeout=10.0
+            )
+            if response.status_code == 200:
+                return {"message": "Zoom connection successful!", "status": "connected"}
+            else:
+                raise HTTPException(status_code=400, detail=f"Zoom API error: {response.text}")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Connection failed: {str(e)}")
+
+@api_router.post("/institution/settings/email")
+async def save_email_settings(settings: InstitutionEmailSettings, current_user: dict = Depends(get_current_user)):
+    """Save Email SMTP settings"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can modify settings")
+    
+    await db.institution_settings.update_one(
+        {"institution_id": current_user["id"]},
+        {"$set": {"email": settings.dict(), "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"message": "Email settings saved"}
+
+@api_router.post("/institution/settings/email/test")
+async def test_email_connection(settings: dict, current_user: dict = Depends(get_current_user)):
+    """Test email SMTP connection by sending a test email"""
+    test_email = settings.get("test_email")
+    if not test_email:
+        raise HTTPException(status_code=400, detail="Test email address required")
+    
+    if not settings.get("smtp_host") or not settings.get("smtp_user"):
+        raise HTTPException(status_code=400, detail="SMTP credentials required")
+    
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+        msg = MIMEMultipart()
+        msg['From'] = f"{settings.get('smtp_from_name', 'ProficientHub')} <{settings.get('smtp_from_email', settings['smtp_user'])}>"
+        msg['To'] = test_email
+        msg['Subject'] = "ProficientHub - Test Email Configuration"
+        
+        body = """
+        <h2>Email Configuration Test</h2>
+        <p>If you're reading this, your email settings are configured correctly!</p>
+        <p>You can now use email features in ProficientHub.</p>
+        <hr>
+        <p><small>This is an automated test email from ProficientHub.</small></p>
+        """
+        msg.attach(MIMEText(body, 'html'))
+        
+        if settings.get("smtp_use_tls", True):
+            server = smtplib.SMTP(settings["smtp_host"], settings.get("smtp_port", 587))
+            server.starttls()
+        else:
+            server = smtplib.SMTP_SSL(settings["smtp_host"], settings.get("smtp_port", 465))
+        
+        server.login(settings["smtp_user"], settings["smtp_password"])
+        server.send_message(msg)
+        server.quit()
+        
+        return {"message": f"Test email sent successfully to {test_email}"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to send email: {str(e)}")
+
+@api_router.post("/institution/settings/gamification")
+async def save_gamification_settings(settings: InstitutionGamificationSettings, current_user: dict = Depends(get_current_user)):
+    """Save gamification settings"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can modify settings")
+    
+    await db.institution_settings.update_one(
+        {"institution_id": current_user["id"]},
+        {"$set": {"gamification": settings.dict(), "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"message": "Gamification settings saved"}
+
+# ==================== GAMIFICATION SYSTEM ====================
+
+@api_router.get("/gamification/profile")
+async def get_gamification_profile(current_user: dict = Depends(get_current_user)):
+    """Get student's gamification profile"""
+    if current_user["user_type"] != "student":
+        raise HTTPException(status_code=403, detail="Only students have gamification profiles")
+    
+    # Check if institution has gamification enabled
+    institution_id = current_user.get("institution_id")
+    if institution_id:
+        settings = await db.institution_settings.find_one({"institution_id": institution_id})
+        if not settings or not settings.get("gamification", {}).get("gamification_enabled", False):
+            return {"gamification_enabled": False}
+    
+    # Get or create gamification profile
+    profile = await db.gamification_profiles.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not profile:
+        profile = {
+            "user_id": current_user["id"],
+            "institution_id": institution_id,
+            "xp": 0,
+            "level": 1,
+            "streak": 0,
+            "longest_streak": 0,
+            "last_activity_date": None,
+            "daily_xp": 0,
+            "badges": [],
+            "challenges_completed": 0,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.gamification_profiles.insert_one(profile)
+    
+    profile["gamification_enabled"] = True
+    return profile
+
+@api_router.post("/gamification/award-xp")
+async def award_xp(activity_type: str, current_user: dict = Depends(get_current_user)):
+    """Award XP for an activity"""
+    if current_user["user_type"] != "student":
+        raise HTTPException(status_code=403, detail="Only students can earn XP")
+    
+    institution_id = current_user.get("institution_id")
+    settings = await db.institution_settings.find_one({"institution_id": institution_id})
+    if not settings or not settings.get("gamification", {}).get("gamification_enabled", False):
+        return {"message": "Gamification not enabled", "xp_earned": 0}
+    
+    gam_settings = settings.get("gamification", {})
+    
+    # Determine XP based on activity
+    xp_map = {
+        "exam": gam_settings.get("xp_per_exam", 50),
+        "section": gam_settings.get("xp_per_section", 20),
+        "tutor": gam_settings.get("xp_per_tutor_session", 15),
+        "class": gam_settings.get("xp_per_class", 30)
+    }
+    base_xp = xp_map.get(activity_type, 10)
+    
+    # Get profile and update streak
+    profile = await db.gamification_profiles.find_one({"user_id": current_user["id"]})
+    today = datetime.now(timezone.utc).date().isoformat()
+    
+    streak = profile.get("streak", 0) if profile else 0
+    last_activity = profile.get("last_activity_date") if profile else None
+    
+    # Check streak
+    if last_activity:
+        last_date = datetime.fromisoformat(last_activity.replace("Z", "+00:00")).date()
+        today_date = datetime.now(timezone.utc).date()
+        days_diff = (today_date - last_date).days
+        
+        if days_diff == 1:
+            streak += 1
+        elif days_diff > 1:
+            streak = 1
+    else:
+        streak = 1
+    
+    # Apply streak bonus
+    multiplier = gam_settings.get("streak_bonus_multiplier", 1.5)
+    streak_bonus = 1 + (min(streak, 30) * 0.01 * (multiplier - 1))
+    final_xp = int(base_xp * streak_bonus)
+    
+    # Update profile
+    update_data = {
+        "$inc": {"xp": final_xp, "daily_xp": final_xp},
+        "$set": {
+            "streak": streak,
+            "last_activity_date": today,
+            "longest_streak": max(streak, profile.get("longest_streak", 0) if profile else 0)
+        }
+    }
+    
+    await db.gamification_profiles.update_one(
+        {"user_id": current_user["id"]},
+        update_data,
+        upsert=True
+    )
+    
+    # Check for badge unlocks
+    badges_earned = await check_badge_unlocks(current_user["id"])
+    
+    return {
+        "xp_earned": final_xp,
+        "base_xp": base_xp,
+        "streak_bonus": round(streak_bonus, 2),
+        "current_streak": streak,
+        "badges_earned": badges_earned
+    }
+
+async def check_badge_unlocks(user_id: str):
+    """Check and award badges based on achievements"""
+    profile = await db.gamification_profiles.find_one({"user_id": user_id})
+    if not profile:
+        return []
+    
+    current_badges = set(profile.get("badges", []))
+    new_badges = []
+    
+    # Check various badge conditions
+    badge_conditions = [
+        ("first_exam", lambda p: True),  # First activity
+        ("streak_7", lambda p: p.get("streak", 0) >= 7),
+        ("streak_30", lambda p: p.get("streak", 0) >= 30),
+    ]
+    
+    for badge_id, condition in badge_conditions:
+        if badge_id not in current_badges and condition(profile):
+            new_badges.append(badge_id)
+            current_badges.add(badge_id)
+    
+    if new_badges:
+        await db.gamification_profiles.update_one(
+            {"user_id": user_id},
+            {"$set": {"badges": list(current_badges)}}
+        )
+    
+    return new_badges
+
+@api_router.get("/gamification/leaderboard")
+async def get_leaderboard(current_user: dict = Depends(get_current_user)):
+    """Get institution leaderboard"""
+    institution_id = current_user.get("institution_id")
+    if not institution_id:
+        return {"leaderboard": []}
+    
+    # Get top students by XP
+    profiles = await db.gamification_profiles.find(
+        {"institution_id": institution_id},
+        {"_id": 0, "user_id": 1, "xp": 1, "level": 1, "streak": 1}
+    ).sort("xp", -1).limit(50).to_list(50)
+    
+    # Enrich with user names
+    leaderboard = []
+    for i, profile in enumerate(profiles):
+        user = await db.users.find_one({"id": profile["user_id"]}, {"name": 1})
+        leaderboard.append({
+            "rank": i + 1,
+            "id": profile["user_id"],
+            "name": user.get("name", "Anonymous") if user else "Anonymous",
+            "xp": profile.get("xp", 0),
+            "level": profile.get("level", 1),
+            "streak": profile.get("streak", 0)
+        })
+    
+    return {"leaderboard": leaderboard}
+
+@api_router.get("/gamification/challenges")
+async def get_weekly_challenges(current_user: dict = Depends(get_current_user)):
+    """Get weekly challenges for the student"""
+    institution_id = current_user.get("institution_id")
+    
+    # Sample challenges (in production, these would be generated weekly)
+    challenges = [
+        {
+            "id": "complete_3_exams",
+            "name": "Exam Master",
+            "description": "Complete 3 full practice exams",
+            "icon": "📝",
+            "target": 3,
+            "progress": 1,
+            "xp_reward": 150
+        },
+        {
+            "id": "5_day_streak",
+            "name": "Consistency King",
+            "description": "Maintain a 5-day study streak",
+            "icon": "🔥",
+            "target": 5,
+            "progress": 3,
+            "xp_reward": 100
+        },
+        {
+            "id": "tutor_sessions",
+            "name": "AI Learner",
+            "description": "Have 5 AI tutor sessions",
+            "icon": "🤖",
+            "target": 5,
+            "progress": 2,
+            "xp_reward": 75
+        }
+    ]
+    
+    return {"challenges": challenges}
+
+# ==================== ZOOM MEETINGS ====================
+
+@api_router.post("/zoom/meetings/create")
+async def create_zoom_meeting(
+    topic: str,
+    start_time: str,
+    duration: int = 60,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a Zoom meeting"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can create meetings")
+    
+    # Get Zoom settings
+    settings = await db.institution_settings.find_one({"institution_id": current_user["id"]})
+    zoom_config = settings.get("zoom", {}) if settings else {}
+    
+    if not zoom_config.get("zoom_enabled") or not zoom_config.get("zoom_client_id"):
+        raise HTTPException(status_code=400, detail="Zoom not configured. Please configure Zoom in settings.")
+    
+    try:
+        import httpx
+        
+        # Get access token
+        async with httpx.AsyncClient() as client:
+            token_response = await client.post(
+                "https://zoom.us/oauth/token",
+                params={
+                    "grant_type": "account_credentials",
+                    "account_id": zoom_config["zoom_account_id"]
+                },
+                auth=(zoom_config["zoom_client_id"], zoom_config["zoom_client_secret"]),
+                timeout=10.0
+            )
+            
+            if token_response.status_code != 200:
+                raise HTTPException(status_code=400, detail="Failed to authenticate with Zoom")
+            
+            access_token = token_response.json()["access_token"]
+            
+            # Create meeting
+            meeting_response = await client.post(
+                "https://api.zoom.us/v2/users/me/meetings",
+                headers={"Authorization": f"Bearer {access_token}"},
+                json={
+                    "topic": topic,
+                    "type": 2,  # Scheduled meeting
+                    "start_time": start_time,
+                    "duration": duration,
+                    "settings": {
+                        "host_video": True,
+                        "participant_video": True,
+                        "join_before_host": False,
+                        "waiting_room": True
+                    }
+                },
+                timeout=10.0
+            )
+            
+            if meeting_response.status_code not in [200, 201]:
+                raise HTTPException(status_code=400, detail=f"Failed to create meeting: {meeting_response.text}")
+            
+            meeting_data = meeting_response.json()
+            
+            # Store meeting in database
+            meeting_doc = {
+                "id": str(uuid.uuid4()),
+                "zoom_meeting_id": meeting_data["id"],
+                "institution_id": current_user["id"],
+                "topic": topic,
+                "start_time": start_time,
+                "duration": duration,
+                "join_url": meeting_data["join_url"],
+                "start_url": meeting_data["start_url"],
+                "password": meeting_data.get("password", ""),
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            await db.zoom_meetings.insert_one(meeting_doc)
+            
+            return {
+                "meeting_id": meeting_doc["id"],
+                "zoom_meeting_id": meeting_data["id"],
+                "join_url": meeting_data["join_url"],
+                "start_url": meeting_data["start_url"],
+                "password": meeting_data.get("password", "")
+            }
+            
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=400, detail=f"Zoom API error: {str(e)}")
+
+@api_router.get("/zoom/meetings/signature")
+async def get_zoom_signature(
+    meeting_number: int,
+    role: int = 0,
+    current_user: dict = Depends(get_current_user)
+):
+    """Generate JWT signature for joining a Zoom meeting"""
+    import jwt
+    import time
+    
+    institution_id = current_user.get("institution_id") or current_user.get("id")
+    settings = await db.institution_settings.find_one({"institution_id": institution_id})
+    zoom_config = settings.get("zoom", {}) if settings else {}
+    
+    if not zoom_config.get("zoom_client_id"):
+        raise HTTPException(status_code=400, detail="Zoom not configured")
+    
+    iat = int(time.time())
+    exp = iat + 60 * 60 * 2  # 2 hours
+    
+    payload = {
+        "appKey": zoom_config["zoom_client_id"],
+        "mn": meeting_number,
+        "role": role,
+        "iat": iat,
+        "exp": exp,
+        "tokenExp": exp
+    }
+    
+    signature = jwt.encode(
+        payload,
+        zoom_config["zoom_client_secret"],
+        algorithm="HS256"
+    )
+    
+    return {
+        "signature": signature,
+        "meeting_number": meeting_number,
+        "sdk_key": zoom_config["zoom_client_id"]
+    }
+
+@api_router.get("/student/upcoming-classes")
+async def get_student_upcoming_classes(current_user: dict = Depends(get_current_user)):
+    """Get upcoming live classes for a student"""
+    institution_id = current_user.get("institution_id")
+    if not institution_id:
+        return {"classes": []}
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Get upcoming video classes
+    classes = await db.video_classes.find(
+        {
+            "institution_id": institution_id,
+            "scheduled_time": {"$gte": now},
+            "status": "scheduled"
+        },
+        {"_id": 0}
+    ).sort("scheduled_time", 1).limit(10).to_list(10)
+    
+    # Also get Zoom meetings
+    meetings = await db.zoom_meetings.find(
+        {
+            "institution_id": institution_id,
+            "start_time": {"$gte": now}
+        },
+        {"_id": 0}
+    ).sort("start_time", 1).limit(10).to_list(10)
+    
+    # Combine and format
+    combined = []
+    for cls in classes:
+        combined.append({
+            "id": cls.get("id"),
+            "title": cls.get("title"),
+            "instructor": cls.get("instructor", "Instructor"),
+            "start_time": cls.get("scheduled_time"),
+            "type": "video_class",
+            "room_code": cls.get("room_code")
+        })
+    
+    for meeting in meetings:
+        combined.append({
+            "id": meeting.get("id"),
+            "title": meeting.get("topic"),
+            "instructor": "Host",
+            "start_time": meeting.get("start_time"),
+            "type": "zoom",
+            "join_url": meeting.get("join_url"),
+            "zoom_meeting_id": meeting.get("zoom_meeting_id")
+        })
+    
+    # Sort by start time
+    combined.sort(key=lambda x: x.get("start_time", ""))
+    
+    return {"classes": combined[:10]}
+
+@api_router.get("/student/profile")
+async def get_student_profile(current_user: dict = Depends(get_current_user)):
+    """Get student profile including exam access"""
+    if current_user["user_type"] != "student":
+        raise HTTPException(status_code=403, detail="Only students can access this")
+    
+    return {
+        "id": current_user["id"],
+        "name": current_user.get("name"),
+        "email": current_user.get("email"),
+        "current_exam": current_user.get("current_exam"),
+        "exam_access": current_user.get("exam_access", []),
+        "credits": current_user.get("credits", 0),
+        "credits_used": current_user.get("credits_used", 0),
+        "institution_id": current_user.get("institution_id"),
+        "institution_name": current_user.get("institution_name")
+    }
+
 # ==================== HEALTH CHECK ====================
 
 @api_router.get("/")
