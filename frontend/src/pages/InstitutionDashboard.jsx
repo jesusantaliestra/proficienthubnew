@@ -52,6 +52,12 @@ export default function InstitutionDashboard() {
     tags: []
   });
   const [selectedLanguage, setSelectedLanguage] = useState(user?.language || 'en');
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [studentsAnalytics, setStudentsAnalytics] = useState([]);
+  const [atRiskStudents, setAtRiskStudents] = useState([]);
+  const [cohortData, setCohortData] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [selectedStudentAnalytics, setSelectedStudentAnalytics] = useState(null);
 
   useEffect(() => {
     fetchData();
