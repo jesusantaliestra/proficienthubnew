@@ -4395,7 +4395,7 @@ async def create_email_template(template: EmailTemplate, current_user: dict = De
 @api_router.get("/crm/email-templates")
 async def get_email_templates(current_user: dict = Depends(get_current_user)):
     """Get all email templates"""
-    templates = await db.email_templates.find({"institution_id": current_user["id"]}).to_list(100)
+    templates = await db.email_templates.find({"institution_id": current_user["id"]}, {"_id": 0}).to_list(100)
     
     # Add default templates if none exist
     if not templates:
