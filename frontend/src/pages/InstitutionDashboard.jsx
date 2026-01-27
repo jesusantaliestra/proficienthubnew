@@ -398,6 +398,7 @@ export default function InstitutionDashboard() {
             { id: 'students', icon: Users, label: 'Students' },
             { id: 'crm', icon: Target, label: 'CRM & Sales' },
             { id: 'marketplace', icon: Store, label: 'Marketplace' },
+            { id: 'classes', icon: Video, label: 'Video Classes' },
             { id: 'library', icon: FolderOpen, label: 'Library' },
             { id: 'analytics', icon: Activity, label: 'Analytics' },
             { id: 'exams', icon: BookOpen, label: 'Exams' }
