@@ -6828,7 +6828,11 @@ async def get_email_templates(current_user: dict = Depends(get_current_user)):
     }
     
     # Merge defaults with custom
-    template_dict = {t["template_type"]: t for t in templates}
+    template_dict = {}
+    for t in templates:
+        if t.get("template_type"):
+            template_dict[t["template_type"]] = t
+    
     for key, default in default_templates.items():
         if key not in template_dict:
             template_dict[key] = {
