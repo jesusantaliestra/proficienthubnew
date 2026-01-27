@@ -2231,6 +2231,13 @@ export default function InstitutionDashboard() {
               </div>
             </div>
           )}
+
+          {/* Settings Tab */}
+          {activeTab === 'settings' && (
+            <div className="space-y-6 animate-fade-in" data-testid="settings-tab">
+              <InstitutionSettings />
+            </div>
+          )}
         </div>
       </main>
     </div>
