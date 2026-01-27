@@ -148,10 +148,13 @@ export default function InstitutionDashboard() {
   ];
 
   const examDistribution = [
-    { name: 'IELTS', value: 35, color: '#FF4B4B' },
-    { name: 'TOEFL', value: 30, color: '#1CB0F6' },
-    { name: 'Cambridge', value: 20, color: '#CE82FF' },
-    { name: 'PTE', value: 10, color: '#FF9600' },
+    { name: 'IELTS', value: 25, color: '#FF4B4B' },
+    { name: 'TOEFL', value: 25, color: '#1CB0F6' },
+    { name: 'Cambridge', value: 15, color: '#CE82FF' },
+    { name: 'Trinity', value: 10, color: '#EC4899' },
+    { name: 'TOEIC', value: 8, color: '#6366F1' },
+    { name: 'CELPIP', value: 5, color: '#06B6D4' },
+    { name: 'PTE', value: 7, color: '#FF9600' },
     { name: 'OET', value: 5, color: '#58CC02' }
   ];
 
@@ -344,6 +347,9 @@ export default function InstitutionDashboard() {
                           <SelectItem value="ielts">IELTS</SelectItem>
                           <SelectItem value="toefl">TOEFL</SelectItem>
                           <SelectItem value="cambridge">Cambridge</SelectItem>
+                          <SelectItem value="trinity">Trinity</SelectItem>
+                          <SelectItem value="toeic">TOEIC</SelectItem>
+                          <SelectItem value="celpip">CELPIP</SelectItem>
                           <SelectItem value="pte">PTE</SelectItem>
                           <SelectItem value="oet">OET</SelectItem>
                         </SelectContent>
@@ -652,6 +658,9 @@ export default function InstitutionDashboard() {
                             <SelectItem value="toefl">TOEFL</SelectItem>
                             <SelectItem value="ielts">IELTS</SelectItem>
                             <SelectItem value="cambridge">Cambridge</SelectItem>
+                            <SelectItem value="trinity">Trinity</SelectItem>
+                            <SelectItem value="toeic">TOEIC</SelectItem>
+                            <SelectItem value="celpip">CELPIP</SelectItem>
                             <SelectItem value="pte">PTE</SelectItem>
                             <SelectItem value="oet">OET</SelectItem>
                           </SelectContent>
@@ -819,6 +828,9 @@ export default function InstitutionDashboard() {
                   { id: 'toefl', name: 'TOEFL', color: 'bg-blue-500' },
                   { id: 'ielts', name: 'IELTS', color: 'bg-red-500' },
                   { id: 'cambridge', name: 'Cambridge', color: 'bg-purple-500' },
+                  { id: 'trinity', name: 'Trinity', color: 'bg-pink-500' },
+                  { id: 'toeic', name: 'TOEIC', color: 'bg-indigo-500' },
+                  { id: 'celpip', name: 'CELPIP', color: 'bg-cyan-500' },
                   { id: 'pte', name: 'PTE', color: 'bg-orange-500' },
                   { id: 'oet', name: 'OET', color: 'bg-green-500' }
                 ].map((exam) => (
