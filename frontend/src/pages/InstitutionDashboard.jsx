@@ -127,6 +127,43 @@ export default function InstitutionDashboard() {
     }
   };
 
+  const fetchAnalyticsData = async () => {
+    setAnalyticsLoading(true);
+    try {
+      const [overviewRes, studentsRes, atRiskRes, cohortsRes] = await Promise.all([
+        axios.get(`${API_URL}/institution/analytics/overview`),
+        axios.get(`${API_URL}/institution/analytics/students`),
+        axios.get(`${API_URL}/institution/analytics/at-risk`),
+        axios.get(`${API_URL}/institution/analytics/cohorts`)
+      ]);
+      setAnalyticsData(overviewRes.data);
+      setStudentsAnalytics(studentsRes.data.students || []);
+      setAtRiskStudents(atRiskRes.data.students || []);
+      setCohortData(cohortsRes.data);
+    } catch (error) {
+      console.error('Failed to fetch analytics:', error);
+      toast.error('Failed to load analytics data');
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  const fetchStudentDetailedAnalytics = async (studentId) => {
+    try {
+      const response = await axios.get(`${API_URL}/institution/analytics/student/${studentId}`);
+      setSelectedStudentAnalytics(response.data);
+    } catch (error) {
+      console.error('Failed to fetch student analytics:', error);
+      toast.error('Failed to load student details');
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'analytics') {
+      fetchAnalyticsData();
+    }
+  }, [activeTab]);
+
   const handleLogout = () => {
     logout();
     navigate('/', { replace: true });
