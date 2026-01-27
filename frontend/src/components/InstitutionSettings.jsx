@@ -848,7 +848,10 @@ export default function InstitutionSettings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="ai-agents" className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4" /> AI Agents
+          </TabsTrigger>
           <TabsTrigger value="avatar" className="flex items-center gap-2">
             <Bot className="w-4 h-4" /> Avatar
           </TabsTrigger>
@@ -864,6 +867,14 @@ export default function InstitutionSettings() {
         </TabsList>
 
         <div className="mt-6">
+          <TabsContent value="ai-agents">
+            <Card className="border-2 border-gray-100">
+              <CardContent className="p-6">
+                <AIAgentsConfigSection />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="avatar">
             <Card className="border-2 border-gray-100">
               <CardContent className="p-6">
