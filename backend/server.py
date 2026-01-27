@@ -4935,7 +4935,7 @@ async def get_tasks(
     if priority:
         query["priority"] = priority
     
-    tasks = await db.crm_tasks.find(query).sort("due_date", 1).to_list(200)
+    tasks = await db.crm_tasks.find(query, {"_id": 0}).sort("due_date", 1).to_list(200)
     
     # Group by status
     overdue = []
