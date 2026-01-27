@@ -58,6 +58,27 @@ export default function InstitutionDashboard() {
   const [cohortData, setCohortData] = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [selectedStudentAnalytics, setSelectedStudentAnalytics] = useState(null);
+  const [crmData, setCrmData] = useState(null);
+  const [crmLoading, setCrmLoading] = useState(false);
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [addLeadOpen, setAddLeadOpen] = useState(false);
+  const [addActivityOpen, setAddActivityOpen] = useState(false);
+  const [newLead, setNewLead] = useState({
+    institution_name: '',
+    contact_name: '',
+    email: '',
+    phone: '',
+    country: '',
+    students_count: '',
+    exam_types: [],
+    estimated_value: '',
+    notes: ''
+  });
+  const [newActivity, setNewActivity] = useState({
+    activity_type: 'call',
+    description: '',
+    outcome: ''
+  });
 
   useEffect(() => {
     fetchData();
