@@ -3560,6 +3560,345 @@ async def submit_trial_request(request_data: dict):
     
     return {"message": "Trial request received! We'll contact you within 24 hours.", "lead_id": lead_id}
 
+# ==================== B2B MARKETPLACE ====================
+
+class MarketplaceListingCreate(BaseModel):
+    title: str
+    description: str
+    category: str  # tutoring, materials, courses, exam_prep, teacher_training
+    price: float
+    price_type: str  # per_student, per_session, per_course, flat_fee
+    exam_types: Optional[List[str]] = []
+    language: Optional[str] = "en"
+    availability: Optional[str] = "available"  # available, limited, sold_out
+    min_quantity: Optional[int] = 1
+    max_quantity: Optional[int] = None
+    delivery_method: Optional[str] = "online"  # online, in_person, hybrid
+
+class MarketplaceListingUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    availability: Optional[str] = None
+    is_active: Optional[bool] = None
+
+MARKETPLACE_CATEGORIES = {
+    "tutoring": {"label": "Tutoring Services", "icon": "👨‍🏫"},
+    "materials": {"label": "Study Materials", "icon": "📚"},
+    "courses": {"label": "Full Courses", "icon": "🎓"},
+    "exam_prep": {"label": "Exam Preparation", "icon": "📝"},
+    "teacher_training": {"label": "Teacher Training", "icon": "👩‍🎓"},
+    "mock_exams": {"label": "Mock Exams", "icon": "✍️"},
+    "speaking_practice": {"label": "Speaking Practice", "icon": "🗣️"},
+    "writing_review": {"label": "Writing Review", "icon": "✏️"}
+}
+
+@api_router.get("/marketplace/categories")
+async def get_marketplace_categories():
+    """Get all marketplace categories"""
+    return {"categories": MARKETPLACE_CATEGORIES}
+
+@api_router.post("/marketplace/listings")
+async def create_marketplace_listing(listing: MarketplaceListingCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new marketplace listing"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can create listings")
+    
+    listing_id = str(uuid.uuid4())
+    
+    listing_doc = {
+        "id": listing_id,
+        "seller_id": current_user["id"],
+        "seller_name": current_user.get("institution_name", current_user.get("name", "")),
+        "seller_slug": current_user.get("institution_slug", ""),
+        "title": listing.title,
+        "description": listing.description,
+        "category": listing.category,
+        "price": listing.price,
+        "price_type": listing.price_type,
+        "exam_types": listing.exam_types,
+        "language": listing.language,
+        "availability": listing.availability,
+        "min_quantity": listing.min_quantity,
+        "max_quantity": listing.max_quantity,
+        "delivery_method": listing.delivery_method,
+        "rating": 0,
+        "reviews_count": 0,
+        "sales_count": 0,
+        "is_active": True,
+        "is_featured": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.marketplace_listings.insert_one(listing_doc)
+    
+    return {"id": listing_id, "message": "Listing created successfully", "listing": listing_doc}
+
+@api_router.get("/marketplace/listings")
+async def get_marketplace_listings(
+    category: Optional[str] = None,
+    exam_type: Optional[str] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    sort_by: Optional[str] = "newest"  # newest, price_low, price_high, rating, popular
+):
+    """Get all active marketplace listings"""
+    query = {"is_active": True}
+    
+    if category:
+        query["category"] = category
+    if exam_type:
+        query["exam_types"] = exam_type
+    if min_price is not None:
+        query["price"] = {"$gte": min_price}
+    if max_price is not None:
+        query["price"] = {**query.get("price", {}), "$lte": max_price}
+    
+    # Sorting
+    sort_field = "created_at"
+    sort_order = -1
+    if sort_by == "price_low":
+        sort_field = "price"
+        sort_order = 1
+    elif sort_by == "price_high":
+        sort_field = "price"
+        sort_order = -1
+    elif sort_by == "rating":
+        sort_field = "rating"
+        sort_order = -1
+    elif sort_by == "popular":
+        sort_field = "sales_count"
+        sort_order = -1
+    
+    listings = await db.marketplace_listings.find(query).sort(sort_field, sort_order).to_list(100)
+    
+    # Calculate stats
+    total_listings = await db.marketplace_listings.count_documents({"is_active": True})
+    featured_listings = [l for l in listings if l.get("is_featured")]
+    
+    return {
+        "total": len(listings),
+        "listings": [{
+            "id": l["id"],
+            "title": l["title"],
+            "description": l["description"],
+            "category": l["category"],
+            "category_info": MARKETPLACE_CATEGORIES.get(l["category"], {}),
+            "price": l["price"],
+            "price_type": l["price_type"],
+            "exam_types": l.get("exam_types", []),
+            "seller_name": l["seller_name"],
+            "seller_id": l["seller_id"],
+            "rating": l.get("rating", 0),
+            "reviews_count": l.get("reviews_count", 0),
+            "sales_count": l.get("sales_count", 0),
+            "availability": l.get("availability", "available"),
+            "delivery_method": l.get("delivery_method", "online"),
+            "is_featured": l.get("is_featured", False),
+            "created_at": l.get("created_at", "")
+        } for l in listings],
+        "featured": [{
+            "id": l["id"],
+            "title": l["title"],
+            "price": l["price"],
+            "seller_name": l["seller_name"],
+            "category": l["category"]
+        } for l in featured_listings],
+        "stats": {
+            "total_listings": total_listings,
+            "categories_count": len(set(l["category"] for l in listings))
+        }
+    }
+
+@api_router.get("/marketplace/listings/{listing_id}")
+async def get_marketplace_listing_detail(listing_id: str):
+    """Get detailed information about a listing"""
+    listing = await db.marketplace_listings.find_one({"id": listing_id})
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
+    # Get seller info
+    seller = await db.users.find_one({"id": listing["seller_id"]})
+    
+    # Get reviews
+    reviews = await db.marketplace_reviews.find({"listing_id": listing_id}).sort("created_at", -1).to_list(20)
+    
+    return {
+        "listing": {
+            "id": listing["id"],
+            "title": listing["title"],
+            "description": listing["description"],
+            "category": listing["category"],
+            "category_info": MARKETPLACE_CATEGORIES.get(listing["category"], {}),
+            "price": listing["price"],
+            "price_type": listing["price_type"],
+            "exam_types": listing.get("exam_types", []),
+            "availability": listing.get("availability", "available"),
+            "min_quantity": listing.get("min_quantity", 1),
+            "max_quantity": listing.get("max_quantity"),
+            "delivery_method": listing.get("delivery_method", "online"),
+            "rating": listing.get("rating", 0),
+            "reviews_count": listing.get("reviews_count", 0),
+            "sales_count": listing.get("sales_count", 0),
+            "created_at": listing.get("created_at", "")
+        },
+        "seller": {
+            "id": seller["id"] if seller else None,
+            "name": seller.get("institution_name", "") if seller else "",
+            "slug": seller.get("institution_slug", "") if seller else ""
+        },
+        "reviews": [{
+            "id": r["id"],
+            "rating": r["rating"],
+            "comment": r["comment"],
+            "buyer_name": r.get("buyer_name", ""),
+            "created_at": r.get("created_at", "")
+        } for r in reviews]
+    }
+
+@api_router.get("/marketplace/my-listings")
+async def get_my_marketplace_listings(current_user: dict = Depends(get_current_user)):
+    """Get listings created by the current user"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can have listings")
+    
+    listings = await db.marketplace_listings.find({"seller_id": current_user["id"]}).sort("created_at", -1).to_list(100)
+    
+    # Calculate total revenue from orders
+    orders = await db.marketplace_orders.find({"seller_id": current_user["id"], "status": "completed"}).to_list(1000)
+    total_revenue = sum(o.get("total_price", 0) for o in orders)
+    
+    return {
+        "total": len(listings),
+        "total_revenue": total_revenue,
+        "listings": [{
+            "id": l["id"],
+            "title": l["title"],
+            "category": l["category"],
+            "price": l["price"],
+            "price_type": l["price_type"],
+            "sales_count": l.get("sales_count", 0),
+            "rating": l.get("rating", 0),
+            "is_active": l.get("is_active", True),
+            "availability": l.get("availability", "available"),
+            "created_at": l.get("created_at", "")
+        } for l in listings]
+    }
+
+@api_router.put("/marketplace/listings/{listing_id}")
+async def update_marketplace_listing(listing_id: str, updates: MarketplaceListingUpdate, current_user: dict = Depends(get_current_user)):
+    """Update a marketplace listing"""
+    listing = await db.marketplace_listings.find_one({"id": listing_id, "seller_id": current_user["id"]})
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found or not owned by you")
+    
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if updates.title:
+        update_data["title"] = updates.title
+    if updates.description:
+        update_data["description"] = updates.description
+    if updates.price is not None:
+        update_data["price"] = updates.price
+    if updates.availability:
+        update_data["availability"] = updates.availability
+    if updates.is_active is not None:
+        update_data["is_active"] = updates.is_active
+    
+    await db.marketplace_listings.update_one({"id": listing_id}, {"$set": update_data})
+    
+    return {"message": "Listing updated successfully"}
+
+@api_router.delete("/marketplace/listings/{listing_id}")
+async def delete_marketplace_listing(listing_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a marketplace listing"""
+    result = await db.marketplace_listings.delete_one({"id": listing_id, "seller_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Listing not found or not owned by you")
+    
+    return {"message": "Listing deleted successfully"}
+
+@api_router.post("/marketplace/orders")
+async def create_marketplace_order(order_data: dict, current_user: dict = Depends(get_current_user)):
+    """Create an order for a marketplace listing"""
+    listing = await db.marketplace_listings.find_one({"id": order_data.get("listing_id")})
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
+    if listing.get("availability") == "sold_out":
+        raise HTTPException(status_code=400, detail="This listing is sold out")
+    
+    quantity = order_data.get("quantity", 1)
+    total_price = listing["price"] * quantity
+    
+    # Platform commission (10%)
+    commission = total_price * 0.10
+    seller_amount = total_price - commission
+    
+    order_id = str(uuid.uuid4())
+    
+    order_doc = {
+        "id": order_id,
+        "listing_id": listing["id"],
+        "listing_title": listing["title"],
+        "seller_id": listing["seller_id"],
+        "seller_name": listing["seller_name"],
+        "buyer_id": current_user["id"],
+        "buyer_name": current_user.get("institution_name", current_user.get("name", "")),
+        "quantity": quantity,
+        "unit_price": listing["price"],
+        "total_price": total_price,
+        "commission": commission,
+        "seller_amount": seller_amount,
+        "status": "pending",  # pending, confirmed, completed, cancelled
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.marketplace_orders.insert_one(order_doc)
+    
+    # Update listing sales count
+    await db.marketplace_listings.update_one(
+        {"id": listing["id"]},
+        {"$inc": {"sales_count": quantity}}
+    )
+    
+    return {"order_id": order_id, "message": "Order created successfully", "order": order_doc}
+
+@api_router.get("/marketplace/orders")
+async def get_my_orders(current_user: dict = Depends(get_current_user)):
+    """Get orders for the current user (as buyer or seller)"""
+    
+    # Get orders as buyer
+    buyer_orders = await db.marketplace_orders.find({"buyer_id": current_user["id"]}).sort("created_at", -1).to_list(100)
+    
+    # Get orders as seller
+    seller_orders = await db.marketplace_orders.find({"seller_id": current_user["id"]}).sort("created_at", -1).to_list(100)
+    
+    return {
+        "as_buyer": [{
+            "id": o["id"],
+            "listing_title": o["listing_title"],
+            "seller_name": o["seller_name"],
+            "quantity": o["quantity"],
+            "total_price": o["total_price"],
+            "status": o["status"],
+            "created_at": o["created_at"]
+        } for o in buyer_orders],
+        "as_seller": [{
+            "id": o["id"],
+            "listing_title": o["listing_title"],
+            "buyer_name": o["buyer_name"],
+            "quantity": o["quantity"],
+            "total_price": o["total_price"],
+            "seller_amount": o["seller_amount"],
+            "commission": o["commission"],
+            "status": o["status"],
+            "created_at": o["created_at"]
+        } for o in seller_orders]
+    }
+
 # ==================== HEALTH CHECK ====================
 
 @api_router.get("/")
