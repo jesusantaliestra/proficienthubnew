@@ -173,11 +173,12 @@ class TestCRMSupremeIntegration(TestCRMSupremeAuth):
         rules = rules_res.json()["rules"]
         print(f"✓ Step 2: Retrieved {len(rules)} automation rules")
         
-        # 3. Get tasks
+        # 3. Get tasks (returns grouped structure)
         tasks_res = requests.get(f"{BASE_URL}/api/crm/tasks", headers=auth_headers)
         assert tasks_res.status_code == 200
-        tasks = tasks_res.json()["tasks"]
-        print(f"✓ Step 3: Retrieved {len(tasks)} tasks")
+        tasks_data = tasks_res.json()
+        total_tasks = tasks_data["stats"]["total_pending"]
+        print(f"✓ Step 3: Retrieved tasks - {total_tasks} pending")
         
         print("✓ Full CRM Supreme workflow completed successfully")
 
