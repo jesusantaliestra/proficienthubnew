@@ -796,6 +796,242 @@ export default function InstitutionDashboard() {
             </div>
           )}
           
+          {/* B2B Marketplace Tab */}
+          {activeTab === 'marketplace' && (
+            <div className="space-y-6 animate-fade-in" data-testid="marketplace-tab">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-extrabold text-gray-900">B2B Academy Marketplace</h2>
+                  <p className="text-gray-500">Buy and sell services to other academies</p>
+                </div>
+                <div className="flex gap-2">
+                  <Dialog open={addListingOpen} onOpenChange={setAddListingOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="btn-duo flex items-center gap-2">
+                        <Plus className="w-4 h-4" />
+                        Sell Service
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-white border-2 border-gray-200 rounded-2xl max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="text-gray-900 font-extrabold">Create New Listing</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={handleCreateListing} className="space-y-4">
+                        <div>
+                          <Label>Title *</Label>
+                          <Input
+                            value={newListing.title}
+                            onChange={(e) => setNewListing({...newListing, title: e.target.value})}
+                            required
+                            className="input-duo"
+                            placeholder="e.g., IELTS Speaking Practice Sessions"
+                          />
+                        </div>
+                        <div>
+                          <Label>Category *</Label>
+                          <Select 
+                            value={newListing.category} 
+                            onValueChange={(v) => setNewListing({...newListing, category: v})}
+                          >
+                            <SelectTrigger className="input-duo">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="tutoring">👨‍🏫 Tutoring Services</SelectItem>
+                              <SelectItem value="materials">📚 Study Materials</SelectItem>
+                              <SelectItem value="courses">🎓 Full Courses</SelectItem>
+                              <SelectItem value="exam_prep">📝 Exam Preparation</SelectItem>
+                              <SelectItem value="teacher_training">👩‍🎓 Teacher Training</SelectItem>
+                              <SelectItem value="mock_exams">✍️ Mock Exams</SelectItem>
+                              <SelectItem value="speaking_practice">🗣️ Speaking Practice</SelectItem>
+                              <SelectItem value="writing_review">✏️ Writing Review</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Price ($) *</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={newListing.price}
+                              onChange={(e) => setNewListing({...newListing, price: e.target.value})}
+                              required
+                              className="input-duo"
+                              placeholder="29.99"
+                            />
+                          </div>
+                          <div>
+                            <Label>Price Type</Label>
+                            <Select 
+                              value={newListing.price_type} 
+                              onValueChange={(v) => setNewListing({...newListing, price_type: v})}
+                            >
+                              <SelectTrigger className="input-duo">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="per_student">Per Student</SelectItem>
+                                <SelectItem value="per_session">Per Session</SelectItem>
+                                <SelectItem value="per_course">Per Course</SelectItem>
+                                <SelectItem value="flat_fee">Flat Fee</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div>
+                          <Label>Delivery Method</Label>
+                          <Select 
+                            value={newListing.delivery_method} 
+                            onValueChange={(v) => setNewListing({...newListing, delivery_method: v})}
+                          >
+                            <SelectTrigger className="input-duo">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="online">🌐 Online</SelectItem>
+                              <SelectItem value="in_person">🏢 In Person</SelectItem>
+                              <SelectItem value="hybrid">🔄 Hybrid</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Description *</Label>
+                          <Textarea
+                            value={newListing.description}
+                            onChange={(e) => setNewListing({...newListing, description: e.target.value})}
+                            required
+                            className="input-duo"
+                            rows={3}
+                            placeholder="Describe what you're offering..."
+                          />
+                        </div>
+                        <Button type="submit" className="btn-duo w-full">Create Listing</Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+
+              {marketplaceLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="w-12 h-12 border-4 border-[#58CC02] border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <>
+                  {/* Category Filters */}
+                  <div className="flex gap-2 flex-wrap">
+                    <Button 
+                      size="sm" 
+                      variant={selectedCategory === 'all' ? 'default' : 'outline'}
+                      onClick={() => setSelectedCategory('all')}
+                      className={selectedCategory === 'all' ? 'bg-[#58CC02] hover:bg-[#46a302]' : ''}
+                    >
+                      All
+                    </Button>
+                    {['tutoring', 'materials', 'courses', 'exam_prep', 'speaking_practice', 'writing_review'].map((cat) => (
+                      <Button 
+                        key={cat}
+                        size="sm" 
+                        variant={selectedCategory === cat ? 'default' : 'outline'}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={selectedCategory === cat ? 'bg-[#58CC02] hover:bg-[#46a302]' : ''}
+                      >
+                        {cat.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                      </Button>
+                    ))}
+                  </div>
+
+                  {/* My Listings Section */}
+                  {myListings.length > 0 && (
+                    <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-2xl">
+                      <CardHeader>
+                        <CardTitle className="text-gray-900 font-extrabold flex items-center gap-2">
+                          <Package className="w-5 h-5 text-purple-600" />
+                          My Listings ({myListings.length})
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {myListings.map((listing) => (
+                            <div key={listing.id} className="bg-white rounded-xl p-4 border border-purple-100">
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge variant="outline" className="text-purple-600 border-purple-200">{listing.category}</Badge>
+                                <span className="font-bold text-green-600">${listing.price}</span>
+                              </div>
+                              <h4 className="font-bold text-gray-900 truncate">{listing.title}</h4>
+                              <div className="flex items-center justify-between mt-3 text-sm text-gray-500">
+                                <span>🛒 {listing.sales_count} sales</span>
+                                <span>⭐ {listing.rating || 'No ratings'}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* All Marketplace Listings */}
+                  <Card className="bg-white border-2 border-gray-100 rounded-2xl">
+                    <CardHeader>
+                      <CardTitle className="text-gray-900 font-extrabold flex items-center gap-2">
+                        <Store className="w-5 h-5 text-[#58CC02]" />
+                        Marketplace Listings ({marketplaceData?.total || 0})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {marketplaceData?.listings?.length > 0 ? (
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {marketplaceData.listings.map((listing) => (
+                            <div key={listing.id} className="bg-gray-50 rounded-xl p-4 hover:shadow-md transition-shadow border border-gray-100">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-2xl">{listing.category_info?.icon || '📦'}</span>
+                                {listing.is_featured && (
+                                  <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200">⭐ Featured</Badge>
+                                )}
+                              </div>
+                              <h4 className="font-bold text-gray-900 mb-1">{listing.title}</h4>
+                              <p className="text-sm text-gray-500 line-clamp-2 mb-3">{listing.description}</p>
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <span className="text-xl font-extrabold text-green-600">${listing.price}</span>
+                                  <span className="text-xs text-gray-400 ml-1">/{listing.price_type?.replace('_', ' ')}</span>
+                                </div>
+                                <Badge variant="outline" className="text-xs">{listing.delivery_method}</Badge>
+                              </div>
+                              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
+                                <span className="text-xs text-gray-500">{listing.seller_name}</span>
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                  <span className="flex items-center gap-1">
+                                    <Star className="w-3 h-3 text-yellow-500" /> {listing.rating || '0'}
+                                  </span>
+                                  <span>•</span>
+                                  <span>{listing.sales_count} sold</span>
+                                </div>
+                              </div>
+                              <Button size="sm" variant="outline" className="w-full mt-3">
+                                <ShoppingCart className="w-3 h-3 mr-2" /> View Details
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12">
+                          <Store className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                          <h3 className="text-lg font-bold text-gray-700 mb-2">No listings yet</h3>
+                          <p className="text-gray-500 mb-4">Be the first to offer your services!</p>
+                          <Button onClick={() => setAddListingOpen(true)} className="btn-duo">
+                            <Plus className="w-4 h-4 mr-2" /> Create Your First Listing
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
+          )}
+          
           {activeTab === 'library' && (
             <div className="space-y-6 animate-fade-in" data-testid="library-tab">
               <div className="flex items-center justify-between">
