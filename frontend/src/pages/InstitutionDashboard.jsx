@@ -1209,6 +1209,324 @@ export default function InstitutionDashboard() {
             </div>
           )}
           
+          {/* CRM & Sales Pipeline Tab */}
+          {activeTab === 'crm' && (
+            <div className="space-y-6 animate-fade-in" data-testid="crm-tab">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-extrabold text-gray-900">CRM & Sales Pipeline</h2>
+                <div className="flex gap-2">
+                  <Button onClick={fetchCrmData} variant="outline" disabled={crmLoading}>
+                    {crmLoading ? 'Loading...' : 'Refresh'}
+                  </Button>
+                  <Dialog open={addLeadOpen} onOpenChange={setAddLeadOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="btn-duo flex items-center gap-2">
+                        <Plus className="w-4 h-4" />
+                        Add Lead
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-white border-2 border-gray-200 rounded-2xl max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="text-gray-900 font-extrabold">Add New Lead</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={handleCreateLead} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="col-span-2">
+                            <Label>Institution Name *</Label>
+                            <Input
+                              value={newLead.institution_name}
+                              onChange={(e) => setNewLead({...newLead, institution_name: e.target.value})}
+                              required
+                              className="input-duo"
+                            />
+                          </div>
+                          <div>
+                            <Label>Contact Name *</Label>
+                            <Input
+                              value={newLead.contact_name}
+                              onChange={(e) => setNewLead({...newLead, contact_name: e.target.value})}
+                              required
+                              className="input-duo"
+                            />
+                          </div>
+                          <div>
+                            <Label>Email *</Label>
+                            <Input
+                              type="email"
+                              value={newLead.email}
+                              onChange={(e) => setNewLead({...newLead, email: e.target.value})}
+                              required
+                              className="input-duo"
+                            />
+                          </div>
+                          <div>
+                            <Label>Phone</Label>
+                            <Input
+                              value={newLead.phone}
+                              onChange={(e) => setNewLead({...newLead, phone: e.target.value})}
+                              className="input-duo"
+                            />
+                          </div>
+                          <div>
+                            <Label>Country</Label>
+                            <Input
+                              value={newLead.country}
+                              onChange={(e) => setNewLead({...newLead, country: e.target.value})}
+                              className="input-duo"
+                            />
+                          </div>
+                          <div>
+                            <Label>Est. Students</Label>
+                            <Input
+                              type="number"
+                              value={newLead.students_count}
+                              onChange={(e) => setNewLead({...newLead, students_count: e.target.value})}
+                              className="input-duo"
+                            />
+                          </div>
+                          <div>
+                            <Label>Est. Deal Value ($)</Label>
+                            <Input
+                              type="number"
+                              value={newLead.estimated_value}
+                              onChange={(e) => setNewLead({...newLead, estimated_value: e.target.value})}
+                              className="input-duo"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <Label>Notes</Label>
+                            <Textarea
+                              value={newLead.notes}
+                              onChange={(e) => setNewLead({...newLead, notes: e.target.value})}
+                              className="input-duo"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                        <Button type="submit" className="btn-duo w-full">Create Lead</Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+
+              {crmLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="w-12 h-12 border-4 border-[#58CC02] border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <>
+                  {/* CRM Stats */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-3xl font-extrabold">{crmData?.stats?.total_leads || 0}</div>
+                        <div className="text-sm opacity-90">Total Leads</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-3xl font-extrabold">${(crmData?.stats?.pipeline_value || 0).toLocaleString()}</div>
+                        <div className="text-sm opacity-90">Pipeline Value</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-3xl font-extrabold">${(crmData?.stats?.won_value || 0).toLocaleString()}</div>
+                        <div className="text-sm opacity-90">Won Value</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-3xl font-extrabold">{crmData?.stats?.conversion_rate || 0}%</div>
+                        <div className="text-sm opacity-90">Conversion Rate</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Sales Pipeline Kanban */}
+                  <Card className="bg-white border-2 border-gray-100 rounded-2xl">
+                    <CardHeader>
+                      <CardTitle className="text-gray-900 font-extrabold">Sales Pipeline</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex gap-4 overflow-x-auto pb-4">
+                        {crmData?.stages && Object.entries(crmData.stages).map(([stageId, stageInfo]) => (
+                          <div key={stageId} className="min-w-[280px] flex-shrink-0">
+                            <div 
+                              className="rounded-t-xl px-4 py-2 text-white font-bold text-sm flex items-center justify-between"
+                              style={{ backgroundColor: stageInfo.color }}
+                            >
+                              <span>{stageInfo.label}</span>
+                              <Badge className="bg-white/20 text-white border-0">
+                                {crmData?.pipeline?.[stageId]?.length || 0}
+                              </Badge>
+                            </div>
+                            <div className="bg-gray-50 rounded-b-xl p-3 min-h-[300px] space-y-3">
+                              {crmData?.pipeline?.[stageId]?.map((lead) => (
+                                <div 
+                                  key={lead.id}
+                                  className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+                                  onClick={() => setSelectedLead(lead)}
+                                >
+                                  <div className="font-bold text-gray-900 text-sm truncate">{lead.institution_name}</div>
+                                  <div className="text-xs text-gray-500 truncate">{lead.contact_name}</div>
+                                  <div className="flex items-center justify-between mt-2">
+                                    <span className="text-xs text-gray-400">{lead.country || 'N/A'}</span>
+                                    <span className="text-sm font-bold text-green-600">${(lead.estimated_value || 0).toLocaleString()}</span>
+                                  </div>
+                                  {lead.students_count > 0 && (
+                                    <div className="mt-2 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full inline-block">
+                                      {lead.students_count} students
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                              {(!crmData?.pipeline?.[stageId] || crmData.pipeline[stageId].length === 0) && (
+                                <div className="text-center text-gray-400 text-sm py-8">No leads</div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Lead Detail Modal */}
+                  {selectedLead && (
+                    <Dialog open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
+                      <DialogContent className="bg-white border-2 border-gray-200 rounded-2xl max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle className="text-gray-900 font-extrabold flex items-center gap-2">
+                            <Target className="w-5 h-5 text-[#58CC02]" />
+                            {selectedLead.institution_name}
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          {/* Lead Info */}
+                          <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl">
+                            <div>
+                              <p className="text-xs text-gray-500">Contact</p>
+                              <p className="font-semibold">{selectedLead.contact_name}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Email</p>
+                              <p className="font-semibold">{selectedLead.email}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Phone</p>
+                              <p className="font-semibold">{selectedLead.phone || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Country</p>
+                              <p className="font-semibold">{selectedLead.country || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Est. Students</p>
+                              <p className="font-semibold">{selectedLead.students_count || 0}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Deal Value</p>
+                              <p className="font-semibold text-green-600">${(selectedLead.estimated_value || 0).toLocaleString()}</p>
+                            </div>
+                          </div>
+
+                          {/* Stage Selector */}
+                          <div>
+                            <Label className="text-gray-700 font-semibold mb-2 block">Move to Stage</Label>
+                            <div className="flex flex-wrap gap-2">
+                              {crmData?.stages && Object.entries(crmData.stages).map(([stageId, stageInfo]) => (
+                                <Button
+                                  key={stageId}
+                                  size="sm"
+                                  variant={selectedLead.stage === stageId ? "default" : "outline"}
+                                  onClick={() => handleUpdateLeadStage(selectedLead.id, stageId)}
+                                  style={{ 
+                                    backgroundColor: selectedLead.stage === stageId ? stageInfo.color : 'transparent',
+                                    borderColor: stageInfo.color,
+                                    color: selectedLead.stage === stageId ? 'white' : stageInfo.color
+                                  }}
+                                >
+                                  {stageInfo.label}
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Add Activity */}
+                          <div className="border-t pt-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <Label className="text-gray-700 font-semibold">Activities</Label>
+                              <Dialog open={addActivityOpen} onOpenChange={setAddActivityOpen}>
+                                <DialogTrigger asChild>
+                                  <Button size="sm" variant="outline" className="flex items-center gap-1">
+                                    <Plus className="w-3 h-3" /> Add Activity
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="bg-white rounded-xl">
+                                  <DialogHeader>
+                                    <DialogTitle>Add Activity</DialogTitle>
+                                  </DialogHeader>
+                                  <form onSubmit={handleAddActivity} className="space-y-4">
+                                    <div>
+                                      <Label>Activity Type</Label>
+                                      <Select 
+                                        value={newActivity.activity_type} 
+                                        onValueChange={(v) => setNewActivity({...newActivity, activity_type: v})}
+                                      >
+                                        <SelectTrigger className="input-duo">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="call">📞 Call</SelectItem>
+                                          <SelectItem value="email">📧 Email</SelectItem>
+                                          <SelectItem value="meeting">🤝 Meeting</SelectItem>
+                                          <SelectItem value="demo">🖥️ Demo</SelectItem>
+                                          <SelectItem value="note">📝 Note</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div>
+                                      <Label>Description</Label>
+                                      <Textarea
+                                        value={newActivity.description}
+                                        onChange={(e) => setNewActivity({...newActivity, description: e.target.value})}
+                                        required
+                                        className="input-duo"
+                                        rows={3}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label>Outcome</Label>
+                                      <Input
+                                        value={newActivity.outcome}
+                                        onChange={(e) => setNewActivity({...newActivity, outcome: e.target.value})}
+                                        className="input-duo"
+                                        placeholder="e.g., Scheduled demo for Friday"
+                                      />
+                                    </div>
+                                    <Button type="submit" className="btn-duo w-full">Add Activity</Button>
+                                  </form>
+                                </DialogContent>
+                              </Dialog>
+                            </div>
+                            <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                              {selectedLead.activities_count > 0 ? (
+                                <p className="text-sm text-gray-500">{selectedLead.activities_count} activities recorded</p>
+                              ) : (
+                                <p className="text-sm text-gray-400 text-center py-4">No activities yet</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+          
           {activeTab === 'exams' && (
             <div className="space-y-6 animate-fade-in" data-testid="exams-tab">
               <h2 className="text-2xl font-extrabold text-gray-900">Exam Management</h2>
