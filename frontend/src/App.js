@@ -18,6 +18,7 @@ import StudentPortal from './pages/StudentPortal';
 import ChangePassword from './pages/ChangePassword';
 import IncomeCalculator from './pages/IncomeCalculator';
 import ExamBankAdmin from './pages/ExamBankAdmin';
+import WhiteLabelSettings from './pages/WhiteLabelSettings';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
