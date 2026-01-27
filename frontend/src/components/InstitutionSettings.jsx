@@ -6,14 +6,238 @@ import { Label } from '../components/ui/label';
 import { Switch } from '../components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Badge } from '../components/ui/badge';
+import { Progress } from '../components/ui/progress';
 import {
   Video, Mail, Trophy, Settings, Save, TestTube, CheckCircle, XCircle,
-  Eye, EyeOff, AlertTriangle, Zap, Users, Gift, Flame
+  Eye, EyeOff, AlertTriangle, Zap, Users, Gift, Flame, Bot, Sparkles
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+// Avatar/HeyGen Configuration Section
+const AvatarConfigSection = ({ config, onSave }) => {
+  const [avatarConfig, setAvatarConfig] = useState({
+    avatar_mode: config?.avatar_mode || 'simple',
+    default_avatar_style: config?.default_avatar_style || 'teacher',
+    heygen_enabled: config?.heygen_enabled || false,
+    heygen_api_key: config?.heygen_api_key || '',
+    heygen_avatar_id: config?.heygen_avatar_id || 'sarah',
+    heygen_voice_id: config?.heygen_voice_id || 'en-US-1',
+    heygen_monthly_limit: config?.heygen_monthly_limit || 100,
+  });
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [usage, setUsage] = useState({ credits_used: 0, credits_limit: 100 });
+
+  useEffect(() => {
+    fetchUsage();
+  }, []);
+
+  const fetchUsage = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/avatar/heygen/usage`);
+      setUsage(response.data);
+    } catch (error) {
+      console.error('Failed to fetch HeyGen usage:', error);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      await onSave('avatar', avatarConfig);
+      toast.success('Avatar settings saved!');
+    } catch (error) {
+      toast.error('Failed to save avatar settings');
+    }
+  };
+
+  const avatarStyles = [
+    { id: 'teacher', name: 'Prof. Smith', icon: '👨‍🏫' },
+    { id: 'female_teacher', name: 'Ms. Johnson', icon: '👩‍🏫' },
+    { id: 'friendly', name: 'Alex', icon: '🧑‍💼' },
+  ];
+
+  const heygenAvatars = [
+    { id: 'sarah', name: 'Sarah (Professional)' },
+    { id: 'james', name: 'James (Casual)' },
+    { id: 'maya', name: 'Maya (Friendly)' },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+            <Bot className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900">AI Avatar for Speaking Practice</h3>
+            <p className="text-sm text-gray-500">Configure the AI tutor avatar for your students</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Avatar Mode Selection */}
+      <div className="bg-gray-50 rounded-xl p-4">
+        <Label className="font-semibold mb-3 block">Avatar Type</Label>
+        <div className="grid grid-cols-2 gap-4">
+          <div 
+            onClick={() => setAvatarConfig({...avatarConfig, avatar_mode: 'simple', heygen_enabled: false})}
+            className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              avatarConfig.avatar_mode === 'simple' 
+                ? 'border-[#58CC02] bg-green-50' 
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <div className="text-center">
+              <span className="text-4xl block mb-2">🎭</span>
+              <h4 className="font-bold text-gray-900">Animated Avatar</h4>
+              <p className="text-xs text-gray-500 mt-1">Free - Simple animated characters</p>
+              <Badge className="mt-2 bg-green-100 text-green-700">Recommended</Badge>
+            </div>
+          </div>
+          
+          <div 
+            onClick={() => setAvatarConfig({...avatarConfig, avatar_mode: 'heygen', heygen_enabled: true})}
+            className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              avatarConfig.avatar_mode === 'heygen' 
+                ? 'border-purple-500 bg-purple-50' 
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <div className="text-center">
+              <span className="text-4xl block mb-2">🎬</span>
+              <h4 className="font-bold text-gray-900">HeyGen AI Avatar</h4>
+              <p className="text-xs text-gray-500 mt-1">Premium - Realistic AI videos</p>
+              <Badge className="mt-2 bg-purple-100 text-purple-700">Premium</Badge>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Simple Avatar Style Selection */}
+      {avatarConfig.avatar_mode === 'simple' && (
+        <div>
+          <Label className="font-semibold mb-3 block">Default Avatar Style</Label>
+          <div className="grid grid-cols-3 gap-3">
+            {avatarStyles.map((style) => (
+              <div
+                key={style.id}
+                onClick={() => setAvatarConfig({...avatarConfig, default_avatar_style: style.id})}
+                className={`p-4 rounded-xl border-2 cursor-pointer text-center transition-all ${
+                  avatarConfig.default_avatar_style === style.id 
+                    ? 'border-[#58CC02] bg-green-50' 
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <span className="text-3xl block mb-2">{style.icon}</span>
+                <span className="text-sm font-medium">{style.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* HeyGen Configuration */}
+      {avatarConfig.avatar_mode === 'heygen' && (
+        <div className="space-y-4">
+          <div className="bg-purple-50 rounded-xl p-4">
+            <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              HeyGen Premium Setup
+            </h4>
+            <ol className="text-sm text-purple-800 space-y-1 list-decimal list-inside">
+              <li>Create an account at <a href="https://heygen.com" target="_blank" rel="noopener noreferrer" className="underline">heygen.com</a></li>
+              <li>Go to Settings &rarr; API and copy your API key</li>
+              <li>Choose your preferred avatar and voice</li>
+            </ol>
+          </div>
+
+          <div>
+            <Label>HeyGen API Key</Label>
+            <div className="relative">
+              <Input
+                type={showApiKey ? 'text' : 'password'}
+                value={avatarConfig.heygen_api_key}
+                onChange={(e) => setAvatarConfig({...avatarConfig, heygen_api_key: e.target.value})}
+                placeholder="Your HeyGen API key"
+                className="input-duo pr-10"
+                data-testid="heygen-api-key"
+              />
+              <button
+                type="button"
+                onClick={() => setShowApiKey(!showApiKey)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Avatar</Label>
+              <select 
+                value={avatarConfig.heygen_avatar_id}
+                onChange={(e) => setAvatarConfig({...avatarConfig, heygen_avatar_id: e.target.value})}
+                className="w-full h-10 px-3 border-2 border-gray-200 rounded-xl focus:border-[#58CC02] outline-none"
+              >
+                {heygenAvatars.map(avatar => (
+                  <option key={avatar.id} value={avatar.id}>{avatar.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>Monthly Credit Limit</Label>
+              <Input
+                type="number"
+                value={avatarConfig.heygen_monthly_limit}
+                onChange={(e) => setAvatarConfig({...avatarConfig, heygen_monthly_limit: parseInt(e.target.value)})}
+                className="input-duo"
+                min="10"
+                max="1000"
+              />
+            </div>
+          </div>
+
+          {/* Usage Display */}
+          <div className="bg-gray-50 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-gray-700">Credits Used This Month</Label>
+              <span className="text-sm font-bold text-gray-900">
+                {usage.credits_used} / {usage.credits_limit}
+              </span>
+            </div>
+            <Progress 
+              value={(usage.credits_used / usage.credits_limit) * 100} 
+              className="h-2"
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              ~${(usage.credits_used * 0.99).toFixed(2)} cost absorbed by your plan
+            </p>
+          </div>
+
+          <div className="bg-amber-50 rounded-xl p-4 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm text-amber-800 font-medium">Cost Control</p>
+              <p className="text-xs text-amber-700">
+                HeyGen credits are included in your institutional plan. Set a monthly limit to control usage. 
+                1 credit ≈ 30 seconds of video.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Button onClick={handleSave} className="btn-duo" data-testid="save-avatar">
+        <Save className="w-4 h-4 mr-2" />
+        Save Avatar Settings
+      </Button>
+    </div>
+  );
+};
 
 // Zoom Configuration Section
 const ZoomConfigSection = ({ config, onSave }) => {
