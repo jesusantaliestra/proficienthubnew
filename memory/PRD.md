@@ -17,27 +17,37 @@
 - **Leaderboard**: Institution-wide ranking by XP
 - **Weekly Challenges**: 3 customizable challenges with progress tracking
 
+### 🤖 AI Avatar System (NEW)
+- **Dual-Mode Architecture**:
+  - **Animated Avatar (Free)**: Default option with 3 character styles (Prof. Smith, Ms. Johnson, Alex)
+  - **HeyGen Premium**: Realistic AI video avatars for institutions that enable it
+- **HeyGen Integration**:
+  - API Key configuration per institution
+  - Avatar selection (Sarah, James, Maya)
+  - Voice selection
+  - Monthly credit limit with usage tracking
+  - Cost control with warnings
+  - Video generation and status polling
+- **Usage Dashboard**: Shows credits used vs limit, estimated costs absorbed
+
 ### ⚙️ Institution Settings (New Tab)
+- **Avatar Tab** (NEW):
+  - Toggle between Animated (free) and HeyGen (premium)
+  - Avatar style selection for animated mode
+  - HeyGen API configuration with usage tracking
+  - Cost control warnings
 - **Zoom Integration**:
   - Zoom Account ID, Client ID, Client Secret configuration
   - Enable/disable toggle
   - Test Connection button
-  - Instructions for obtaining Zoom credentials
 - **Email SMTP Configuration**:
   - SMTP Host, Port, Username, Password
-  - From Email, From Name
-  - Use TLS toggle
   - Quick presets: Gmail, Outlook, SendGrid, Mailgun
   - Send Test Email functionality
 - **Gamification Settings**:
   - Master enable/disable toggle
-  - Leaderboard, Badges, Challenges sub-toggles
-  - XP per Full Exam (default 50)
-  - XP per Section Practice (default 20)
-  - XP per AI Tutor Session (default 15)
-  - XP per Live Class (default 30)
-  - Streak Bonus Multiplier (default 1.5x)
-  - Weekly Challenges Count
+  - XP per activity configuration
+  - Streak bonus multiplier
 
 ### 🎮 Gamification System
 - **XP System**: Earn XP for exams, sections, tutor sessions, live classes
