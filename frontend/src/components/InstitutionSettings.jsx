@@ -154,30 +154,9 @@ const AvatarConfigSection = ({ config, onSave }) => {
             </ol>
           </div>
 
-          <div>
-            <Label>HeyGen API Key</Label>
-            <div className="relative">
-              <Input
-                type={showApiKey ? 'text' : 'password'}
-                value={avatarConfig.heygen_api_key}
-                onChange={(e) => setAvatarConfig({...avatarConfig, heygen_api_key: e.target.value})}
-                placeholder="Your HeyGen API key"
-                className="input-duo pr-10"
-                data-testid="heygen-api-key"
-              />
-              <button
-                type="button"
-                onClick={() => setShowApiKey(!showApiKey)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Avatar</Label>
+              <Label>Avatar Style</Label>
               <select 
                 value={avatarConfig.heygen_avatar_id}
                 onChange={(e) => setAvatarConfig({...avatarConfig, heygen_avatar_id: e.target.value})}
@@ -198,6 +177,38 @@ const AvatarConfigSection = ({ config, onSave }) => {
                 min="10"
                 max="1000"
               />
+            </div>
+          </div>
+
+          {/* Free Minutes for Students */}
+          <div className="bg-green-50 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Gift className="w-5 h-5 text-green-600" />
+              <Label className="font-semibold text-green-900">Free Premium Minutes for Students</Label>
+            </div>
+            <p className="text-xs text-green-700 mb-3">
+              Offer free premium AI tutor minutes to attract and convert students. Uses your credit pool.
+            </p>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <Label className="text-sm">Free minutes per student</Label>
+                <Input
+                  type="number"
+                  value={avatarConfig.free_minutes_per_student || 5}
+                  onChange={(e) => setAvatarConfig({...avatarConfig, free_minutes_per_student: parseInt(e.target.value)})}
+                  className="input-duo"
+                  min="0"
+                  max="60"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="free-minutes-enabled"
+                  checked={avatarConfig.free_minutes_enabled || false}
+                  onCheckedChange={(checked) => setAvatarConfig({...avatarConfig, free_minutes_enabled: checked})}
+                />
+                <Label htmlFor="free-minutes-enabled" className="text-sm">Enable</Label>
+              </div>
             </div>
           </div>
 
