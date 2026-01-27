@@ -26,8 +26,9 @@ const AvatarConfigSection = ({ config, onSave }) => {
     heygen_avatar_id: config?.heygen_avatar_id || 'sarah',
     heygen_voice_id: config?.heygen_voice_id || 'en-US-1',
     heygen_monthly_limit: config?.heygen_monthly_limit || 100,
+    free_minutes_per_student: config?.free_minutes_per_student || 5,
+    free_minutes_enabled: config?.free_minutes_enabled || false,
   });
-  const [showApiKey, setShowApiKey] = useState(false);
   const [usage, setUsage] = useState({ credits_used: 0, credits_limit: 100 });
 
   useEffect(() => {
