@@ -79,6 +79,20 @@ export default function InstitutionDashboard() {
     description: '',
     outcome: ''
   });
+  const [marketplaceData, setMarketplaceData] = useState(null);
+  const [myListings, setMyListings] = useState([]);
+  const [marketplaceLoading, setMarketplaceLoading] = useState(false);
+  const [addListingOpen, setAddListingOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [newListing, setNewListing] = useState({
+    title: '',
+    description: '',
+    category: 'tutoring',
+    price: '',
+    price_type: 'per_student',
+    exam_types: [],
+    delivery_method: 'online'
+  });
 
   useEffect(() => {
     fetchData();
