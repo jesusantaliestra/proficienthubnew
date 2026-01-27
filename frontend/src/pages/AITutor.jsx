@@ -38,6 +38,9 @@ export default function AITutor() {
     toefl: { name: 'TOEFL', color: 'bg-blue-500', description: 'Academic English for US universities' },
     ielts: { name: 'IELTS', color: 'bg-red-500', description: 'International English testing' },
     cambridge: { name: 'Cambridge', color: 'bg-purple-500', description: 'Comprehensive English qualifications' },
+    trinity: { name: 'Trinity', color: 'bg-pink-500', description: 'Trinity College London GESE & ISE exams' },
+    toeic: { name: 'TOEIC', color: 'bg-indigo-500', description: 'Business & workplace English' },
+    celpip: { name: 'CELPIP', color: 'bg-cyan-500', description: 'Canadian immigration & citizenship' },
     pte: { name: 'PTE', color: 'bg-orange-500', description: 'Computer-based testing' },
     oet: { name: 'OET', color: 'bg-green-500', description: 'Healthcare professionals' }
   };

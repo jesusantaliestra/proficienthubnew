@@ -49,6 +49,9 @@ export default function StudentDashboard() {
     { id: 'toefl', name: 'TOEFL', color: 'from-blue-500 to-blue-700', icon: '🎓', description: 'Test of English as a Foreign Language' },
     { id: 'ielts', name: 'IELTS', color: 'from-red-500 to-red-700', icon: '🌍', description: 'International English Language Testing System' },
     { id: 'cambridge', name: 'Cambridge', color: 'from-purple-500 to-purple-700', icon: '🏛️', description: 'Cambridge English Qualifications' },
+    { id: 'trinity', name: 'Trinity', color: 'from-pink-500 to-pink-700', icon: '🎭', description: 'Trinity College London GESE & ISE' },
+    { id: 'toeic', name: 'TOEIC', color: 'from-indigo-500 to-indigo-700', icon: '💼', description: 'Test of English for International Communication' },
+    { id: 'celpip', name: 'CELPIP', color: 'from-cyan-500 to-cyan-700', icon: '🍁', description: 'Canadian English Language Proficiency Index' },
     { id: 'pte', name: 'PTE', color: 'from-amber-500 to-amber-700', icon: '💻', description: 'Pearson Test of English' },
     { id: 'oet', name: 'OET', color: 'from-emerald-500 to-emerald-700', icon: '⚕️', description: 'Occupational English Test' }
   ];
