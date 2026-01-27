@@ -1045,6 +1045,416 @@ const AIAgentsConfigSection = () => {
   );
 };
 
+// Messaging Configuration Section (WhatsApp/SMS)
+const MessagingConfigSection = () => {
+  const [config, setConfig] = useState({
+    provider: 'twilio',
+    account_sid: '',
+    api_key: '',
+    api_secret: '',
+    from_number: '',
+    whatsapp_number: '',
+    enabled: false,
+    sms_enabled: false,
+    whatsapp_enabled: false
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [testNumber, setTestNumber] = useState('');
+
+  useEffect(() => {
+    fetchConfig();
+  }, []);
+
+  const fetchConfig = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/institution/messaging/config`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setConfig(prev => ({ ...prev, ...response.data }));
+    } catch (error) {
+      console.error('Failed to fetch messaging config:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/institution/messaging/config`, config, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Messaging configuration saved!');
+    } catch (error) {
+      toast.error('Failed to save configuration');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTest = async (type) => {
+    if (!testNumber) {
+      toast.error('Enter a test phone number');
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/institution/messaging/test?message_type=${type}&test_number=${testNumber}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(`Test ${type.toUpperCase()} sent to ${testNumber}`);
+    } catch (error) {
+      toast.error('Failed to send test message');
+    }
+  };
+
+  if (loading) {
+    return <div className="flex justify-center py-10"><div className="w-8 h-8 border-4 border-[#58CC02] border-t-transparent rounded-full animate-spin"></div></div>;
+  }
+
+  const providers = [
+    { id: 'twilio', name: 'Twilio', icon: '📱' },
+    { id: 'messagebird', name: 'MessageBird', icon: '🐦' },
+    { id: 'vonage', name: 'Vonage', icon: '📞' }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center">
+          <span className="text-2xl">📱</span>
+        </div>
+        <div>
+          <h3 className="font-bold text-gray-900">WhatsApp & SMS Configuration</h3>
+          <p className="text-sm text-gray-500">Send notifications and reminders to students</p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+        <div className="flex items-center gap-3">
+          <Switch checked={config.enabled} onCheckedChange={(v) => setConfig({...config, enabled: v})} />
+          <Label className="font-medium">Enable Messaging</Label>
+        </div>
+      </div>
+
+      {config.enabled && (
+        <>
+          <div>
+            <Label className="font-semibold mb-3 block">Provider</Label>
+            <div className="grid grid-cols-3 gap-3">
+              {providers.map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => setConfig({...config, provider: p.id})}
+                  className={`p-4 rounded-xl border-2 text-center transition-all ${
+                    config.provider === p.id ? 'border-[#58CC02] bg-green-50' : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <span className="text-2xl block mb-1">{p.icon}</span>
+                  <span className="text-sm font-medium">{p.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label>Account SID / API Key</Label>
+              <Input
+                type="password"
+                value={config.account_sid || config.api_key}
+                onChange={(e) => setConfig({...config, account_sid: e.target.value, api_key: e.target.value})}
+                placeholder="Enter API credentials"
+              />
+            </div>
+            <div>
+              <Label>API Secret</Label>
+              <Input
+                type="password"
+                value={config.api_secret}
+                onChange={(e) => setConfig({...config, api_secret: e.target.value})}
+                placeholder="Enter secret"
+              />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label>SMS From Number</Label>
+              <Input
+                value={config.from_number}
+                onChange={(e) => setConfig({...config, from_number: e.target.value})}
+                placeholder="+1234567890"
+              />
+            </div>
+            <div>
+              <Label>WhatsApp Number</Label>
+              <Input
+                value={config.whatsapp_number}
+                onChange={(e) => setConfig({...config, whatsapp_number: e.target.value})}
+                placeholder="whatsapp:+1234567890"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <div className="flex items-center gap-2">
+              <Switch checked={config.sms_enabled} onCheckedChange={(v) => setConfig({...config, sms_enabled: v})} />
+              <Label>Enable SMS</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch checked={config.whatsapp_enabled} onCheckedChange={(v) => setConfig({...config, whatsapp_enabled: v})} />
+              <Label>Enable WhatsApp</Label>
+            </div>
+          </div>
+
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="p-4">
+              <h4 className="font-semibold text-blue-900 mb-2">Test Message</h4>
+              <div className="flex gap-2">
+                <Input
+                  value={testNumber}
+                  onChange={(e) => setTestNumber(e.target.value)}
+                  placeholder="+1234567890"
+                  className="flex-1"
+                />
+                <Button variant="outline" onClick={() => handleTest('sms')}>Test SMS</Button>
+                <Button variant="outline" onClick={() => handleTest('whatsapp')}>Test WhatsApp</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      <Button onClick={handleSave} className="bg-[#58CC02] hover:bg-[#46A302]" disabled={saving}>
+        <Save className="w-4 h-4 mr-2" />
+        {saving ? 'Saving...' : 'Save Messaging Configuration'}
+      </Button>
+    </div>
+  );
+};
+
+// Reports Configuration Section
+const ReportsConfigSection = () => {
+  const [config, setConfig] = useState({
+    weekly_enabled: true,
+    monthly_enabled: true,
+    send_to_admins: true,
+    send_to_students: false,
+    include_ai_usage: true,
+    include_exam_stats: true,
+    include_engagement: true,
+    delivery_day: 1
+  });
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchConfig();
+  }, []);
+
+  const fetchConfig = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/institution/reports/config`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setConfig(prev => ({ ...prev, ...response.data }));
+    } catch (error) {
+      console.error('Failed to fetch reports config:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/institution/reports/config`, config, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Report configuration saved!');
+    } catch (error) {
+      toast.error('Failed to save configuration');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const generateReport = async (type) => {
+    setGenerating(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/institution/reports/generate?report_type=${type}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setReport(response.data);
+      toast.success('Report generated!');
+    } catch (error) {
+      toast.error('Failed to generate report');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="flex justify-center py-10"><div className="w-8 h-8 border-4 border-[#58CC02] border-t-transparent rounded-full animate-spin"></div></div>;
+  }
+
+  const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
+          <span className="text-2xl">📊</span>
+        </div>
+        <div>
+          <h3 className="font-bold text-gray-900">Automatic Reports</h3>
+          <p className="text-sm text-gray-500">Configure automatic progress and usage reports</p>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <Card className="border-2 border-gray-100">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-semibold">Weekly Reports</h4>
+                <p className="text-xs text-gray-500">Sent every {days[config.delivery_day - 1]}</p>
+              </div>
+              <Switch checked={config.weekly_enabled} onCheckedChange={(v) => setConfig({...config, weekly_enabled: v})} />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-2 border-gray-100">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-semibold">Monthly Reports</h4>
+                <p className="text-xs text-gray-500">Sent on the 1st of each month</p>
+              </div>
+              <Switch checked={config.monthly_enabled} onCheckedChange={(v) => setConfig({...config, monthly_enabled: v})} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div>
+        <Label className="font-semibold mb-3 block">Report Delivery Day</Label>
+        <select
+          value={config.delivery_day}
+          onChange={(e) => setConfig({...config, delivery_day: parseInt(e.target.value)})}
+          className="w-full p-3 border rounded-xl"
+        >
+          {days.map((day, idx) => (
+            <option key={idx} value={idx + 1}>{day}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-3">
+        <Label className="font-semibold block">Report Contents</Label>
+        <div className="grid md:grid-cols-3 gap-3">
+          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+            <Switch checked={config.include_ai_usage} onCheckedChange={(v) => setConfig({...config, include_ai_usage: v})} />
+            <Label className="text-sm">AI Usage Stats</Label>
+          </div>
+          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+            <Switch checked={config.include_exam_stats} onCheckedChange={(v) => setConfig({...config, include_exam_stats: v})} />
+            <Label className="text-sm">Exam Statistics</Label>
+          </div>
+          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+            <Switch checked={config.include_engagement} onCheckedChange={(v) => setConfig({...config, include_engagement: v})} />
+            <Label className="text-sm">Student Engagement</Label>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <Label className="font-semibold block">Recipients</Label>
+        <div className="flex gap-4">
+          <div className="flex items-center gap-2">
+            <Switch checked={config.send_to_admins} onCheckedChange={(v) => setConfig({...config, send_to_admins: v})} />
+            <Label>Institution Admins</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch checked={config.send_to_students} onCheckedChange={(v) => setConfig({...config, send_to_students: v})} />
+            <Label>Students</Label>
+          </div>
+        </div>
+      </div>
+
+      <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+        <CardContent className="p-4">
+          <h4 className="font-semibold text-indigo-900 mb-3">Generate Report Now</h4>
+          <div className="flex gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => generateReport('weekly')}
+              disabled={generating}
+              className="flex-1"
+            >
+              {generating ? 'Generating...' : '📅 Weekly Report'}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => generateReport('monthly')}
+              disabled={generating}
+              className="flex-1"
+            >
+              {generating ? 'Generating...' : '📆 Monthly Report'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {report && (
+        <Card className="border-2 border-indigo-200">
+          <CardHeader>
+            <CardTitle className="text-lg">📊 Generated Report</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-3 gap-4 mb-4">
+              <div className="p-4 bg-green-50 rounded-xl text-center">
+                <p className="text-2xl font-bold text-green-600">{report.engagement?.active_students || 0}</p>
+                <p className="text-xs text-gray-600">Active Students</p>
+              </div>
+              <div className="p-4 bg-blue-50 rounded-xl text-center">
+                <p className="text-2xl font-bold text-blue-600">{report.ai_usage?.total_credits_used || 0}</p>
+                <p className="text-xs text-gray-600">AI Credits Used</p>
+              </div>
+              <div className="p-4 bg-purple-50 rounded-xl text-center">
+                <p className="text-2xl font-bold text-purple-600">{report.exams?.total_attempts || 0}</p>
+                <p className="text-xs text-gray-600">Exam Attempts</p>
+              </div>
+            </div>
+            {report.highlights?.length > 0 && (
+              <div className="space-y-2">
+                <p className="font-semibold text-sm">Highlights:</p>
+                {report.highlights.map((h, i) => (
+                  <p key={i} className="text-sm text-gray-700">{h}</p>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      <Button onClick={handleSave} className="bg-[#58CC02] hover:bg-[#46A302]" disabled={saving}>
+        <Save className="w-4 h-4 mr-2" />
+        {saving ? 'Saving...' : 'Save Report Configuration'}
+      </Button>
+    </div>
+  );
+};
+
 // Main Institution Settings Component
 export default function InstitutionSettings() {
   const [activeTab, setActiveTab] = useState('ai-agents');
