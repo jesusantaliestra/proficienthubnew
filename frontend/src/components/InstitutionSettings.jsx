@@ -1097,21 +1097,27 @@ export default function InstitutionSettings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="ai-agents" className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4" /> AI Agents
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="ai-agents" className="flex items-center gap-1 text-xs">
+            <Sparkles className="w-4 h-4" /> AI
           </TabsTrigger>
-          <TabsTrigger value="avatar" className="flex items-center gap-2">
+          <TabsTrigger value="avatar" className="flex items-center gap-1 text-xs">
             <Bot className="w-4 h-4" /> Avatar
           </TabsTrigger>
-          <TabsTrigger value="zoom" className="flex items-center gap-2">
+          <TabsTrigger value="zoom" className="flex items-center gap-1 text-xs">
             <Video className="w-4 h-4" /> Zoom
           </TabsTrigger>
-          <TabsTrigger value="email" className="flex items-center gap-2">
+          <TabsTrigger value="email" className="flex items-center gap-1 text-xs">
             <Mail className="w-4 h-4" /> Email
           </TabsTrigger>
-          <TabsTrigger value="gamification" className="flex items-center gap-2">
-            <Trophy className="w-4 h-4" /> Gamification
+          <TabsTrigger value="messaging" className="flex items-center gap-1 text-xs">
+            📱 SMS
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="flex items-center gap-1 text-xs">
+            📊 Reports
+          </TabsTrigger>
+          <TabsTrigger value="gamification" className="flex items-center gap-1 text-xs">
+            <Trophy className="w-4 h-4" /> XP
           </TabsTrigger>
         </TabsList>
 
@@ -1144,6 +1150,22 @@ export default function InstitutionSettings() {
             <Card className="border-2 border-gray-100">
               <CardContent className="p-6">
                 <EmailConfigSection config={config?.email} onSave={handleSave} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="messaging">
+            <Card className="border-2 border-gray-100">
+              <CardContent className="p-6">
+                <MessagingConfigSection />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="reports">
+            <Card className="border-2 border-gray-100">
+              <CardContent className="p-6">
+                <ReportsConfigSection />
               </CardContent>
             </Card>
           </TabsContent>
