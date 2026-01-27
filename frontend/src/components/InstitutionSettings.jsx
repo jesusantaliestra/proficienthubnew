@@ -785,7 +785,7 @@ const GamificationConfigSection = ({ config, onSave }) => {
 
 // Main Institution Settings Component
 export default function InstitutionSettings() {
-  const [activeTab, setActiveTab] = useState('zoom');
+  const [activeTab, setActiveTab] = useState('avatar');
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
 
