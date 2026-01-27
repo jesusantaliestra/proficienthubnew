@@ -14,8 +14,9 @@ import {
   Users, GraduationCap, BarChart3, TrendingUp, TrendingDown, AlertTriangle,
   Plus, Search, LogOut, Settings, BookOpen, Brain, ChevronRight, Award,
   Clock, Target, Activity, UserPlus, Download, Filter, FolderOpen, 
-  FileText, Video, Headphones, Layers, Trash2, Globe, Store, ShoppingCart, Star, Package, Play, Radio, Calendar, Palette
+  FileText, Video, Headphones, Layers, Trash2, Globe, Store, ShoppingCart, Star, Package, Play, Radio, Calendar, Palette, Zap
 } from 'lucide-react';
+import CRMSupreme from '../components/CRMSupreme';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import axios from 'axios';
 import { toast, Toaster } from 'sonner';
