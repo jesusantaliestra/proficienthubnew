@@ -12,6 +12,7 @@ import InstitutionDashboard from './pages/InstitutionDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentDashboardRestricted from './pages/StudentDashboardRestricted';
 import AITutor from './pages/AITutor';
+import AITutorMultiAgent from './pages/AITutorMultiAgent';
 import ExamSimulator from './pages/ExamSimulator';
 import PaymentSuccess from './pages/PaymentSuccess';
 import AdminPanel from './pages/AdminPanel';
@@ -165,9 +166,19 @@ function AppRoutes() {
         } 
       />
       
-      {/* AI Tutor */}
+      {/* AI Tutor - Multi-Agent System */}
       <Route 
         path="/tutor/:examType" 
+        element={
+          <ProtectedRoute>
+            <AITutorMultiAgent />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* AI Tutor - Legacy (fallback) */}
+      <Route 
+        path="/tutor-legacy/:examType" 
         element={
           <ProtectedRoute>
             <AITutor />
