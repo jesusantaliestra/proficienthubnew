@@ -3150,6 +3150,416 @@ async def get_student_detailed_analytics(student_id: str, current_user: dict = D
         } for a in activity_logs[:10]]
     }
 
+# ==================== CRM & SALES PIPELINE ====================
+
+# Lead/Deal stages for sales pipeline
+PIPELINE_STAGES = {
+    "new": {"label": "New Lead", "order": 1, "color": "#6366F1"},
+    "contacted": {"label": "Contacted", "order": 2, "color": "#8B5CF6"},
+    "demo_scheduled": {"label": "Demo Scheduled", "order": 3, "color": "#F59E0B"},
+    "demo_completed": {"label": "Demo Completed", "order": 4, "color": "#3B82F6"},
+    "proposal_sent": {"label": "Proposal Sent", "order": 5, "color": "#EC4899"},
+    "negotiating": {"label": "Negotiating", "order": 6, "color": "#F97316"},
+    "won": {"label": "Won 🎉", "order": 7, "color": "#10B981"},
+    "lost": {"label": "Lost", "order": 8, "color": "#EF4444"}
+}
+
+class LeadCreate(BaseModel):
+    institution_name: str
+    contact_name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    country: Optional[str] = None
+    students_count: Optional[int] = None
+    exam_types: Optional[List[str]] = []
+    source: Optional[str] = "website"
+    notes: Optional[str] = None
+    estimated_value: Optional[float] = 0
+
+class LeadUpdate(BaseModel):
+    stage: Optional[str] = None
+    contact_name: Optional[str] = None
+    phone: Optional[str] = None
+    country: Optional[str] = None
+    students_count: Optional[int] = None
+    exam_types: Optional[List[str]] = None
+    notes: Optional[str] = None
+    estimated_value: Optional[float] = None
+    next_follow_up: Optional[str] = None
+    assigned_to: Optional[str] = None
+
+class ActivityCreate(BaseModel):
+    lead_id: str
+    activity_type: str  # call, email, meeting, note, demo
+    description: str
+    outcome: Optional[str] = None
+
+@api_router.get("/crm/pipeline-stages")
+async def get_pipeline_stages():
+    """Get all available pipeline stages"""
+    return {"stages": PIPELINE_STAGES}
+
+@api_router.post("/crm/leads")
+async def create_lead(lead_data: LeadCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new lead in the CRM"""
+    if current_user["user_type"] not in ["admin", "institution"]:
+        raise HTTPException(status_code=403, detail="Only admins and institutions can create leads")
+    
+    # Check if lead with same email exists
+    existing = await db.crm_leads.find_one({"email": lead_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Lead with this email already exists")
+    
+    lead_id = str(uuid.uuid4())
+    lead_doc = {
+        "id": lead_id,
+        "institution_name": lead_data.institution_name,
+        "contact_name": lead_data.contact_name,
+        "email": lead_data.email,
+        "phone": lead_data.phone,
+        "country": lead_data.country,
+        "students_count": lead_data.students_count,
+        "exam_types": lead_data.exam_types or [],
+        "source": lead_data.source,
+        "notes": lead_data.notes,
+        "estimated_value": lead_data.estimated_value or 0,
+        "stage": "new",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"],
+        "assigned_to": current_user["id"],
+        "next_follow_up": None,
+        "activities": [],
+        "tags": []
+    }
+    
+    await db.crm_leads.insert_one(lead_doc)
+    
+    return {"id": lead_id, "message": "Lead created successfully", "lead": lead_doc}
+
+@api_router.get("/crm/leads")
+async def get_all_leads(
+    stage: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all leads, optionally filtered by stage"""
+    if current_user["user_type"] not in ["admin", "institution"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    query = {}
+    if stage:
+        query["stage"] = stage
+    
+    # For institutions, only show their own leads
+    if current_user["user_type"] == "institution":
+        query["$or"] = [
+            {"created_by": current_user["id"]},
+            {"assigned_to": current_user["id"]}
+        ]
+    
+    leads = await db.crm_leads.find(query).sort("updated_at", -1).to_list(500)
+    
+    # Group by stage for pipeline view
+    pipeline = {stage: [] for stage in PIPELINE_STAGES.keys()}
+    for lead in leads:
+        lead_stage = lead.get("stage", "new")
+        if lead_stage in pipeline:
+            pipeline[lead_stage].append({
+                "id": lead["id"],
+                "institution_name": lead.get("institution_name", ""),
+                "contact_name": lead.get("contact_name", ""),
+                "email": lead.get("email", ""),
+                "phone": lead.get("phone", ""),
+                "country": lead.get("country", ""),
+                "students_count": lead.get("students_count", 0),
+                "exam_types": lead.get("exam_types", []),
+                "estimated_value": lead.get("estimated_value", 0),
+                "stage": lead_stage,
+                "created_at": lead.get("created_at", ""),
+                "updated_at": lead.get("updated_at", ""),
+                "next_follow_up": lead.get("next_follow_up"),
+                "source": lead.get("source", ""),
+                "activities_count": len(lead.get("activities", []))
+            })
+    
+    # Calculate totals
+    total_leads = len(leads)
+    total_value = sum(l.get("estimated_value", 0) for l in leads)
+    won_value = sum(l.get("estimated_value", 0) for l in leads if l.get("stage") == "won")
+    
+    return {
+        "pipeline": pipeline,
+        "stages": PIPELINE_STAGES,
+        "stats": {
+            "total_leads": total_leads,
+            "total_value": total_value,
+            "won_value": won_value,
+            "conversion_rate": round(len([l for l in leads if l.get("stage") == "won"]) / total_leads * 100, 1) if total_leads > 0 else 0
+        }
+    }
+
+@api_router.get("/crm/leads/{lead_id}")
+async def get_lead_detail(lead_id: str, current_user: dict = Depends(get_current_user)):
+    """Get detailed information about a lead"""
+    if current_user["user_type"] not in ["admin", "institution"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    lead = await db.crm_leads.find_one({"id": lead_id})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    
+    return {
+        "id": lead["id"],
+        "institution_name": lead.get("institution_name", ""),
+        "contact_name": lead.get("contact_name", ""),
+        "email": lead.get("email", ""),
+        "phone": lead.get("phone", ""),
+        "country": lead.get("country", ""),
+        "students_count": lead.get("students_count", 0),
+        "exam_types": lead.get("exam_types", []),
+        "estimated_value": lead.get("estimated_value", 0),
+        "stage": lead.get("stage", "new"),
+        "source": lead.get("source", ""),
+        "notes": lead.get("notes", ""),
+        "created_at": lead.get("created_at", ""),
+        "updated_at": lead.get("updated_at", ""),
+        "next_follow_up": lead.get("next_follow_up"),
+        "assigned_to": lead.get("assigned_to"),
+        "activities": lead.get("activities", []),
+        "tags": lead.get("tags", [])
+    }
+
+@api_router.put("/crm/leads/{lead_id}")
+async def update_lead(lead_id: str, updates: LeadUpdate, current_user: dict = Depends(get_current_user)):
+    """Update a lead's information or stage"""
+    if current_user["user_type"] not in ["admin", "institution"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    lead = await db.crm_leads.find_one({"id": lead_id})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if updates.stage:
+        if updates.stage not in PIPELINE_STAGES:
+            raise HTTPException(status_code=400, detail="Invalid stage")
+        update_data["stage"] = updates.stage
+        
+        # Add stage change to activities
+        activity = {
+            "id": str(uuid.uuid4()),
+            "type": "stage_change",
+            "description": f"Stage changed from {lead.get('stage', 'new')} to {updates.stage}",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "user": current_user["email"]
+        }
+        await db.crm_leads.update_one(
+            {"id": lead_id},
+            {"$push": {"activities": activity}}
+        )
+    
+    if updates.contact_name:
+        update_data["contact_name"] = updates.contact_name
+    if updates.phone:
+        update_data["phone"] = updates.phone
+    if updates.country:
+        update_data["country"] = updates.country
+    if updates.students_count is not None:
+        update_data["students_count"] = updates.students_count
+    if updates.exam_types is not None:
+        update_data["exam_types"] = updates.exam_types
+    if updates.notes:
+        update_data["notes"] = updates.notes
+    if updates.estimated_value is not None:
+        update_data["estimated_value"] = updates.estimated_value
+    if updates.next_follow_up:
+        update_data["next_follow_up"] = updates.next_follow_up
+    if updates.assigned_to:
+        update_data["assigned_to"] = updates.assigned_to
+    
+    await db.crm_leads.update_one({"id": lead_id}, {"$set": update_data})
+    
+    return {"message": "Lead updated successfully", "updated_fields": list(update_data.keys())}
+
+@api_router.post("/crm/leads/{lead_id}/activities")
+async def add_lead_activity(lead_id: str, activity: ActivityCreate, current_user: dict = Depends(get_current_user)):
+    """Add an activity to a lead (call, email, meeting, note)"""
+    if current_user["user_type"] not in ["admin", "institution"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    lead = await db.crm_leads.find_one({"id": lead_id})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    
+    activity_doc = {
+        "id": str(uuid.uuid4()),
+        "type": activity.activity_type,
+        "description": activity.description,
+        "outcome": activity.outcome,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "user": current_user["email"]
+    }
+    
+    await db.crm_leads.update_one(
+        {"id": lead_id},
+        {
+            "$push": {"activities": activity_doc},
+            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    return {"message": "Activity added", "activity": activity_doc}
+
+@api_router.delete("/crm/leads/{lead_id}")
+async def delete_lead(lead_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a lead"""
+    if current_user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can delete leads")
+    
+    result = await db.crm_leads.delete_one({"id": lead_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    
+    return {"message": "Lead deleted successfully"}
+
+@api_router.get("/crm/dashboard")
+async def get_crm_dashboard(current_user: dict = Depends(get_current_user)):
+    """Get CRM dashboard with key metrics"""
+    if current_user["user_type"] not in ["admin", "institution"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    query = {}
+    if current_user["user_type"] == "institution":
+        query["$or"] = [
+            {"created_by": current_user["id"]},
+            {"assigned_to": current_user["id"]}
+        ]
+    
+    leads = await db.crm_leads.find(query).to_list(1000)
+    
+    # Calculate metrics
+    total_leads = len(leads)
+    new_leads = len([l for l in leads if l.get("stage") == "new"])
+    won_deals = len([l for l in leads if l.get("stage") == "won"])
+    lost_deals = len([l for l in leads if l.get("stage") == "lost"])
+    
+    total_value = sum(l.get("estimated_value", 0) for l in leads)
+    won_value = sum(l.get("estimated_value", 0) for l in leads if l.get("stage") == "won")
+    pipeline_value = sum(l.get("estimated_value", 0) for l in leads if l.get("stage") not in ["won", "lost"])
+    
+    # Leads by stage
+    by_stage = {}
+    for stage in PIPELINE_STAGES.keys():
+        stage_leads = [l for l in leads if l.get("stage") == stage]
+        by_stage[stage] = {
+            "count": len(stage_leads),
+            "value": sum(l.get("estimated_value", 0) for l in stage_leads)
+        }
+    
+    # Leads by source
+    by_source = {}
+    for lead in leads:
+        source = lead.get("source", "unknown")
+        if source not in by_source:
+            by_source[source] = 0
+        by_source[source] += 1
+    
+    # Recent activities
+    recent_activities = []
+    for lead in sorted(leads, key=lambda x: x.get("updated_at", ""), reverse=True)[:10]:
+        activities = lead.get("activities", [])
+        if activities:
+            latest = activities[-1]
+            recent_activities.append({
+                "lead_id": lead["id"],
+                "lead_name": lead.get("institution_name", ""),
+                "activity": latest
+            })
+    
+    # Follow-ups due
+    today = datetime.now(timezone.utc).date().isoformat()
+    follow_ups_due = []
+    for lead in leads:
+        follow_up = lead.get("next_follow_up")
+        if follow_up and follow_up <= today:
+            follow_ups_due.append({
+                "id": lead["id"],
+                "institution_name": lead.get("institution_name", ""),
+                "contact_name": lead.get("contact_name", ""),
+                "follow_up_date": follow_up,
+                "stage": lead.get("stage", "")
+            })
+    
+    return {
+        "metrics": {
+            "total_leads": total_leads,
+            "new_leads": new_leads,
+            "won_deals": won_deals,
+            "lost_deals": lost_deals,
+            "conversion_rate": round(won_deals / (won_deals + lost_deals) * 100, 1) if (won_deals + lost_deals) > 0 else 0,
+            "total_value": total_value,
+            "won_value": won_value,
+            "pipeline_value": pipeline_value,
+            "avg_deal_size": round(won_value / won_deals, 2) if won_deals > 0 else 0
+        },
+        "by_stage": by_stage,
+        "by_source": by_source,
+        "recent_activities": recent_activities[:5],
+        "follow_ups_due": follow_ups_due
+    }
+
+# Connect trial request form to CRM
+@api_router.post("/trial-request")
+async def submit_trial_request(request_data: dict):
+    """Handle trial request form submission and create lead"""
+    lead_id = str(uuid.uuid4())
+    
+    lead_doc = {
+        "id": lead_id,
+        "institution_name": request_data.get("institutionName", ""),
+        "contact_name": request_data.get("contactName", ""),
+        "email": request_data.get("email", ""),
+        "phone": request_data.get("phone", ""),
+        "country": request_data.get("country", ""),
+        "students_count": int(request_data.get("studentsCount", 0)) if request_data.get("studentsCount") else 0,
+        "exam_types": [request_data.get("selectedExam")] if request_data.get("selectedExam") else [],
+        "source": "free_trial_form",
+        "notes": f"Trial request submitted via website",
+        "estimated_value": 0,
+        "stage": "new",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": "website",
+        "assigned_to": None,
+        "next_follow_up": (datetime.now(timezone.utc) + timedelta(days=1)).date().isoformat(),
+        "activities": [{
+            "id": str(uuid.uuid4()),
+            "type": "form_submission",
+            "description": "Trial request form submitted",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "user": "system"
+        }],
+        "tags": ["trial_request"]
+    }
+    
+    # Check if lead already exists
+    existing = await db.crm_leads.find_one({"email": request_data.get("email")})
+    if existing:
+        # Update existing lead
+        await db.crm_leads.update_one(
+            {"email": request_data.get("email")},
+            {
+                "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
+                "$push": {"activities": lead_doc["activities"][0]}
+            }
+        )
+        return {"message": "Trial request received", "lead_id": existing["id"]}
+    
+    await db.crm_leads.insert_one(lead_doc)
+    
+    return {"message": "Trial request received! We'll contact you within 24 hours.", "lead_id": lead_id}
+
 # ==================== HEALTH CHECK ====================
 
 @api_router.get("/")
