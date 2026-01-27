@@ -5739,6 +5739,337 @@ async def get_heygen_usage(current_user: dict = Depends(get_current_user)):
         "credits_remaining": max(0, avatar_config.get("heygen_monthly_limit", 100) - avatar_config.get("heygen_credits_used", 0))
     }
 
+# ==================== CONTENT LIBRARY ====================
+
+import os
+import shutil
+from pathlib import Path
+
+UPLOAD_DIR = Path("/app/uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+@api_router.post("/library/upload")
+async def upload_material(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+    """Upload material to the library"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can upload materials")
+    
+    # Create institution directory
+    inst_dir = UPLOAD_DIR / current_user["id"]
+    inst_dir.mkdir(exist_ok=True)
+    
+    # Generate unique filename
+    file_id = str(uuid.uuid4())
+    ext = Path(file.filename).suffix
+    safe_filename = f"{file_id}{ext}"
+    file_path = inst_dir / safe_filename
+    
+    # Save file
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Get file size
+        file_size = os.path.getsize(file_path)
+        
+        # Format size
+        if file_size < 1024:
+            size_formatted = f"{file_size} B"
+        elif file_size < 1024 * 1024:
+            size_formatted = f"{file_size / 1024:.1f} KB"
+        else:
+            size_formatted = f"{file_size / (1024 * 1024):.1f} MB"
+        
+        # Store in database
+        material_doc = {
+            "id": file_id,
+            "institution_id": current_user["id"],
+            "name": file.filename,
+            "filename": safe_filename,
+            "original_filename": file.filename,
+            "file_path": str(file_path),
+            "size": file_size,
+            "size_formatted": size_formatted,
+            "content_type": file.content_type,
+            "offline_enabled": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.library_materials.insert_one(material_doc)
+        
+        return {"id": file_id, "message": "File uploaded successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@api_router.get("/library/materials")
+async def get_materials(current_user: dict = Depends(get_current_user)):
+    """Get all materials for the institution"""
+    institution_id = current_user.get("institution_id") or current_user.get("id")
+    
+    materials = await db.library_materials.find(
+        {"institution_id": institution_id},
+        {"_id": 0, "file_path": 0}
+    ).sort("created_at", -1).to_list(200)
+    
+    return {"materials": materials}
+
+@api_router.delete("/library/materials/{material_id}")
+async def delete_material(material_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a material"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can delete materials")
+    
+    material = await db.library_materials.find_one({
+        "id": material_id,
+        "institution_id": current_user["id"]
+    })
+    
+    if not material:
+        raise HTTPException(status_code=404, detail="Material not found")
+    
+    # Delete file
+    try:
+        file_path = Path(material.get("file_path", ""))
+        if file_path.exists():
+            file_path.unlink()
+    except Exception:
+        pass
+    
+    # Delete from database
+    await db.library_materials.delete_one({"id": material_id})
+    
+    return {"message": "Material deleted"}
+
+@api_router.post("/library/materials/{material_id}/offline")
+async def toggle_offline(material_id: str, enabled: bool, current_user: dict = Depends(get_current_user)):
+    """Toggle offline availability for a material"""
+    institution_id = current_user.get("institution_id") or current_user.get("id")
+    
+    await db.library_materials.update_one(
+        {"id": material_id, "institution_id": institution_id},
+        {"$set": {"offline_enabled": enabled}}
+    )
+    
+    return {"message": "Offline status updated"}
+
+@api_router.get("/library/vocabularies")
+async def get_vocabularies(current_user: dict = Depends(get_current_user)):
+    """Get vocabulary lists"""
+    institution_id = current_user.get("institution_id") or current_user.get("id")
+    
+    vocabularies = await db.vocabularies.find(
+        {"institution_id": institution_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return {"vocabularies": vocabularies}
+
+@api_router.post("/library/vocabularies")
+async def create_vocabulary(
+    name: str,
+    words: List[str],
+    description: str = "",
+    exam_type: str = "all",
+    auto_generate_flashcards: bool = True,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a vocabulary list"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can create vocabulary lists")
+    
+    vocab_id = str(uuid.uuid4())
+    
+    vocab_doc = {
+        "id": vocab_id,
+        "institution_id": current_user["id"],
+        "name": name,
+        "description": description,
+        "words": words,
+        "word_count": len(words),
+        "exam_type": exam_type,
+        "has_flashcards": False,
+        "offline_available": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.vocabularies.insert_one(vocab_doc)
+    
+    # Auto-generate flashcards if requested
+    if auto_generate_flashcards and words:
+        flashcard_set = {
+            "id": str(uuid.uuid4()),
+            "institution_id": current_user["id"],
+            "vocabulary_id": vocab_id,
+            "name": f"{name} Flashcards",
+            "card_count": len(words),
+            "cards": [{"word": w, "definition": "", "example": ""} for w in words],
+            "offline_available": False,
+            "mastery": 0,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.flashcard_sets.insert_one(flashcard_set)
+        
+        # Update vocabulary
+        await db.vocabularies.update_one(
+            {"id": vocab_id},
+            {"$set": {"has_flashcards": True}}
+        )
+    
+    return {"id": vocab_id, "message": "Vocabulary list created"}
+
+@api_router.get("/library/flashcards")
+async def get_flashcards(current_user: dict = Depends(get_current_user)):
+    """Get flashcard sets"""
+    institution_id = current_user.get("institution_id") or current_user.get("id")
+    
+    flashcard_sets = await db.flashcard_sets.find(
+        {"institution_id": institution_id},
+        {"_id": 0, "cards": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return {"flashcard_sets": flashcard_sets}
+
+@api_router.post("/library/flashcards/generate")
+async def generate_flashcards(material_id: str, current_user: dict = Depends(get_current_user)):
+    """Generate flashcards from material (placeholder for AI generation)"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can generate flashcards")
+    
+    # In a real implementation, this would use AI to extract key terms
+    # For now, create a placeholder set
+    flashcard_set = {
+        "id": str(uuid.uuid4()),
+        "institution_id": current_user["id"],
+        "material_id": material_id,
+        "name": f"Generated Flashcards",
+        "card_count": 0,
+        "cards": [],
+        "offline_available": False,
+        "mastery": 0,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.flashcard_sets.insert_one(flashcard_set)
+    
+    return {"id": flashcard_set["id"], "message": "Flashcards generated"}
+
+# ==================== PLACEMENT TEST ====================
+
+class PlacementTestSettings(BaseModel):
+    placement_test_enabled: bool = True
+    placement_test_mandatory: bool = False
+    placement_test_free: bool = True  # Free for conversion
+
+@api_router.get("/institution/settings/placement-test")
+async def get_placement_test_settings(current_user: dict = Depends(get_current_user)):
+    """Get placement test settings"""
+    institution_id = current_user.get("institution_id") or current_user.get("id")
+    
+    settings = await db.institution_settings.find_one({"institution_id": institution_id})
+    placement = settings.get("placement_test", {}) if settings else {}
+    
+    return {
+        "placement_test_enabled": placement.get("placement_test_enabled", True),
+        "placement_test_mandatory": placement.get("placement_test_mandatory", False),
+        "placement_test_free": placement.get("placement_test_free", True)
+    }
+
+@api_router.post("/institution/settings/placement-test")
+async def save_placement_test_settings(settings: PlacementTestSettings, current_user: dict = Depends(get_current_user)):
+    """Save placement test settings"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can modify settings")
+    
+    await db.institution_settings.update_one(
+        {"institution_id": current_user["id"]},
+        {"$set": {"placement_test": settings.dict(), "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    
+    return {"message": "Placement test settings saved"}
+
+@api_router.get("/student/should-take-placement-test")
+async def should_take_placement_test(current_user: dict = Depends(get_current_user)):
+    """Check if student should take placement test"""
+    if current_user["user_type"] != "student":
+        return {"should_take": False, "reason": "Not a student"}
+    
+    institution_id = current_user.get("institution_id")
+    if not institution_id:
+        return {"should_take": False, "reason": "No institution"}
+    
+    # Check if student already took placement test
+    existing = await db.placement_tests.find_one({"user_id": current_user["id"]})
+    if existing:
+        return {"should_take": False, "reason": "Already completed", "result": existing.get("level")}
+    
+    # Get institution settings
+    settings = await db.institution_settings.find_one({"institution_id": institution_id})
+    placement = settings.get("placement_test", {}) if settings else {}
+    
+    if not placement.get("placement_test_enabled", True):
+        return {"should_take": False, "reason": "Disabled by institution"}
+    
+    return {
+        "should_take": True,
+        "mandatory": placement.get("placement_test_mandatory", False),
+        "is_free": placement.get("placement_test_free", True)
+    }
+
+@api_router.post("/student/placement-test/submit")
+async def submit_placement_test(
+    answers: List[dict],
+    current_user: dict = Depends(get_current_user)
+):
+    """Submit placement test answers and get level"""
+    if current_user["user_type"] != "student":
+        raise HTTPException(status_code=403, detail="Only students can take placement tests")
+    
+    # Calculate score (simplified - in production would be more sophisticated)
+    correct = sum(1 for a in answers if a.get("correct", False))
+    total = len(answers)
+    percentage = (correct / total * 100) if total > 0 else 0
+    
+    # Determine level
+    if percentage >= 90:
+        level = "C2"
+    elif percentage >= 80:
+        level = "C1"
+    elif percentage >= 70:
+        level = "B2"
+    elif percentage >= 55:
+        level = "B1"
+    elif percentage >= 40:
+        level = "A2"
+    else:
+        level = "A1"
+    
+    # Store result
+    result = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "institution_id": current_user.get("institution_id"),
+        "score": percentage,
+        "level": level,
+        "answers": answers,
+        "completed_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.placement_tests.insert_one(result)
+    
+    # Update user's level
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {"english_level": level}}
+    )
+    
+    return {
+        "score": percentage,
+        "level": level,
+        "message": f"Your English level is {level}"
+    }
+
 # ==================== HEALTH CHECK ====================
 
 @api_router.get("/")
