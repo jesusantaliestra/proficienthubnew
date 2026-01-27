@@ -3899,6 +3899,174 @@ async def get_my_orders(current_user: dict = Depends(get_current_user)):
         } for o in seller_orders]
     }
 
+# ==================== VIDEO CLASSES & STREAMING ====================
+
+class VideoClassCreate(BaseModel):
+    title: str
+    description: str
+    exam_type: str
+    skill: str  # reading, writing, listening, speaking
+    scheduled_at: Optional[str] = None  # ISO datetime for live classes
+    duration_minutes: Optional[int] = 60
+    class_type: str  # live, recorded
+    video_url: Optional[str] = None  # For recorded classes
+    max_students: Optional[int] = 100
+
+class VideoClassUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    scheduled_at: Optional[str] = None
+    status: Optional[str] = None  # scheduled, live, ended, cancelled
+
+@api_router.post("/video-classes")
+async def create_video_class(video_class: VideoClassCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new video class (live or recorded)"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can create video classes")
+    
+    class_id = str(uuid.uuid4())
+    
+    # Generate a simple room code for live classes
+    room_code = ''.join(random.choices('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', k=6)) if video_class.class_type == "live" else None
+    
+    class_doc = {
+        "id": class_id,
+        "institution_id": current_user["id"],
+        "institution_name": current_user.get("institution_name", ""),
+        "title": video_class.title,
+        "description": video_class.description,
+        "exam_type": video_class.exam_type,
+        "skill": video_class.skill,
+        "class_type": video_class.class_type,
+        "scheduled_at": video_class.scheduled_at,
+        "duration_minutes": video_class.duration_minutes,
+        "video_url": video_class.video_url,
+        "max_students": video_class.max_students,
+        "room_code": room_code,
+        "status": "scheduled" if video_class.class_type == "live" else "available",
+        "enrolled_students": [],
+        "attendees_count": 0,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.video_classes.insert_one(class_doc)
+    
+    return {"id": class_id, "room_code": room_code, "message": "Video class created successfully"}
+
+@api_router.get("/video-classes")
+async def get_video_classes(
+    class_type: Optional[str] = None,
+    exam_type: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get video classes for the institution"""
+    if current_user["user_type"] == "institution":
+        query = {"institution_id": current_user["id"]}
+    elif current_user["user_type"] == "student":
+        query = {"institution_id": current_user.get("institution_id")}
+    else:
+        query = {}
+    
+    if class_type:
+        query["class_type"] = class_type
+    if exam_type:
+        query["exam_type"] = exam_type
+    
+    classes = await db.video_classes.find(query).sort("scheduled_at", -1).to_list(100)
+    
+    # Separate live and recorded
+    live_classes = [c for c in classes if c.get("class_type") == "live"]
+    recorded_classes = [c for c in classes if c.get("class_type") == "recorded"]
+    
+    return {
+        "total": len(classes),
+        "live_classes": [{
+            "id": c["id"],
+            "title": c["title"],
+            "description": c["description"],
+            "exam_type": c["exam_type"],
+            "skill": c["skill"],
+            "scheduled_at": c.get("scheduled_at"),
+            "duration_minutes": c.get("duration_minutes", 60),
+            "room_code": c.get("room_code"),
+            "status": c.get("status", "scheduled"),
+            "max_students": c.get("max_students", 100),
+            "enrolled_count": len(c.get("enrolled_students", []))
+        } for c in live_classes],
+        "recorded_classes": [{
+            "id": c["id"],
+            "title": c["title"],
+            "description": c["description"],
+            "exam_type": c["exam_type"],
+            "skill": c["skill"],
+            "video_url": c.get("video_url"),
+            "duration_minutes": c.get("duration_minutes", 60),
+            "views_count": c.get("views_count", 0)
+        } for c in recorded_classes],
+        "stats": {
+            "total_live": len(live_classes),
+            "total_recorded": len(recorded_classes),
+            "upcoming": len([c for c in live_classes if c.get("status") == "scheduled"])
+        }
+    }
+
+@api_router.post("/video-classes/{class_id}/enroll")
+async def enroll_in_video_class(class_id: str, current_user: dict = Depends(get_current_user)):
+    """Enroll a student in a live video class"""
+    video_class = await db.video_classes.find_one({"id": class_id})
+    if not video_class:
+        raise HTTPException(status_code=404, detail="Video class not found")
+    
+    if current_user["id"] in video_class.get("enrolled_students", []):
+        return {"message": "Already enrolled", "room_code": video_class.get("room_code")}
+    
+    if len(video_class.get("enrolled_students", [])) >= video_class.get("max_students", 100):
+        raise HTTPException(status_code=400, detail="Class is full")
+    
+    await db.video_classes.update_one(
+        {"id": class_id},
+        {"$push": {"enrolled_students": current_user["id"]}}
+    )
+    
+    return {"message": "Enrolled successfully", "room_code": video_class.get("room_code")}
+
+@api_router.put("/video-classes/{class_id}/status")
+async def update_video_class_status(class_id: str, status: str, current_user: dict = Depends(get_current_user)):
+    """Update video class status (start/end live class)"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can update class status")
+    
+    video_class = await db.video_classes.find_one({"id": class_id, "institution_id": current_user["id"]})
+    if not video_class:
+        raise HTTPException(status_code=404, detail="Video class not found")
+    
+    if status not in ["scheduled", "live", "ended", "cancelled"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    
+    update_data = {
+        "status": status,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if status == "live":
+        update_data["started_at"] = datetime.now(timezone.utc).isoformat()
+    elif status == "ended":
+        update_data["ended_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.video_classes.update_one({"id": class_id}, {"$set": update_data})
+    
+    return {"message": f"Class status updated to {status}"}
+
+@api_router.delete("/video-classes/{class_id}")
+async def delete_video_class(class_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a video class"""
+    result = await db.video_classes.delete_one({"id": class_id, "institution_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Video class not found")
+    
+    return {"message": "Video class deleted successfully"}
+
 # ==================== HEALTH CHECK ====================
 
 @api_router.get("/")
