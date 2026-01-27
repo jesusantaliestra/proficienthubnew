@@ -108,8 +108,8 @@ const AvatarConfigSection = ({ config, onSave }) => {
           >
             <div className="text-center">
               <span className="text-4xl block mb-2">🎬</span>
-              <h4 className="font-bold text-gray-900">HeyGen AI Avatar</h4>
-              <p className="text-xs text-gray-500 mt-1">Premium - Realistic AI videos</p>
+              <h4 className="font-bold text-gray-900">Premium Avatar</h4>
+              <p className="text-xs text-gray-500 mt-1">Realistic AI video tutor</p>
               <Badge className="mt-2 bg-purple-100 text-purple-700">Premium</Badge>
             </div>
           </div>
@@ -145,12 +145,12 @@ const AvatarConfigSection = ({ config, onSave }) => {
           <div className="bg-purple-50 rounded-xl p-4">
             <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              HeyGen Premium Setup
+              Premium Avatar Setup
             </h4>
             <ol className="text-sm text-purple-800 space-y-1 list-decimal list-inside">
-              <li>Create an account at <a href="https://heygen.com" target="_blank" rel="noopener noreferrer" className="underline">heygen.com</a></li>
-              <li>Go to Settings &rarr; API and copy your API key</li>
-              <li>Choose your preferred avatar and voice</li>
+              <li>Your Premium Avatar credits are included in your plan</li>
+              <li>Configure your monthly credit limit below</li>
+              <li>Students will see a realistic AI tutor during speaking practice</li>
             </ol>
           </div>
 
