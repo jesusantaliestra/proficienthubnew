@@ -366,23 +366,27 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - [x] Content Library (Materials upload, Vocabulary, Flashcards, Offline)
 - [x] Placement Test configurable (mandatory/optional/free)
 - [x] Demo data for institutions showcase
+- [x] **Multi-Agent AI Tutor System** (3 agents, credit system, Mock Coach with hints)
 
 ### P1 - High Priority
-- [ ] Integrate Avatar in AI Tutor (animated + premium option)
 - [ ] Complete React Native app screens (login, exam, tutor, classes)
 - [ ] WhatsApp/SMS provider configuration per institution
 - [ ] Real email sending from CRM automations
+- [ ] Full White-Label Customization (system emails, complete student portal)
 
 ### P2 - Medium Priority
 - [ ] Video streaming with Zoom embedded in platform
 - [ ] Push notifications for mobile
 - [ ] Superadmin dashboard for ProficientHub
+- [ ] ElevenLabs voice integration for AI Tutor (currently using OpenAI TTS)
 
 ### P3 - Nice to Have
 - [ ] AI-generated flashcard definitions
 - [ ] Additional language translations
+- [ ] Offline content access in mobile app
 
 ## Business Model Notes
+- **AI Credits**: Institutions buy credits, students consume them per interaction
 - **Premium Avatar**: Included in institutional plan, institutions set credit limits
 - **Free Minutes for Students**: Institutions can offer X free minutes of premium AI tutor to students for conversion
 - **Placement Test**: Configurable per institution (mandatory/optional/free)
@@ -390,6 +394,7 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 
 ## Notes
 - Voice features use OpenAI TTS/STT via Emergent LLM Key
+- AI Tutor uses GPT-5.2 via Emergent LLM Key
 - Zoom integration requires institution credentials
 - Gamification is toggle-able per institution
 - All content can be marked for offline availability
