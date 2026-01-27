@@ -336,6 +336,7 @@ export default function InstitutionDashboard() {
             { id: 'overview', icon: BarChart3, label: 'Overview' },
             { id: 'students', icon: Users, label: 'Students' },
             { id: 'crm', icon: Target, label: 'CRM & Sales' },
+            { id: 'marketplace', icon: Store, label: 'Marketplace' },
             { id: 'library', icon: FolderOpen, label: 'Library' },
             { id: 'analytics', icon: Activity, label: 'Analytics' },
             { id: 'exams', icon: BookOpen, label: 'Exams' }
