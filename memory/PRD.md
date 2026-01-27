@@ -301,28 +301,29 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 ### P0 - Completed ✅
 - [x] React Native base structure with white-label support
 - [x] CRM Supreme UI (Email Templates, Automations, Tasks, Reports)
+- [x] Student Dashboard Restricted (only assigned exam)
+- [x] Institution Settings (Zoom, Email, Gamification)
+- [x] Complete Gamification System (XP, Levels, Streaks, Badges, Leaderboard, Challenges)
+- [x] Zoom SDK Integration (meetings, signatures)
 
 ### P1 - High Priority
-- [ ] PWA + Offline Mode enhancement (download classes, flashcards for offline)
-- [ ] Full React Native app development (screens, navigation, API integration)
-- [ ] WhatsApp/SMS integration for CRM communications
-- [ ] Full Admin Panel functionality (Users, Revenue, API Keys management)
+- [ ] Complete React Native app screens (login, exam, tutor, classes)
+- [ ] Real email sending from CRM automations
+- [ ] WhatsApp/SMS integration for CRM
+- [ ] Full Admin Panel (Users, Revenue, API Keys management)
 
 ### P2 - Medium Priority
-- [ ] Gamification (badges, points, leaderboards)
-- [ ] Learning path recommendations
-- [ ] Video streaming for classes (live + recorded)
-- [ ] Mobile push notifications
+- [ ] Video streaming for live classes (recording + replay)
+- [ ] Push notifications for mobile
+- [ ] PWA offline mode for downloaded materials
 
 ### P3 - Nice to Have
-- [ ] Additional language translations (200 languages)
+- [ ] Additional language translations
 - [ ] Video tutorials
 - [ ] Community features
-- [ ] Third-party API integrations
 
 ## Notes
 - Voice features use OpenAI TTS/STT via Emergent LLM Key
-- Ready for ElevenLabs when API key is provided
-- Service Worker provides basic offline support
-- Mobile app ready for EAS builds (iOS and Android)
-- CRM Supreme provides enterprise-level automation capabilities
+- Zoom integration requires institution credentials (Account ID, Client ID, Client Secret)
+- Gamification is toggle-able per institution
+- Student restricted dashboard auto-detects institutional students
