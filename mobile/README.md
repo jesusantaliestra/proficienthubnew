@@ -1,61 +1,69 @@
 # ProficientHub Mobile App
 
-React Native (Expo) app with **White-Label Support** for iOS and Android.
+A React Native / Expo mobile application for English proficiency exam preparation with AI tutoring, offline support, and white-label customization.
 
 ## 🚀 Features
 
-### White-Label System
-- **Custom Domain Support**: Each institution can have their own domain
-- **Dynamic Theming**: Colors, fonts, and branding from backend config
-- **Institution Code Entry**: Students enter their academy code at startup
-- **Custom Logo & Branding**: Institution logos displayed throughout
+- **Multi-Platform**: iOS and Android from a single codebase
+- **AI Tutoring**: Voice-enabled AI tutor for exam practice
+- **Offline Mode**: Download and study materials offline
+- **White-Label Ready**: Full customization for institutions
+- **Dark Mode**: System-aware theme support
+- **Multi-Language**: 6+ language support
 
-### Offline Mode
-- **Download Materials**: Save PDFs, flashcards, and audio for offline use
-- **Secure Storage**: Encrypted local storage for user data
-- **Sync on Reconnect**: Automatic data sync when back online
+## 📁 Project Structure
 
-### Core Features
-- 📚 **Study Materials**: Access learning resources
-- 📝 **Practice Exams**: Take mock tests (Reading, Writing, Listening, Speaking)
-- 📊 **Progress Tracking**: View scores and improvement
-- 🤖 **AI Tutor**: Chat with AI for help
-- 🎙️ **Speaking Practice**: Voice recording and feedback
-
-## 📱 Screens
-
-| Screen | Description |
-|--------|-------------|
-| `InstitutionSelectScreen` | Enter institution code for white-label |
-| `LoginScreen` | User authentication |
-| `HomeScreen` | Dashboard with stats and quick actions |
-| `ExamsScreen` | Practice tests by section |
-| `MaterialsScreen` | Study materials with offline support |
-| `ProgressScreen` | Performance analytics |
-| `ProfileScreen` | User settings and preferences |
-
-## 🎨 White-Label Configuration
-
-The app automatically loads branding based on institution:
-
-```typescript
-// Example white-label config
-{
-  platformName: "Oxford Academy",
-  logoUrl: "https://...",
-  primaryColor: "#003366",
-  secondaryColor: "#0066CC",
-  showPoweredBy: false, // Hide "Powered by ProficientHub"
-}
+```
+mobile/
+├── App.tsx                      # App entry point
+├── app.json                     # Expo configuration
+├── eas.json                     # EAS Build configuration
+├── white-label.config.js        # White-label customization
+├── src/
+│   ├── components/              # Reusable UI components
+│   │   ├── Button.tsx
+│   │   ├── Card.tsx
+│   │   ├── Input.tsx
+│   │   ├── Badge.tsx
+│   │   └── index.ts
+│   ├── contexts/                # React contexts
+│   │   ├── AuthContext.tsx      # Authentication state
+│   │   ├── ThemeContext.tsx     # Theme management
+│   │   └── WhiteLabelContext.tsx # White-label config
+│   ├── hooks/                   # Custom hooks
+│   │   ├── useOffline.ts        # Offline functionality
+│   │   ├── useVoice.ts          # Voice recording/playback
+│   │   └── index.ts
+│   ├── navigation/              # Navigation setup
+│   │   ├── RootNavigator.tsx
+│   │   └── MainTabs.tsx
+│   ├── screens/                 # App screens
+│   │   ├── HomeScreen.tsx
+│   │   ├── ExamsScreen.tsx
+│   │   ├── MaterialsScreen.tsx
+│   │   ├── ProgressScreen.tsx
+│   │   ├── ProfileScreen.tsx
+│   │   ├── LoginScreen.tsx
+│   │   └── SplashScreen.tsx
+│   ├── services/                # API and storage services
+│   │   ├── api.ts
+│   │   └── offlineStorage.ts
+│   ├── theme/                   # Design system
+│   │   ├── colors.ts
+│   │   ├── spacing.ts
+│   │   ├── typography.ts
+│   │   └── index.ts
+│   └── assets/                  # Images, fonts, etc.
 ```
 
-## 🛠️ Setup
+## 🛠 Setup
 
 ### Prerequisites
+
 - Node.js 18+
+- Yarn
 - Expo CLI: `npm install -g expo-cli`
-- iOS: Xcode (Mac only)
-- Android: Android Studio
+- EAS CLI: `npm install -g eas-cli`
 
 ### Installation
 
@@ -67,126 +75,135 @@ yarn install
 ### Development
 
 ```bash
-# Start Expo dev server
+# Start Expo development server
 yarn start
 
-# Run on iOS
+# Run on iOS simulator
 yarn ios
 
-# Run on Android
+# Run on Android emulator
 yarn android
 ```
 
-### Building for Production
+### Building
 
 ```bash
-# Install EAS CLI
-npm install -g eas-cli
-
 # Login to Expo
 eas login
 
-# Build for both platforms
-eas build --platform all
+# Build for development
+eas build --profile development --platform all
 
-# Or separately
-eas build --platform ios
-eas build --platform android
+# Build for preview (internal testing)
+eas build --profile preview --platform all
+
+# Build for production
+eas build --profile production --platform all
 ```
 
-## 📁 Project Structure
+## ⚙️ White-Label Configuration
 
-```
-mobile/
-├── App.tsx                    # App entry point
-├── app.json                   # Expo configuration
-├── package.json               # Dependencies
-└── src/
-    ├── contexts/
-    │   ├── AuthContext.tsx    # Authentication state
-    │   ├── ThemeContext.tsx   # Dynamic theming
-    │   └── WhiteLabelContext.tsx  # Institution branding
-    ├── navigation/
-    │   ├── RootNavigator.tsx  # Auth flow navigation
-    │   └── MainTabs.tsx       # Bottom tab navigation
-    ├── screens/
-    │   ├── SplashScreen.tsx
-    │   ├── InstitutionSelectScreen.tsx
-    │   ├── LoginScreen.tsx
-    │   ├── HomeScreen.tsx
-    │   ├── ExamsScreen.tsx
-    │   ├── MaterialsScreen.tsx
-    │   ├── ProgressScreen.tsx
-    │   └── ProfileScreen.tsx
-    ├── services/
-    │   ├── api.ts             # API client
-    │   └── offlineStorage.ts  # Offline data management
-    └── theme/
-        └── (theme utilities)
+Edit `white-label.config.js` to customize:
+
+```javascript
+module.exports = {
+  institution: {
+    name: 'Your Academy',
+    slug: 'your-academy',
+    tagline: 'Your Tagline',
+  },
+  branding: {
+    colors: {
+      primary: '#YOUR_COLOR',
+      secondary: '#YOUR_COLOR',
+    },
+    logo: {
+      light: 'https://...',
+      dark: 'https://...',
+    },
+  },
+  features: {
+    aiTutor: true,
+    offlineMode: true,
+    // ... toggle features
+  },
+};
 ```
 
-## 🔧 Configuration
+## 📱 App Features
 
-### API URL
+### Exam Practice
+- IELTS, TOEFL, Cambridge, Trinity, PTE, OET support
+- Reading, Writing, Listening, Speaking sections
+- Timed practice tests
+- AI-powered feedback
 
-Update the API URL in `src/services/api.ts`:
+### AI Tutor
+- Voice-enabled conversations
+- Exam-specific coaching
+- Real-time feedback
+- Multiple voice options
+
+### Offline Mode
+- Download study materials
+- Practice without internet
+- Auto-sync when online
+
+### Progress Tracking
+- Performance analytics
+- Skill breakdown
+- Study streak tracking
+
+## 🔐 Authentication
+
+The app supports:
+- Email/Password login
+- Institutional login (white-label)
+- Provisional credentials for students
+- Biometric authentication (optional)
+
+## 🌐 API Integration
+
+Update `src/services/api.ts` with your API URL:
 
 ```typescript
 const API_BASE_URL = 'https://your-api-url.com/api';
 ```
 
-Or use Expo config:
+Or set it in `app.json`:
 
 ```json
-// app.json
-{
-  "expo": {
-    "extra": {
-      "apiUrl": "https://your-api-url.com/api"
-    }
-  }
+"extra": {
+  "apiUrl": "https://your-api-url.com/api"
 }
 ```
 
-### White-Label for Different Institutions
+## 📦 Dependencies
 
-Each institution gets their own branded app by:
+- **expo**: ~50.0.0
+- **react-native**: 0.73.2
+- **react-navigation**: 6.x
+- **expo-av**: Audio/Video handling
+- **expo-secure-store**: Secure storage
+- **expo-file-system**: File management
+- **axios**: HTTP client
 
-1. **Runtime Detection**: Student enters institution code
-2. **Build Variants**: Create separate builds with different configs
+## 🚀 Deployment
 
-For production, create `app.config.js`:
+### iOS App Store
+1. Configure `eas.json` with your Apple credentials
+2. Run `eas build --platform ios --profile production`
+3. Run `eas submit --platform ios`
 
-```javascript
-export default {
-  name: process.env.APP_NAME || "ProficientHub",
-  slug: process.env.APP_SLUG || "proficienthub",
-  // ... other config
-  extra: {
-    institutionSlug: process.env.INSTITUTION_SLUG,
-    apiUrl: process.env.API_URL,
-  }
-};
-```
+### Google Play Store
+1. Add `google-services.json` for Firebase
+2. Run `eas build --platform android --profile production`
+3. Run `eas submit --platform android`
 
-## 📲 App Store Submission
+## 📄 License
 
-### iOS (App Store)
-1. Create app in App Store Connect
-2. Run `eas build --platform ios`
-3. Submit using `eas submit --platform ios`
+Proprietary - ProficientHub
 
-### Android (Google Play)
-1. Create app in Google Play Console
-2. Run `eas build --platform android`
-3. Submit using `eas submit --platform android`
+---
 
-## 🔒 Security
-
-- User credentials stored in Expo SecureStore
-- JWT tokens for API authentication
-- Offline data encrypted locally
-
-## 📞 Support
-
-For issues or questions, contact support@proficienthub.com
+Built with ❤️ using Expo and React Native
