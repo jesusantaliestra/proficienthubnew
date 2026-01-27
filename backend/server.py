@@ -6187,7 +6187,7 @@ async def get_ai_credits(current_user: dict = Depends(get_current_user)):
             "last_updated": datetime.now(timezone.utc).isoformat()
         }
         await db.ai_credits.insert_one(credits_doc)
-        del credits_doc["_id"] if "_id" in credits_doc else None
+        credits_doc.pop("_id", None)
     
     return {
         "total_credits": credits_doc.get("total_credits", 0),
