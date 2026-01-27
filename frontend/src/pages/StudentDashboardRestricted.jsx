@@ -583,7 +583,7 @@ export default function StudentDashboardRestricted() {
                   <CardContent className="p-12 text-center">
                     <Video className="w-16 h-16 text-slate-500 mx-auto mb-4" />
                     <h3 className="text-xl font-semibold text-white mb-2">No Upcoming Classes</h3>
-                    <p className="text-slate-400">Your institution hasn't scheduled any live classes yet.</p>
+                    <p className="text-slate-400">Your institution has not scheduled any live classes yet.</p>
                   </CardContent>
                 </Card>
               ) : (
