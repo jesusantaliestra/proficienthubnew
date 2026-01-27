@@ -470,6 +470,7 @@ export default function InstitutionDashboard() {
             { id: 'overview', icon: BarChart3, label: 'Overview' },
             { id: 'students', icon: Users, label: 'Students' },
             { id: 'crm', icon: Target, label: 'CRM & Sales' },
+            { id: 'crm-supreme', icon: Zap, label: 'CRM Supreme', badge: 'PRO' },
             { id: 'marketplace', icon: Store, label: 'Marketplace' },
             { id: 'classes', icon: Video, label: 'Video Classes' },
             { id: 'library', icon: FolderOpen, label: 'Library' },
@@ -484,6 +485,9 @@ export default function InstitutionDashboard() {
             >
               <item.icon className="w-5 h-5" />
               <span>{item.label}</span>
+              {item.badge && (
+                <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-0.5 rounded-full">{item.badge}</span>
+              )}
             </button>
           ))}
         </nav>
