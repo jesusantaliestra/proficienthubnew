@@ -797,69 +797,323 @@ export default function InstitutionDashboard() {
           
           {activeTab === 'analytics' && (
             <div className="space-y-6 animate-fade-in" data-testid="analytics-tab">
-              <h2 className="text-2xl font-extrabold text-gray-900">Premium Analytics</h2>
-              <div className="grid lg:grid-cols-3 gap-6">
-                <Card className="bg-white border-2 border-gray-100 rounded-2xl col-span-2">
-                  <CardHeader>
-                    <CardTitle className="text-gray-900 font-extrabold">Weekly Progress</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={400}>
-                      <LineChart data={progressData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
-                        <XAxis dataKey="month" stroke="#AFAFAF" />
-                        <YAxis stroke="#AFAFAF" />
-                        <Tooltip contentStyle={{ backgroundColor: '#fff', border: '2px solid #E5E5E5', borderRadius: '12px' }} />
-                        <Line type="monotone" dataKey="score" stroke="#58CC02" strokeWidth={3} dot={{ fill: '#58CC02' }} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-                
-                <div className="space-y-6">
-                  <Card className="metric-card">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="feature-icon feature-icon-green">
-                          <Award className="w-8 h-8" />
-                        </div>
-                        <div>
-                          <p className="text-gray-500 text-sm font-semibold">High Performers</p>
-                          <p className="text-3xl font-extrabold text-gray-900">{metrics?.high_performers || 0}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="metric-card">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="feature-icon feature-icon-blue">
-                          <Clock className="w-8 h-8" />
-                        </div>
-                        <div>
-                          <p className="text-gray-500 text-sm font-semibold">Avg Study Time</p>
-                          <p className="text-3xl font-extrabold text-gray-900">4.2h</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="metric-card">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="feature-icon feature-icon-purple">
-                          <Brain className="w-8 h-8" />
-                        </div>
-                        <div>
-                          <p className="text-gray-500 text-sm font-semibold">AI Tutoring Sessions</p>
-                          <p className="text-3xl font-extrabold text-gray-900">1,240</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-extrabold text-gray-900">Predictive Analytics & Risk Management</h2>
+                <Button onClick={fetchAnalyticsData} variant="outline" disabled={analyticsLoading}>
+                  {analyticsLoading ? 'Loading...' : 'Refresh Data'}
+                </Button>
               </div>
+
+              {analyticsLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="w-12 h-12 border-4 border-[#58CC02] border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <>
+                  {/* Impact Metrics Banner */}
+                  <div className="bg-gradient-to-r from-[#58CC02] to-[#46a302] rounded-2xl p-6 text-white">
+                    <h3 className="text-lg font-bold mb-4">🚀 Your AI-Powered Impact</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center">
+                        <div className="text-4xl font-extrabold">10x</div>
+                        <div className="text-sm opacity-90">Student Capacity</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-4xl font-extrabold text-yellow-300">+23%</div>
+                        <div className="text-sm opacity-90">Pass Rate Increase</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-4xl font-extrabold">-60%</div>
+                        <div className="text-sm opacity-90">No-Show Reduction</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-4xl font-extrabold">⚡ Seconds</div>
+                        <div className="text-sm opacity-90">Feedback Time</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* KPIs Row */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <Card className="bg-white border-2 border-gray-100 rounded-xl">
+                      <CardContent className="p-4 text-center">
+                        <Users className="w-8 h-8 mx-auto mb-2 text-blue-500" />
+                        <div className="text-2xl font-extrabold text-gray-900">{analyticsData?.kpis?.total_students || 0}</div>
+                        <div className="text-xs text-gray-500">Total Students</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-white border-2 border-gray-100 rounded-xl">
+                      <CardContent className="p-4 text-center">
+                        <Activity className="w-8 h-8 mx-auto mb-2 text-green-500" />
+                        <div className="text-2xl font-extrabold text-gray-900">{analyticsData?.kpis?.active_students || 0}</div>
+                        <div className="text-xs text-gray-500">Active (7 days)</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-white border-2 border-gray-100 rounded-xl">
+                      <CardContent className="p-4 text-center">
+                        <Award className="w-8 h-8 mx-auto mb-2 text-yellow-500" />
+                        <div className="text-2xl font-extrabold text-gray-900">{analyticsData?.kpis?.pass_rate || 0}%</div>
+                        <div className="text-xs text-gray-500">Pass Rate</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-white border-2 border-gray-100 rounded-xl">
+                      <CardContent className="p-4 text-center">
+                        <TrendingUp className="w-8 h-8 mx-auto mb-2 text-purple-500" />
+                        <div className="text-2xl font-extrabold text-gray-900">{analyticsData?.kpis?.engagement_rate || 0}%</div>
+                        <div className="text-xs text-gray-500">Engagement</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-white border-2 border-gray-100 rounded-xl">
+                      <CardContent className="p-4 text-center">
+                        <Target className="w-8 h-8 mx-auto mb-2 text-indigo-500" />
+                        <div className="text-2xl font-extrabold text-gray-900">{analyticsData?.kpis?.average_score || 0}</div>
+                        <div className="text-xs text-gray-500">Avg Score</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-white border-2 border-gray-100 rounded-xl">
+                      <CardContent className="p-4 text-center">
+                        <BookOpen className="w-8 h-8 mx-auto mb-2 text-cyan-500" />
+                        <div className="text-2xl font-extrabold text-gray-900">{analyticsData?.kpis?.total_exams_taken || 0}</div>
+                        <div className="text-xs text-gray-500">Exams Taken</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Risk Distribution & At-Risk Students */}
+                  <div className="grid lg:grid-cols-3 gap-6">
+                    {/* Risk Distribution Chart */}
+                    <Card className="bg-white border-2 border-gray-100 rounded-2xl">
+                      <CardHeader>
+                        <CardTitle className="text-gray-900 font-extrabold flex items-center gap-2">
+                          <AlertTriangle className="w-5 h-5 text-orange-500" />
+                          Risk Distribution
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-200">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                              <span className="font-semibold text-red-700">High Risk</span>
+                            </div>
+                            <span className="text-2xl font-extrabold text-red-600">{analyticsData?.risk_distribution?.high_risk || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between p-3 bg-orange-50 rounded-xl border border-orange-200">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                              <span className="font-semibold text-orange-700">Medium Risk</span>
+                            </div>
+                            <span className="text-2xl font-extrabold text-orange-600">{analyticsData?.risk_distribution?.medium_risk || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl border border-green-200">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                              <span className="font-semibold text-green-700">Low Risk</span>
+                            </div>
+                            <span className="text-2xl font-extrabold text-green-600">{analyticsData?.risk_distribution?.low_risk || 0}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* At-Risk Students */}
+                    <Card className="bg-white border-2 border-gray-100 rounded-2xl lg:col-span-2">
+                      <CardHeader>
+                        <CardTitle className="text-gray-900 font-extrabold flex items-center gap-2">
+                          <AlertTriangle className="w-5 h-5 text-red-500" />
+                          Students Requiring Attention ({atRiskStudents.length})
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                          {atRiskStudents.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500">
+                              <Award className="w-12 h-12 mx-auto mb-2 text-green-500" />
+                              <p className="font-semibold">All students are on track!</p>
+                            </div>
+                          ) : (
+                            atRiskStudents.slice(0, 5).map((student) => (
+                              <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                    student.dropout_category === 'high' ? 'bg-red-100' : 'bg-orange-100'
+                                  }`}>
+                                    <span className="font-bold text-sm">{student.name?.charAt(0) || '?'}</span>
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-gray-900">{student.name}</p>
+                                    <p className="text-xs text-gray-500">{student.exam_type?.toUpperCase()} • {student.primary_concern}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <Badge className={`${
+                                    student.dropout_category === 'high' ? 'bg-red-100 text-red-700 border-red-200' : 
+                                    'bg-orange-100 text-orange-700 border-orange-200'
+                                  }`}>
+                                    {student.pass_probability}% Pass
+                                  </Badge>
+                                  <p className="text-xs text-gray-500 mt-1">Dropout: {student.dropout_risk}%</p>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Cohort Analysis */}
+                  <div className="grid lg:grid-cols-2 gap-6">
+                    {/* By Exam Type */}
+                    <Card className="bg-white border-2 border-gray-100 rounded-2xl">
+                      <CardHeader>
+                        <CardTitle className="text-gray-900 font-extrabold">📊 Performance by Exam Type</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {cohortData?.by_exam_type?.map((cohort) => (
+                            <div key={cohort.cohort_name} className="p-3 bg-gray-50 rounded-xl">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-bold text-gray-900">{cohort.cohort_name}</span>
+                                <Badge variant="outline">{cohort.total_students} students</Badge>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2 text-sm">
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-blue-600">{cohort.average_score}</div>
+                                  <div className="text-xs text-gray-500">Avg Score</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-green-600">{cohort.pass_rate}%</div>
+                                  <div className="text-xs text-gray-500">Pass Rate</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-purple-600">{cohort.active_rate}%</div>
+                                  <div className="text-xs text-gray-500">Active</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {(!cohortData?.by_exam_type || cohortData.by_exam_type.length === 0) && (
+                            <p className="text-center text-gray-500 py-4">No cohort data available</p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* By Enrollment Month */}
+                    <Card className="bg-white border-2 border-gray-100 rounded-2xl">
+                      <CardHeader>
+                        <CardTitle className="text-gray-900 font-extrabold">📅 Performance by Enrollment Month</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {cohortData?.by_enrollment_month?.map((cohort) => (
+                            <div key={cohort.cohort_name} className="p-3 bg-gray-50 rounded-xl">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-bold text-gray-900">{cohort.cohort_name}</span>
+                                <Badge variant="outline">{cohort.total_students} students</Badge>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2 text-sm">
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-blue-600">{cohort.average_score}</div>
+                                  <div className="text-xs text-gray-500">Avg Score</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-green-600">{cohort.total_attempts}</div>
+                                  <div className="text-xs text-gray-500">Attempts</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-purple-600">{cohort.retention_rate}%</div>
+                                  <div className="text-xs text-gray-500">Retention</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {(!cohortData?.by_enrollment_month || cohortData.by_enrollment_month.length === 0) && (
+                            <p className="text-center text-gray-500 py-4">No monthly data available</p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* All Students with Predictions */}
+                  <Card className="bg-white border-2 border-gray-100 rounded-2xl">
+                    <CardHeader>
+                      <CardTitle className="text-gray-900 font-extrabold">🎯 All Students - Pass Probability & Dropout Risk</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b border-gray-200">
+                              <th className="text-left py-3 px-4 font-bold text-gray-700">Student</th>
+                              <th className="text-left py-3 px-4 font-bold text-gray-700">Exam</th>
+                              <th className="text-center py-3 px-4 font-bold text-gray-700">Avg Score</th>
+                              <th className="text-center py-3 px-4 font-bold text-gray-700">Pass Prob.</th>
+                              <th className="text-center py-3 px-4 font-bold text-gray-700">Dropout Risk</th>
+                              <th className="text-center py-3 px-4 font-bold text-gray-700">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {studentsAnalytics.slice(0, 10).map((student) => (
+                              <tr key={student.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                <td className="py-3 px-4">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-sm">
+                                      {student.name?.charAt(0) || '?'}
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold text-gray-900">{student.name}</p>
+                                      <p className="text-xs text-gray-500">{student.email}</p>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <Badge variant="outline">{student.exam_type?.toUpperCase()}</Badge>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <span className="font-bold">{student.performance?.average_score || 0}</span>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-bold ${
+                                    student.pass_prediction?.pass_probability >= 75 ? 'bg-green-100 text-green-700' :
+                                    student.pass_prediction?.pass_probability >= 50 ? 'bg-yellow-100 text-yellow-700' :
+                                    'bg-red-100 text-red-700'
+                                  }`}>
+                                    {student.pass_prediction?.pass_probability || 0}%
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-bold ${
+                                    student.dropout_risk?.dropout_risk <= 30 ? 'bg-green-100 text-green-700' :
+                                    student.dropout_risk?.dropout_risk <= 60 ? 'bg-orange-100 text-orange-700' :
+                                    'bg-red-100 text-red-700'
+                                  }`}>
+                                    {student.dropout_risk?.dropout_risk || 0}%
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <Badge className={`${
+                                    student.pass_prediction?.risk_level === 'low' ? 'bg-green-100 text-green-700 border-green-200' :
+                                    student.pass_prediction?.risk_level === 'medium' ? 'bg-orange-100 text-orange-700 border-orange-200' :
+                                    'bg-red-100 text-red-700 border-red-200'
+                                  }`}>
+                                    {student.pass_prediction?.risk_level || 'unknown'}
+                                  </Badge>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {studentsAnalytics.length === 0 && (
+                          <p className="text-center text-gray-500 py-8">No student analytics available. Add students to see predictions.</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
           )}
           
