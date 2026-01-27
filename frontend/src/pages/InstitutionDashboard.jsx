@@ -183,7 +183,77 @@ export default function InstitutionDashboard() {
     if (activeTab === 'analytics') {
       fetchAnalyticsData();
     }
+    if (activeTab === 'crm') {
+      fetchCrmData();
+    }
   }, [activeTab]);
+
+  const fetchCrmData = async () => {
+    setCrmLoading(true);
+    try {
+      const response = await axios.get(`${API_URL}/crm/leads`);
+      setCrmData(response.data);
+    } catch (error) {
+      console.error('Failed to fetch CRM data:', error);
+      toast.error('Failed to load CRM data');
+    } finally {
+      setCrmLoading(false);
+    }
+  };
+
+  const handleCreateLead = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API_URL}/crm/leads`, {
+        ...newLead,
+        students_count: parseInt(newLead.students_count) || 0,
+        estimated_value: parseFloat(newLead.estimated_value) || 0
+      });
+      toast.success('Lead created successfully!');
+      setAddLeadOpen(false);
+      setNewLead({
+        institution_name: '',
+        contact_name: '',
+        email: '',
+        phone: '',
+        country: '',
+        students_count: '',
+        exam_types: [],
+        estimated_value: '',
+        notes: ''
+      });
+      fetchCrmData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create lead');
+    }
+  };
+
+  const handleUpdateLeadStage = async (leadId, newStage) => {
+    try {
+      await axios.put(`${API_URL}/crm/leads/${leadId}`, { stage: newStage });
+      toast.success('Lead stage updated!');
+      fetchCrmData();
+    } catch (error) {
+      toast.error('Failed to update lead');
+    }
+  };
+
+  const handleAddActivity = async (e) => {
+    e.preventDefault();
+    if (!selectedLead) return;
+    try {
+      await axios.post(`${API_URL}/crm/leads/${selectedLead.id}/activities`, {
+        lead_id: selectedLead.id,
+        ...newActivity
+      });
+      toast.success('Activity added!');
+      setAddActivityOpen(false);
+      setNewActivity({ activity_type: 'call', description: '', outcome: '' });
+      fetchCrmData();
+    } catch (error) {
+      toast.error('Failed to add activity');
+    }
+  };
 
   const handleLogout = () => {
     logout();
