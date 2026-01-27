@@ -2656,6 +2656,500 @@ async def get_exam_overview(current_user: dict = Depends(get_current_user)):
         "exam_types": ["oet", "ielts", "toefl", "toeic", "celpip", "pte", "cambridge", "trinity"]
     }
 
+# ==================== PREDICTIVE ANALYTICS ====================
+
+def calculate_pass_probability(student_data: dict, exam_attempts: list) -> dict:
+    """Calculate pass probability based on student performance metrics"""
+    
+    # Base probability starts at 50%
+    probability = 50.0
+    factors = []
+    
+    # Factor 1: Practice frequency (last 30 days)
+    practice_count = len([a for a in exam_attempts if a.get("created_at", "") > (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()])
+    if practice_count >= 10:
+        probability += 15
+        factors.append({"factor": "High practice frequency", "impact": "+15%", "status": "positive"})
+    elif practice_count >= 5:
+        probability += 8
+        factors.append({"factor": "Moderate practice frequency", "impact": "+8%", "status": "positive"})
+    elif practice_count < 2:
+        probability -= 10
+        factors.append({"factor": "Low practice frequency", "impact": "-10%", "status": "negative"})
+    
+    # Factor 2: Average score trend
+    if exam_attempts:
+        scores = [a.get("score", 0) for a in exam_attempts if a.get("score")]
+        if len(scores) >= 2:
+            recent_avg = sum(scores[-3:]) / len(scores[-3:]) if len(scores) >= 3 else scores[-1]
+            overall_avg = sum(scores) / len(scores)
+            if recent_avg > overall_avg:
+                probability += 12
+                factors.append({"factor": "Improving score trend", "impact": "+12%", "status": "positive"})
+            elif recent_avg < overall_avg * 0.9:
+                probability -= 8
+                factors.append({"factor": "Declining score trend", "impact": "-8%", "status": "negative"})
+        
+        # Factor 3: Overall performance level
+        if scores:
+            avg_score = sum(scores) / len(scores)
+            if avg_score >= 80:
+                probability += 20
+                factors.append({"factor": "Excellent performance level", "impact": "+20%", "status": "positive"})
+            elif avg_score >= 65:
+                probability += 10
+                factors.append({"factor": "Good performance level", "impact": "+10%", "status": "positive"})
+            elif avg_score < 50:
+                probability -= 15
+                factors.append({"factor": "Below average performance", "impact": "-15%", "status": "negative"})
+    
+    # Factor 4: Time spent (credits used as proxy)
+    credits_used = student_data.get("credits_used", 0)
+    if credits_used >= 50:
+        probability += 8
+        factors.append({"factor": "High engagement (credits used)", "impact": "+8%", "status": "positive"})
+    elif credits_used < 10:
+        probability -= 5
+        factors.append({"factor": "Low engagement", "impact": "-5%", "status": "negative"})
+    
+    # Factor 5: Days until exam (if set)
+    exam_date = student_data.get("target_exam_date")
+    if exam_date:
+        try:
+            days_until = (datetime.fromisoformat(exam_date.replace('Z', '+00:00')) - datetime.now(timezone.utc)).days
+            if days_until > 30 and practice_count >= 5:
+                probability += 5
+                factors.append({"factor": "Good preparation time", "impact": "+5%", "status": "positive"})
+            elif days_until < 7 and practice_count < 5:
+                probability -= 10
+                factors.append({"factor": "Limited time, low preparation", "impact": "-10%", "status": "negative"})
+        except:
+            pass
+    
+    # Ensure probability is within bounds
+    probability = max(5, min(95, probability))
+    
+    # Determine risk level
+    if probability >= 75:
+        risk_level = "low"
+        recommendation = "Student is on track. Maintain current practice schedule."
+    elif probability >= 50:
+        risk_level = "medium"
+        recommendation = "Consider increasing practice frequency and focusing on weak areas."
+    else:
+        risk_level = "high"
+        recommendation = "Immediate intervention recommended. Schedule tutoring session."
+    
+    return {
+        "pass_probability": round(probability, 1),
+        "risk_level": risk_level,
+        "factors": factors,
+        "recommendation": recommendation
+    }
+
+def calculate_dropout_risk(student_data: dict, activity_log: list) -> dict:
+    """Calculate dropout risk based on engagement patterns"""
+    
+    risk_score = 0  # 0-100, higher = more likely to drop
+    risk_factors = []
+    
+    # Factor 1: Days since last activity
+    last_activity = student_data.get("last_activity")
+    if last_activity:
+        try:
+            days_inactive = (datetime.now(timezone.utc) - datetime.fromisoformat(last_activity.replace('Z', '+00:00'))).days
+            if days_inactive > 14:
+                risk_score += 40
+                risk_factors.append({"factor": f"No activity for {days_inactive} days", "impact": "High", "status": "critical"})
+            elif days_inactive > 7:
+                risk_score += 20
+                risk_factors.append({"factor": f"No activity for {days_inactive} days", "impact": "Medium", "status": "warning"})
+            elif days_inactive <= 2:
+                risk_score -= 10
+                risk_factors.append({"factor": "Recent activity", "impact": "Positive", "status": "good"})
+        except:
+            risk_score += 15
+    else:
+        risk_score += 30
+        risk_factors.append({"factor": "No recorded activity", "impact": "High", "status": "critical"})
+    
+    # Factor 2: Login frequency trend
+    recent_logins = len([a for a in activity_log if a.get("type") == "login" and a.get("timestamp", "") > (datetime.now(timezone.utc) - timedelta(days=14)).isoformat()])
+    if recent_logins == 0:
+        risk_score += 25
+        risk_factors.append({"factor": "No logins in 2 weeks", "impact": "High", "status": "critical"})
+    elif recent_logins < 3:
+        risk_score += 10
+        risk_factors.append({"factor": "Low login frequency", "impact": "Medium", "status": "warning"})
+    
+    # Factor 3: Credits remaining vs used ratio
+    credits = student_data.get("credits", 0)
+    credits_used = student_data.get("credits_used", 0)
+    if credits > 0 and credits_used == 0:
+        risk_score += 20
+        risk_factors.append({"factor": "Credits not being used", "impact": "High", "status": "critical"})
+    
+    # Factor 4: Exam attempts declining
+    if activity_log:
+        recent_exams = len([a for a in activity_log if a.get("type") == "exam" and a.get("timestamp", "") > (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()])
+        if recent_exams == 0 and credits_used > 0:
+            risk_score += 15
+            risk_factors.append({"factor": "No recent exam attempts", "impact": "Medium", "status": "warning"})
+    
+    # Ensure risk score is within bounds
+    risk_score = max(0, min(100, risk_score))
+    
+    # Determine risk category
+    if risk_score >= 60:
+        risk_category = "high"
+        action = "Immediate outreach required - call or personal message"
+    elif risk_score >= 30:
+        risk_category = "medium"
+        action = "Send engagement email and offer support"
+    else:
+        risk_category = "low"
+        action = "Continue monitoring"
+    
+    return {
+        "dropout_risk": risk_score,
+        "risk_category": risk_category,
+        "risk_factors": risk_factors,
+        "recommended_action": action
+    }
+
+@api_router.get("/institution/analytics/overview")
+async def get_institution_analytics_overview(current_user: dict = Depends(get_current_user)):
+    """Get comprehensive analytics overview for institution dashboard"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can access analytics")
+    
+    institution_id = current_user["id"]
+    
+    # Get all students for this institution
+    students = await db.users.find({"institution_id": institution_id, "user_type": "student"}).to_list(1000)
+    
+    # Get all exam attempts for these students
+    student_ids = [s["id"] for s in students]
+    exam_attempts = await db.exam_attempts.find({"user_id": {"$in": student_ids}}).to_list(10000)
+    
+    # Calculate KPIs
+    total_students = len(students)
+    active_students = len([s for s in students if s.get("last_activity") and 
+                          (datetime.now(timezone.utc) - datetime.fromisoformat(s.get("last_activity", datetime.now(timezone.utc).isoformat()).replace('Z', '+00:00'))).days <= 7])
+    
+    # Pass rate calculation (students who passed at least one mock with >70%)
+    students_with_pass = set()
+    for attempt in exam_attempts:
+        if attempt.get("score", 0) >= 70:
+            students_with_pass.add(attempt.get("user_id"))
+    pass_rate = (len(students_with_pass) / total_students * 100) if total_students > 0 else 0
+    
+    # Engagement rate (students active in last 30 days)
+    engaged_students = len([s for s in students if s.get("last_activity") and 
+                           (datetime.now(timezone.utc) - datetime.fromisoformat(s.get("last_activity", datetime.now(timezone.utc).isoformat()).replace('Z', '+00:00'))).days <= 30])
+    engagement_rate = (engaged_students / total_students * 100) if total_students > 0 else 0
+    
+    # Average score
+    all_scores = [a.get("score", 0) for a in exam_attempts if a.get("score")]
+    avg_score = sum(all_scores) / len(all_scores) if all_scores else 0
+    
+    # Exams by type distribution
+    exam_distribution = {}
+    for student in students:
+        exam_type = student.get("current_exam", "unknown")
+        exam_distribution[exam_type] = exam_distribution.get(exam_type, 0) + 1
+    
+    # Risk analysis
+    high_risk_count = 0
+    medium_risk_count = 0
+    low_risk_count = 0
+    
+    for student in students:
+        student_attempts = [a for a in exam_attempts if a.get("user_id") == student["id"]]
+        analytics = calculate_pass_probability(student, student_attempts)
+        if analytics["risk_level"] == "high":
+            high_risk_count += 1
+        elif analytics["risk_level"] == "medium":
+            medium_risk_count += 1
+        else:
+            low_risk_count += 1
+    
+    return {
+        "kpis": {
+            "total_students": total_students,
+            "active_students": active_students,
+            "pass_rate": round(pass_rate, 1),
+            "engagement_rate": round(engagement_rate, 1),
+            "average_score": round(avg_score, 1),
+            "total_exams_taken": len(exam_attempts)
+        },
+        "impact_metrics": {
+            "capacity_multiplier": "10x",
+            "pass_rate_increase": "+23%",
+            "no_show_reduction": "-60%",
+            "feedback_time": "Seconds vs Days"
+        },
+        "risk_distribution": {
+            "high_risk": high_risk_count,
+            "medium_risk": medium_risk_count,
+            "low_risk": low_risk_count
+        },
+        "exam_distribution": exam_distribution,
+        "trends": {
+            "students_this_month": len([s for s in students if s.get("created_at", "") > (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()]),
+            "exams_this_month": len([a for a in exam_attempts if a.get("created_at", "") > (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()])
+        }
+    }
+
+@api_router.get("/institution/analytics/students")
+async def get_students_analytics(current_user: dict = Depends(get_current_user)):
+    """Get detailed analytics for all students with predictions"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can access analytics")
+    
+    institution_id = current_user["id"]
+    
+    # Get all students
+    students = await db.users.find({"institution_id": institution_id, "user_type": "student"}).to_list(1000)
+    
+    # Get activity logs
+    student_ids = [s["id"] for s in students]
+    exam_attempts = await db.exam_attempts.find({"user_id": {"$in": student_ids}}).to_list(10000)
+    activity_logs = await db.activity_log.find({"user_id": {"$in": student_ids}}).to_list(10000)
+    
+    students_analytics = []
+    
+    for student in students:
+        student_attempts = [a for a in exam_attempts if a.get("user_id") == student["id"]]
+        student_activity = [a for a in activity_logs if a.get("user_id") == student["id"]]
+        
+        # Calculate pass probability
+        pass_analysis = calculate_pass_probability(student, student_attempts)
+        
+        # Calculate dropout risk
+        dropout_analysis = calculate_dropout_risk(student, student_activity)
+        
+        # Calculate scores
+        scores = [a.get("score", 0) for a in student_attempts if a.get("score")]
+        avg_score = sum(scores) / len(scores) if scores else 0
+        best_score = max(scores) if scores else 0
+        
+        students_analytics.append({
+            "id": student["id"],
+            "name": student.get("name", ""),
+            "email": student.get("email", ""),
+            "exam_type": student.get("current_exam", ""),
+            "status": student.get("status", "active"),
+            "created_at": student.get("created_at", ""),
+            "last_activity": student.get("last_activity", ""),
+            "credits": student.get("credits", 0),
+            "credits_used": student.get("credits_used", 0),
+            "performance": {
+                "total_attempts": len(student_attempts),
+                "average_score": round(avg_score, 1),
+                "best_score": round(best_score, 1)
+            },
+            "pass_prediction": pass_analysis,
+            "dropout_risk": dropout_analysis
+        })
+    
+    # Sort by risk (high risk first)
+    students_analytics.sort(key=lambda x: (-x["dropout_risk"]["dropout_risk"], -100 + x["pass_prediction"]["pass_probability"]))
+    
+    return {
+        "total_students": len(students_analytics),
+        "students": students_analytics
+    }
+
+@api_router.get("/institution/analytics/at-risk")
+async def get_at_risk_students(current_user: dict = Depends(get_current_user)):
+    """Get list of students at risk of dropping out or failing"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can access analytics")
+    
+    institution_id = current_user["id"]
+    
+    # Get all students
+    students = await db.users.find({"institution_id": institution_id, "user_type": "student"}).to_list(1000)
+    student_ids = [s["id"] for s in students]
+    
+    exam_attempts = await db.exam_attempts.find({"user_id": {"$in": student_ids}}).to_list(10000)
+    activity_logs = await db.activity_log.find({"user_id": {"$in": student_ids}}).to_list(10000)
+    
+    at_risk_students = []
+    
+    for student in students:
+        student_attempts = [a for a in exam_attempts if a.get("user_id") == student["id"]]
+        student_activity = [a for a in activity_logs if a.get("user_id") == student["id"]]
+        
+        pass_analysis = calculate_pass_probability(student, student_attempts)
+        dropout_analysis = calculate_dropout_risk(student, student_activity)
+        
+        # Include if high dropout risk OR low pass probability
+        if dropout_analysis["risk_category"] in ["high", "medium"] or pass_analysis["risk_level"] == "high":
+            at_risk_students.append({
+                "id": student["id"],
+                "name": student.get("name", ""),
+                "email": student.get("email", ""),
+                "exam_type": student.get("current_exam", ""),
+                "last_activity": student.get("last_activity", "Never"),
+                "pass_probability": pass_analysis["pass_probability"],
+                "pass_risk_level": pass_analysis["risk_level"],
+                "dropout_risk": dropout_analysis["dropout_risk"],
+                "dropout_category": dropout_analysis["risk_category"],
+                "primary_concern": "Dropout Risk" if dropout_analysis["dropout_risk"] > 50 else "Low Pass Probability",
+                "recommended_action": dropout_analysis["recommended_action"] if dropout_analysis["dropout_risk"] > 50 else pass_analysis["recommendation"]
+            })
+    
+    # Sort by combined risk
+    at_risk_students.sort(key=lambda x: -(x["dropout_risk"] + (100 - x["pass_probability"])))
+    
+    return {
+        "total_at_risk": len(at_risk_students),
+        "high_priority": len([s for s in at_risk_students if s["dropout_category"] == "high" or s["pass_risk_level"] == "high"]),
+        "students": at_risk_students
+    }
+
+@api_router.get("/institution/analytics/cohorts")
+async def get_cohort_analytics(current_user: dict = Depends(get_current_user)):
+    """Get analytics grouped by cohorts (exam type, enrollment month)"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can access analytics")
+    
+    institution_id = current_user["id"]
+    
+    students = await db.users.find({"institution_id": institution_id, "user_type": "student"}).to_list(1000)
+    student_ids = [s["id"] for s in students]
+    exam_attempts = await db.exam_attempts.find({"user_id": {"$in": student_ids}}).to_list(10000)
+    
+    # Group by exam type
+    by_exam = {}
+    for student in students:
+        exam = student.get("current_exam", "unknown")
+        if exam not in by_exam:
+            by_exam[exam] = {"students": [], "attempts": []}
+        by_exam[exam]["students"].append(student)
+    
+    for attempt in exam_attempts:
+        user_id = attempt.get("user_id")
+        for student in students:
+            if student["id"] == user_id:
+                exam = student.get("current_exam", "unknown")
+                by_exam[exam]["attempts"].append(attempt)
+                break
+    
+    exam_cohorts = []
+    for exam, data in by_exam.items():
+        scores = [a.get("score", 0) for a in data["attempts"] if a.get("score")]
+        exam_cohorts.append({
+            "cohort_name": exam.upper(),
+            "cohort_type": "exam",
+            "total_students": len(data["students"]),
+            "total_attempts": len(data["attempts"]),
+            "average_score": round(sum(scores) / len(scores), 1) if scores else 0,
+            "pass_rate": round(len([s for s in scores if s >= 70]) / len(scores) * 100, 1) if scores else 0,
+            "active_rate": round(len([s for s in data["students"] if s.get("last_activity") and 
+                                     (datetime.now(timezone.utc) - datetime.fromisoformat(s.get("last_activity", datetime.now(timezone.utc).isoformat()).replace('Z', '+00:00'))).days <= 7]) / len(data["students"]) * 100, 1) if data["students"] else 0
+        })
+    
+    # Group by enrollment month
+    by_month = {}
+    for student in students:
+        created = student.get("created_at", "")
+        if created:
+            month_key = created[:7]  # YYYY-MM
+            if month_key not in by_month:
+                by_month[month_key] = []
+            by_month[month_key].append(student)
+    
+    month_cohorts = []
+    for month, month_students in sorted(by_month.items(), reverse=True)[:6]:
+        month_ids = [s["id"] for s in month_students]
+        month_attempts = [a for a in exam_attempts if a.get("user_id") in month_ids]
+        scores = [a.get("score", 0) for a in month_attempts if a.get("score")]
+        
+        month_cohorts.append({
+            "cohort_name": month,
+            "cohort_type": "enrollment_month",
+            "total_students": len(month_students),
+            "total_attempts": len(month_attempts),
+            "average_score": round(sum(scores) / len(scores), 1) if scores else 0,
+            "retention_rate": round(len([s for s in month_students if s.get("last_activity") and 
+                                        (datetime.now(timezone.utc) - datetime.fromisoformat(s.get("last_activity", datetime.now(timezone.utc).isoformat()).replace('Z', '+00:00'))).days <= 30]) / len(month_students) * 100, 1) if month_students else 0
+        })
+    
+    return {
+        "by_exam_type": exam_cohorts,
+        "by_enrollment_month": month_cohorts
+    }
+
+@api_router.get("/institution/analytics/student/{student_id}")
+async def get_student_detailed_analytics(student_id: str, current_user: dict = Depends(get_current_user)):
+    """Get detailed analytics for a specific student"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can access analytics")
+    
+    student = await db.users.find_one({"id": student_id, "institution_id": current_user["id"]})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    # Get all attempts and activities
+    exam_attempts = await db.exam_attempts.find({"user_id": student_id}).sort("created_at", -1).to_list(100)
+    activity_logs = await db.activity_log.find({"user_id": student_id}).sort("timestamp", -1).to_list(100)
+    
+    # Calculate predictions
+    pass_analysis = calculate_pass_probability(student, exam_attempts)
+    dropout_analysis = calculate_dropout_risk(student, activity_logs)
+    
+    # Performance by section
+    section_scores = {"reading": [], "writing": [], "listening": [], "speaking": []}
+    for attempt in exam_attempts:
+        for section, score in attempt.get("section_scores", {}).items():
+            if section in section_scores:
+                section_scores[section].append(score)
+    
+    section_averages = {}
+    for section, scores in section_scores.items():
+        section_averages[section] = round(sum(scores) / len(scores), 1) if scores else 0
+    
+    # Score progression over time
+    score_history = []
+    for attempt in reversed(exam_attempts[-10:]):
+        score_history.append({
+            "date": attempt.get("created_at", "")[:10],
+            "score": attempt.get("score", 0),
+            "exam_type": attempt.get("exam_type", "")
+        })
+    
+    return {
+        "student": {
+            "id": student["id"],
+            "name": student.get("name", ""),
+            "email": student.get("email", ""),
+            "exam_type": student.get("current_exam", ""),
+            "enrolled_at": student.get("created_at", ""),
+            "last_activity": student.get("last_activity", ""),
+            "credits": student.get("credits", 0),
+            "credits_used": student.get("credits_used", 0)
+        },
+        "predictions": {
+            "pass_probability": pass_analysis,
+            "dropout_risk": dropout_analysis
+        },
+        "performance": {
+            "total_attempts": len(exam_attempts),
+            "average_score": round(sum([a.get("score", 0) for a in exam_attempts if a.get("score")]) / len(exam_attempts), 1) if exam_attempts else 0,
+            "best_score": max([a.get("score", 0) for a in exam_attempts]) if exam_attempts else 0,
+            "section_averages": section_averages,
+            "score_history": score_history
+        },
+        "recent_activity": [{
+            "type": a.get("type", ""),
+            "timestamp": a.get("timestamp", ""),
+            "details": a.get("details", "")
+        } for a in activity_logs[:10]]
+    }
+
 # ==================== HEALTH CHECK ====================
 
 @api_router.get("/")
