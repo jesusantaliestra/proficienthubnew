@@ -9,7 +9,8 @@ import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
 import {
   Video, Mail, Trophy, Settings, Save, TestTube, CheckCircle, XCircle,
-  Eye, EyeOff, AlertTriangle, Zap, Users, Gift, Flame, Bot, Sparkles
+  Eye, EyeOff, AlertTriangle, Zap, Users, Gift, Flame, Bot, Sparkles,
+  GraduationCap, Calendar, Coins, ShoppingCart
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
