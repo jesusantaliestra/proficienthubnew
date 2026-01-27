@@ -5563,6 +5563,182 @@ async def get_student_profile(current_user: dict = Depends(get_current_user)):
         "institution_name": current_user.get("institution_name")
     }
 
+# ==================== AVATAR & HEYGEN ====================
+
+@api_router.post("/institution/settings/avatar")
+async def save_avatar_settings(settings: InstitutionAvatarSettings, current_user: dict = Depends(get_current_user)):
+    """Save Avatar/HeyGen settings"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can modify settings")
+    
+    await db.institution_settings.update_one(
+        {"institution_id": current_user["id"]},
+        {"$set": {"avatar": settings.dict(), "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"message": "Avatar settings saved"}
+
+@api_router.post("/avatar/heygen/generate")
+async def generate_heygen_video(
+    script_text: str,
+    avatar_id: str = "sarah",
+    voice_id: str = "en-US-1",
+    current_user: dict = Depends(get_current_user)
+):
+    """Generate HeyGen avatar video"""
+    institution_id = current_user.get("institution_id") or current_user.get("id")
+    
+    # Get institution's HeyGen settings
+    settings = await db.institution_settings.find_one({"institution_id": institution_id})
+    avatar_config = settings.get("avatar", {}) if settings else {}
+    
+    if not avatar_config.get("heygen_enabled"):
+        raise HTTPException(status_code=400, detail="HeyGen not enabled for this institution")
+    
+    heygen_api_key = avatar_config.get("heygen_api_key")
+    if not heygen_api_key:
+        raise HTTPException(status_code=400, detail="HeyGen API key not configured")
+    
+    # Check credit limits
+    credits_used = avatar_config.get("heygen_credits_used", 0)
+    monthly_limit = avatar_config.get("heygen_monthly_limit", 100)
+    
+    # Estimate credits needed (1 credit per ~30 seconds)
+    word_count = len(script_text.split())
+    estimated_credits = max(1, int((word_count / 150) * 2))  # ~150 words per minute
+    
+    if credits_used + estimated_credits > monthly_limit:
+        raise HTTPException(
+            status_code=429, 
+            detail=f"HeyGen credit limit reached ({credits_used}/{monthly_limit}). Upgrade your plan or wait until next month."
+        )
+    
+    try:
+        import httpx
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://api.heygen.com/v2/video/generate",
+                headers={
+                    "X-API-Key": heygen_api_key,
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "video_inputs": [{
+                        "character": {
+                            "avatar_id": avatar_id,
+                            "voice": {"voice_id": voice_id}
+                        },
+                        "script": {
+                            "type": "text",
+                            "input": script_text
+                        }
+                    }],
+                    "test": False
+                }
+            )
+            
+            if response.status_code not in [200, 201]:
+                raise HTTPException(status_code=400, detail=f"HeyGen API error: {response.text}")
+            
+            data = response.json()
+            video_id = data.get("data", {}).get("video_id")
+            
+            # Store video request
+            video_doc = {
+                "id": str(uuid.uuid4()),
+                "heygen_video_id": video_id,
+                "institution_id": institution_id,
+                "user_id": current_user["id"],
+                "script_text": script_text[:200],
+                "avatar_id": avatar_id,
+                "status": "processing",
+                "credits_consumed": estimated_credits,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.heygen_videos.insert_one(video_doc)
+            
+            # Update credits used
+            await db.institution_settings.update_one(
+                {"institution_id": institution_id},
+                {"$inc": {"avatar.heygen_credits_used": estimated_credits}}
+            )
+            
+            return {
+                "video_id": video_doc["id"],
+                "heygen_video_id": video_id,
+                "status": "processing",
+                "credits_consumed": estimated_credits
+            }
+            
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=400, detail=f"HeyGen connection error: {str(e)}")
+
+@api_router.get("/avatar/heygen/status/{video_id}")
+async def get_heygen_video_status(video_id: str, current_user: dict = Depends(get_current_user)):
+    """Check HeyGen video generation status"""
+    video = await db.heygen_videos.find_one({"id": video_id}, {"_id": 0})
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+    
+    # If already completed, return cached result
+    if video.get("status") == "completed" and video.get("video_url"):
+        return {
+            "status": "completed",
+            "video_url": video.get("video_url")
+        }
+    
+    # Check with HeyGen API
+    institution_id = current_user.get("institution_id") or current_user.get("id")
+    settings = await db.institution_settings.find_one({"institution_id": institution_id})
+    heygen_api_key = settings.get("avatar", {}).get("heygen_api_key") if settings else None
+    
+    if not heygen_api_key:
+        return {"status": video.get("status", "unknown")}
+    
+    try:
+        import httpx
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                "https://api.heygen.com/v1/video_status",
+                params={"video_id": video.get("heygen_video_id")},
+                headers={"X-API-Key": heygen_api_key}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                status = data.get("data", {}).get("status")
+                video_url = data.get("data", {}).get("video_url")
+                
+                if status == "completed" and video_url:
+                    await db.heygen_videos.update_one(
+                        {"id": video_id},
+                        {"$set": {"status": "completed", "video_url": video_url}}
+                    )
+                    return {"status": "completed", "video_url": video_url}
+                
+                return {"status": status or "processing"}
+                
+    except Exception as e:
+        return {"status": "processing", "error": str(e)}
+    
+    return {"status": video.get("status", "processing")}
+
+@api_router.get("/avatar/heygen/usage")
+async def get_heygen_usage(current_user: dict = Depends(get_current_user)):
+    """Get HeyGen usage statistics"""
+    institution_id = current_user.get("institution_id") or current_user.get("id")
+    settings = await db.institution_settings.find_one({"institution_id": institution_id})
+    avatar_config = settings.get("avatar", {}) if settings else {}
+    
+    return {
+        "heygen_enabled": avatar_config.get("heygen_enabled", False),
+        "credits_used": avatar_config.get("heygen_credits_used", 0),
+        "credits_limit": avatar_config.get("heygen_monthly_limit", 100),
+        "credits_remaining": max(0, avatar_config.get("heygen_monthly_limit", 100) - avatar_config.get("heygen_credits_used", 0))
+    }
+
 # ==================== HEALTH CHECK ====================
 
 @api_router.get("/")
