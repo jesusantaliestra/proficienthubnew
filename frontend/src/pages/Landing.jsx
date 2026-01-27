@@ -44,6 +44,8 @@ export default function Landing() {
     { id: 'all', label: 'All Exams' },
     { id: 'toefl', label: 'TOEFL' },
     { id: 'ielts', label: 'IELTS' },
+    { id: 'cambridge', label: 'Cambridge' },
+    { id: 'trinity', label: 'Trinity' },
     { id: 'toeic', label: 'TOEIC' },
     { id: 'celpip', label: 'CELPIP' },
     { id: 'pte', label: 'PTE' },
@@ -236,6 +238,8 @@ export default function Landing() {
   const examTypes = [
     { id: 'toefl', name: 'TOEFL', color: 'bg-blue-600', description: 'Test of English as a Foreign Language' },
     { id: 'ielts', name: 'IELTS', color: 'bg-red-600', description: 'International English Language Testing System' },
+    { id: 'cambridge', name: 'Cambridge', color: 'bg-purple-600', description: 'Cambridge English Qualifications (FCE, CAE, CPE)' },
+    { id: 'trinity', name: 'Trinity', color: 'bg-pink-600', description: 'Trinity College London GESE & ISE Exams' },
     { id: 'toeic', name: 'TOEIC', color: 'bg-indigo-600', description: 'Test of English for International Communication' },
     { id: 'celpip', name: 'CELPIP', color: 'bg-cyan-600', description: 'Canadian English Language Proficiency Index' },
     { id: 'pte', name: 'PTE', color: 'bg-orange-600', description: 'Pearson Test of English' },
@@ -321,6 +325,8 @@ export default function Landing() {
               instant feedback, and premium analytics. Prepare students for 
               <span className="font-semibold text-blue-600"> TOEFL</span>,
               <span className="font-semibold text-red-600"> IELTS</span>,
+              <span className="font-semibold text-purple-600"> Cambridge</span>,
+              <span className="font-semibold text-pink-600"> Trinity</span>,
               <span className="font-semibold text-indigo-600"> TOEIC</span>,
               <span className="font-semibold text-cyan-600"> CELPIP</span>,
               <span className="font-semibold text-orange-600"> PTE</span>, and
