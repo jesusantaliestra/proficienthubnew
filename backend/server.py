@@ -222,6 +222,7 @@ async def login(credentials: UserLogin):
         name=user["name"],
         user_type=user["user_type"],
         institution_name=user.get("institution_name"),
+        institution_id=user.get("institution_id"),
         created_at=user["created_at"],
         subscription_plan=user.get("subscription_plan"),
         language=user.get("language", "en")
