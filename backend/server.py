@@ -202,6 +202,7 @@ async def register(user_data: UserCreate):
         name=user_data.name,
         user_type=user_data.user_type,
         institution_name=user_data.institution_name,
+        institution_id=None,
         created_at=user_doc["created_at"],
         subscription_plan=None,
         language="en"
