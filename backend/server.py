@@ -5007,6 +5007,16 @@ class InstitutionEmailSettings(BaseModel):
     smtp_enabled: bool = False
     smtp_use_tls: bool = True
 
+class InstitutionAvatarSettings(BaseModel):
+    avatar_mode: str = "simple"  # simple, rive, heygen
+    default_avatar_style: str = "teacher"
+    heygen_enabled: bool = False
+    heygen_api_key: str = ""
+    heygen_avatar_id: str = "sarah"
+    heygen_voice_id: str = "en-US-1"
+    heygen_monthly_limit: int = 100  # credits per month
+    heygen_credits_used: int = 0
+
 class InstitutionGamificationSettings(BaseModel):
     gamification_enabled: bool = False
     xp_per_exam: int = 50
