@@ -127,13 +127,16 @@ class TestCRMTasks(TestCRMSupremeAuth):
     """CRM Tasks CRUD tests"""
     
     def test_get_tasks(self, auth_headers):
-        """GET /api/crm/tasks - Returns tasks list"""
+        """GET /api/crm/tasks - Returns tasks grouped by status"""
         response = requests.get(f"{BASE_URL}/api/crm/tasks", headers=auth_headers)
         assert response.status_code == 200, f"Failed: {response.text}"
         data = response.json()
-        assert "tasks" in data, "Response should contain 'tasks' key"
-        assert isinstance(data["tasks"], list), "Tasks should be a list"
-        print(f"✓ GET /api/crm/tasks - Found {len(data['tasks'])} tasks")
+        # Tasks endpoint returns grouped structure
+        expected_keys = ["overdue", "today", "upcoming", "completed", "stats"]
+        for key in expected_keys:
+            assert key in data, f"Response should contain '{key}' key"
+        assert "total_pending" in data["stats"], "Stats should contain total_pending"
+        print(f"✓ GET /api/crm/tasks - Stats: {data['stats']}")
     
     def test_create_task(self, auth_headers):
         """POST /api/crm/tasks - Creates new task"""
@@ -151,7 +154,6 @@ class TestCRMTasks(TestCRMSupremeAuth):
         data = response.json()
         assert "id" in data, "Response should contain task id"
         print(f"✓ POST /api/crm/tasks - Created task with id: {data['id']}")
-        return data["id"]
 
 
 class TestCRMSupremeIntegration(TestCRMSupremeAuth):
