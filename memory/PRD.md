@@ -159,7 +159,7 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 ```
 /app
 ├── backend/
-│   ├── server.py           # FastAPI app (1700+ lines)
+│   ├── server.py           # FastAPI app (4900+ lines)
 │   ├── exam_questions.py   # Question bank
 │   ├── requirements.txt
 │   └── .env
@@ -170,21 +170,38 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 │   │   │   ├── ExamSimulator.jsx     # Full exam simulator
 │   │   │   ├── AITutor.jsx           # Voice-enabled tutor
 │   │   │   ├── AdminPanel.jsx        # Admin dashboard
-│   │   │   ├── InstitutionDashboard.jsx
+│   │   │   ├── InstitutionDashboard.jsx  # Main institution portal
 │   │   │   ├── StudentDashboard.jsx
+│   │   │   ├── WhiteLabelSettings.jsx    # Premium white-label config
 │   │   │   ├── PaymentSuccess.jsx
 │   │   │   └── Auth.jsx
+│   │   ├── components/
+│   │   │   ├── CRMSupreme.jsx        # Advanced CRM component
+│   │   │   └── ui/                   # Shadcn components
 │   │   ├── hooks/
 │   │   │   └── useOffline.js        # Offline hook
 │   │   ├── locales/
 │   │   │   └── translations.json    # i18n translations
 │   │   ├── contexts/
 │   │   │   └── AuthContext.jsx
-│   │   ├── components/ui/           # Shadcn components
 │   │   ├── i18n.js                  # i18next config
 │   │   └── App.js
 │   ├── public/
 │   │   └── service-worker.js        # Offline support
+│   └── package.json
+├── mobile/                          # NEW: React Native App
+│   ├── App.tsx                      # App entry point
+│   ├── app.json                     # Expo config
+│   ├── eas.json                     # EAS Build config
+│   ├── white-label.config.js        # White-label settings
+│   ├── src/
+│   │   ├── components/              # Reusable components
+│   │   ├── contexts/                # AuthContext, ThemeContext, WhiteLabelContext
+│   │   ├── hooks/                   # useOffline, useVoice
+│   │   ├── navigation/              # React Navigation setup
+│   │   ├── screens/                 # App screens
+│   │   ├── services/                # API and storage
+│   │   └── theme/                   # Design system
 │   └── package.json
 └── memory/
     └── PRD.md
