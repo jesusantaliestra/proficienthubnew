@@ -502,6 +502,14 @@ export default function InstitutionDashboard() {
               </SelectContent>
             </Select>
           </div>
+          <button 
+            onClick={() => navigate('/institution/whitelabel')} 
+            className="sidebar-item w-full" 
+            data-testid="nav-whitelabel"
+          >
+            <Palette className="w-5 h-5" />
+            <span>White-Label</span>
+          </button>
           <button className="sidebar-item w-full" data-testid="nav-settings">
             <Settings className="w-5 h-5" />
             <span>Settings</span>
