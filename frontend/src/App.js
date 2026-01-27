@@ -131,6 +131,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* White-Label Settings */}
+      <Route 
+        path="/institution/whitelabel" 
+        element={
+          <ProtectedRoute allowedTypes={['institution', 'admin']}>
+            <WhiteLabelSettings />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Student/Individual Routes */}
       <Route 
         path="/student/dashboard" 
