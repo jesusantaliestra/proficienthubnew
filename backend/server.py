@@ -63,6 +63,7 @@ class UserResponse(BaseModel):
     name: str
     user_type: str
     institution_name: Optional[str] = None
+    institution_id: Optional[str] = None
     created_at: str
     subscription_plan: Optional[str] = None
     language: str = "en"
