@@ -93,6 +93,18 @@ export default function InstitutionDashboard() {
     exam_types: [],
     delivery_method: 'online'
   });
+  const [videoClassesData, setVideoClassesData] = useState(null);
+  const [videoClassesLoading, setVideoClassesLoading] = useState(false);
+  const [addClassOpen, setAddClassOpen] = useState(false);
+  const [newVideoClass, setNewVideoClass] = useState({
+    title: '',
+    description: '',
+    exam_type: 'ielts',
+    skill: 'speaking',
+    class_type: 'live',
+    duration_minutes: 60,
+    scheduled_at: ''
+  });
 
   useEffect(() => {
     fetchData();
