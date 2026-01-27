@@ -326,7 +326,67 @@ export default function InstitutionDashboard() {
     if (activeTab === 'marketplace') {
       fetchMarketplaceData();
     }
+    if (activeTab === 'classes') {
+      fetchVideoClasses();
+    }
   }, [activeTab, selectedCategory]);
+
+  const fetchVideoClasses = async () => {
+    setVideoClassesLoading(true);
+    try {
+      const response = await axios.get(`${API_URL}/video-classes`);
+      setVideoClassesData(response.data);
+    } catch (error) {
+      console.error('Failed to fetch video classes:', error);
+      toast.error('Failed to load video classes');
+    } finally {
+      setVideoClassesLoading(false);
+    }
+  };
+
+  const handleCreateVideoClass = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API_URL}/video-classes`, {
+        ...newVideoClass,
+        duration_minutes: parseInt(newVideoClass.duration_minutes) || 60
+      });
+      toast.success('Video class created!');
+      setAddClassOpen(false);
+      setNewVideoClass({
+        title: '',
+        description: '',
+        exam_type: 'ielts',
+        skill: 'speaking',
+        class_type: 'live',
+        duration_minutes: 60,
+        scheduled_at: ''
+      });
+      fetchVideoClasses();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create class');
+    }
+  };
+
+  const handleStartClass = async (classId) => {
+    try {
+      await axios.put(`${API_URL}/video-classes/${classId}/status?status=live`);
+      toast.success('Class is now live!');
+      fetchVideoClasses();
+    } catch (error) {
+      toast.error('Failed to start class');
+    }
+  };
+
+  const handleEndClass = async (classId) => {
+    try {
+      await axios.put(`${API_URL}/video-classes/${classId}/status?status=ended`);
+      toast.success('Class ended');
+      fetchVideoClasses();
+    } catch (error) {
+      toast.error('Failed to end class');
+    }
+  };
 
   const handleLogout = () => {
     logout();
