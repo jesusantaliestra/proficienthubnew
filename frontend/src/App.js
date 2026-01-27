@@ -10,6 +10,7 @@ import Landing from './pages/Landing';
 import Auth from './pages/Auth';
 import InstitutionDashboard from './pages/InstitutionDashboard';
 import StudentDashboard from './pages/StudentDashboard';
+import StudentDashboardRestricted from './pages/StudentDashboardRestricted';
 import AITutor from './pages/AITutor';
 import ExamSimulator from './pages/ExamSimulator';
 import PaymentSuccess from './pages/PaymentSuccess';
