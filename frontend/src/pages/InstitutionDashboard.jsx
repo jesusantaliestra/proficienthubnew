@@ -476,7 +476,8 @@ export default function InstitutionDashboard() {
             { id: 'classes', icon: Video, label: 'Video Classes' },
             { id: 'library', icon: FolderOpen, label: 'Library' },
             { id: 'analytics', icon: Activity, label: 'Analytics' },
-            { id: 'exams', icon: BookOpen, label: 'Exams' }
+            { id: 'exams', icon: BookOpen, label: 'Exams' },
+            { id: 'settings', icon: Cog, label: 'Settings' }
           ].map((item) => (
             <button
               key={item.id}
