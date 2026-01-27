@@ -6076,6 +6076,586 @@ async def submit_placement_test(
 async def root():
     return {"message": "ProficientHub API", "status": "healthy"}
 
+# ==================== MULTI-AGENT AI TUTOR SYSTEM ====================
+
+# Agent Types with their personalities and configurations
+AI_AGENTS = {
+    "official_tutor": {
+        "name": "Official Tutor",
+        "name_es": "Tutor Oficial",
+        "description": "Expert exam preparation tutor",
+        "icon": "🎓",
+        "system_prompt": """You are an expert English exam tutor specializing in {exam_type}. Your role is to:
+- Provide detailed explanations of exam formats, sections, and scoring
+- Teach strategies and techniques for each section
+- Give clear, structured feedback on practice answers
+- Share exam tips and common mistakes to avoid
+- Explain grammar and vocabulary in context
+- Be encouraging but honest about areas needing improvement
+
+Always structure your responses clearly. Use examples when helpful.
+Respond in the student's preferred language when appropriate.""",
+        "credits_per_message": 1,
+        "voice_enabled": True
+    },
+    "mock_coach": {
+        "name": "Mock Coach",
+        "name_es": "Coach de Simulacros",
+        "description": "Practice coach with guided feedback",
+        "icon": "🏆",
+        "system_prompt": """You are a Mock Coach for {exam_type} exam practice. Your approach:
+- Present practice questions one at a time
+- Let the student attempt to answer (up to 5 tries per question)
+- After each incorrect attempt, give a hint without revealing the answer
+- On the 5th attempt or if they give up, explain the correct answer thoroughly
+- Track their progress and adjust difficulty
+- Celebrate correct answers and encourage persistence
+
+IMPORTANT: Never give the answer directly until 5 attempts or student asks to skip.
+Use the Socratic method - guide through questions, not direct answers.""",
+        "credits_per_message": 2,
+        "voice_enabled": True,
+        "max_attempts": 5
+    },
+    "planner": {
+        "name": "Study Planner",
+        "name_es": "Planificador de Estudio",
+        "description": "Personalized study plan creator",
+        "icon": "📋",
+        "system_prompt": """You are a Study Planner AI for {exam_type} exam preparation. Your role is to:
+- Create personalized study schedules based on exam date and available time
+- Identify weak areas from student's practice history
+- Recommend specific resources and exercises
+- Break down goals into daily/weekly targets
+- Adjust plans based on progress
+- Motivate and keep students accountable
+
+Ask about: exam date, hours available per day/week, current level, weak areas.
+Create realistic, achievable plans with specific daily tasks.""",
+        "credits_per_message": 1,
+        "voice_enabled": False
+    }
+}
+
+# Pydantic models for Multi-Agent System
+class AIAgentConfig(BaseModel):
+    agent_type: str
+    enabled: bool = True
+    custom_prompt: Optional[str] = None
+    voice_id: Optional[str] = None
+
+class AICreditsBalance(BaseModel):
+    institution_id: str
+    total_credits: int = 0
+    used_credits: int = 0
+    last_purchase: Optional[str] = None
+
+class AIAgentInteraction(BaseModel):
+    agent_type: str
+    message: str
+    exam_type: str
+    session_id: Optional[str] = None
+    voice_enabled: bool = False
+    voice_id: str = "nova"
+    context: Optional[Dict[str, Any]] = None
+
+class CreditPurchase(BaseModel):
+    credits: int
+    payment_method: str = "stripe"
+
+# ==================== AI CREDITS MANAGEMENT ====================
+
+@api_router.get("/ai-agents/credits")
+async def get_ai_credits(current_user: dict = Depends(get_current_user)):
+    """Get AI credits balance for institution or individual"""
+    user_id = current_user.get("institution_id") or current_user["id"]
+    user_type = current_user["user_type"]
+    
+    credits_doc = await db.ai_credits.find_one({"user_id": user_id}, {"_id": 0})
+    
+    if not credits_doc:
+        # Initialize credits for new users
+        initial_credits = 100 if user_type == "institution" else 10  # Free starter credits
+        credits_doc = {
+            "user_id": user_id,
+            "user_type": user_type,
+            "total_credits": initial_credits,
+            "used_credits": 0,
+            "free_credits": initial_credits,
+            "purchased_credits": 0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "last_updated": datetime.now(timezone.utc).isoformat()
+        }
+        await db.ai_credits.insert_one(credits_doc)
+        del credits_doc["_id"] if "_id" in credits_doc else None
+    
+    return {
+        "total_credits": credits_doc.get("total_credits", 0),
+        "used_credits": credits_doc.get("used_credits", 0),
+        "remaining_credits": credits_doc.get("total_credits", 0) - credits_doc.get("used_credits", 0),
+        "free_credits": credits_doc.get("free_credits", 0),
+        "purchased_credits": credits_doc.get("purchased_credits", 0),
+        "last_updated": credits_doc.get("last_updated")
+    }
+
+@api_router.post("/ai-agents/credits/purchase")
+async def purchase_ai_credits(purchase: CreditPurchase, current_user: dict = Depends(get_current_user)):
+    """Purchase AI credits for institution"""
+    if current_user["user_type"] not in ["institution", "admin"]:
+        raise HTTPException(status_code=403, detail="Only institutions can purchase credits")
+    
+    user_id = current_user["id"]
+    
+    # Credit pricing tiers
+    credit_prices = {
+        100: 10,    # $10 for 100 credits
+        500: 40,    # $40 for 500 credits (20% discount)
+        1000: 70,   # $70 for 1000 credits (30% discount)
+        5000: 300,  # $300 for 5000 credits (40% discount)
+    }
+    
+    if purchase.credits not in credit_prices:
+        raise HTTPException(status_code=400, detail=f"Invalid credit amount. Choose from: {list(credit_prices.keys())}")
+    
+    price = credit_prices[purchase.credits]
+    
+    # For now, simulate successful purchase (integrate with Stripe in production)
+    await db.ai_credits.update_one(
+        {"user_id": user_id},
+        {
+            "$inc": {
+                "total_credits": purchase.credits,
+                "purchased_credits": purchase.credits
+            },
+            "$set": {
+                "last_purchase": datetime.now(timezone.utc).isoformat(),
+                "last_updated": datetime.now(timezone.utc).isoformat()
+            },
+            "$push": {
+                "purchase_history": {
+                    "credits": purchase.credits,
+                    "price": price,
+                    "currency": "USD",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "success": True,
+        "credits_added": purchase.credits,
+        "price": price,
+        "message": f"Successfully added {purchase.credits} AI credits"
+    }
+
+async def consume_ai_credits(user_id: str, credits: int, agent_type: str, session_id: str):
+    """Internal function to consume AI credits"""
+    result = await db.ai_credits.find_one_and_update(
+        {"user_id": user_id, "$expr": {"$gte": [{"$subtract": ["$total_credits", "$used_credits"]}, credits]}},
+        {
+            "$inc": {"used_credits": credits},
+            "$set": {"last_updated": datetime.now(timezone.utc).isoformat()},
+            "$push": {
+                "usage_history": {
+                    "credits": credits,
+                    "agent_type": agent_type,
+                    "session_id": session_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        }
+    )
+    return result is not None
+
+# ==================== AI AGENT CONFIGURATION ====================
+
+@api_router.get("/ai-agents/config")
+async def get_agent_config(current_user: dict = Depends(get_current_user)):
+    """Get AI agent configuration for institution"""
+    institution_id = current_user.get("institution_id") or current_user.get("id")
+    
+    config = await db.ai_agent_config.find_one({"institution_id": institution_id}, {"_id": 0})
+    
+    if not config:
+        # Default configuration - all agents enabled
+        config = {
+            "institution_id": institution_id,
+            "agents": {
+                "official_tutor": {"enabled": True, "voice_id": "nova"},
+                "mock_coach": {"enabled": True, "voice_id": "echo"},
+                "planner": {"enabled": True, "voice_id": None}
+            },
+            "default_voice_enabled": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.ai_agent_config.insert_one(config)
+    
+    # Merge with agent definitions
+    agents_with_info = []
+    for agent_id, agent_info in AI_AGENTS.items():
+        agent_config = config.get("agents", {}).get(agent_id, {"enabled": True})
+        agents_with_info.append({
+            "id": agent_id,
+            "name": agent_info["name"],
+            "name_es": agent_info["name_es"],
+            "description": agent_info["description"],
+            "icon": agent_info["icon"],
+            "credits_per_message": agent_info["credits_per_message"],
+            "voice_enabled": agent_info["voice_enabled"],
+            "enabled": agent_config.get("enabled", True),
+            "custom_voice_id": agent_config.get("voice_id")
+        })
+    
+    return {
+        "agents": agents_with_info,
+        "default_voice_enabled": config.get("default_voice_enabled", True)
+    }
+
+@api_router.post("/ai-agents/config")
+async def update_agent_config(config_update: Dict[str, Any], current_user: dict = Depends(get_current_user)):
+    """Update AI agent configuration for institution"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can configure agents")
+    
+    institution_id = current_user["id"]
+    
+    await db.ai_agent_config.update_one(
+        {"institution_id": institution_id},
+        {
+            "$set": {
+                **config_update,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    return {"success": True, "message": "Agent configuration updated"}
+
+# ==================== AI AGENT INTERACTION ====================
+
+@api_router.get("/ai-agents/available")
+async def get_available_agents(current_user: dict = Depends(get_current_user)):
+    """Get list of available AI agents for the user"""
+    institution_id = current_user.get("institution_id")
+    
+    # Get institution config if user belongs to one
+    if institution_id:
+        config = await db.ai_agent_config.find_one({"institution_id": institution_id}, {"_id": 0})
+    else:
+        config = None
+    
+    available_agents = []
+    for agent_id, agent_info in AI_AGENTS.items():
+        is_enabled = True
+        if config:
+            is_enabled = config.get("agents", {}).get(agent_id, {}).get("enabled", True)
+        
+        if is_enabled:
+            available_agents.append({
+                "id": agent_id,
+                "name": agent_info["name"],
+                "name_es": agent_info["name_es"],
+                "description": agent_info["description"],
+                "icon": agent_info["icon"],
+                "credits_per_message": agent_info["credits_per_message"],
+                "voice_enabled": agent_info["voice_enabled"]
+            })
+    
+    return {"agents": available_agents}
+
+@api_router.post("/ai-agents/interact")
+async def interact_with_agent(interaction: AIAgentInteraction, current_user: dict = Depends(get_current_user)):
+    """Main endpoint for interacting with AI agents"""
+    
+    # Validate agent type
+    if interaction.agent_type not in AI_AGENTS:
+        raise HTTPException(status_code=400, detail=f"Invalid agent type. Choose from: {list(AI_AGENTS.keys())}")
+    
+    agent = AI_AGENTS[interaction.agent_type]
+    user_id = current_user.get("institution_id") or current_user["id"]
+    session_id = interaction.session_id or str(uuid.uuid4())
+    
+    # Check credits
+    credits_needed = agent["credits_per_message"]
+    has_credits = await consume_ai_credits(user_id, credits_needed, interaction.agent_type, session_id)
+    
+    if not has_credits:
+        return {
+            "success": False,
+            "error": "insufficient_credits",
+            "message": "No hay créditos suficientes. Por favor compra más créditos para continuar.",
+            "credits_needed": credits_needed
+        }
+    
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        api_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="AI service not configured")
+        
+        # Build system prompt with exam context
+        system_prompt = agent["system_prompt"].format(exam_type=interaction.exam_type.upper())
+        
+        # Add context for Mock Coach (attempt tracking)
+        if interaction.agent_type == "mock_coach" and interaction.context:
+            attempt_count = interaction.context.get("attempt_count", 0)
+            current_question = interaction.context.get("current_question", "")
+            if attempt_count > 0:
+                system_prompt += f"\n\nCurrent question: {current_question}\nStudent's attempt number: {attempt_count}/5"
+                if attempt_count >= 5:
+                    system_prompt += "\nThis is their final attempt - provide the full answer and explanation."
+        
+        # Initialize chat with session for multi-turn
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"agent_{interaction.agent_type}_{session_id}",
+            system_message=system_prompt
+        ).with_model("openai", "gpt-5.2")
+        
+        # Send message
+        user_message = UserMessage(text=interaction.message)
+        response_text = await chat.send_message(user_message)
+        
+        # Generate voice response if enabled
+        audio_base64 = None
+        if interaction.voice_enabled and agent["voice_enabled"]:
+            try:
+                from elevenlabs import ElevenLabs
+                from elevenlabs.types import VoiceSettings
+                
+                eleven_api_key = os.environ.get('ELEVENLABS_API_KEY')
+                if eleven_api_key:
+                    eleven_client = ElevenLabs(api_key=eleven_api_key)
+                    
+                    # Use institution's configured voice or default
+                    voice_id = interaction.voice_id or "21m00Tcm4TlvDq8ikWAM"  # Default: Rachel
+                    
+                    audio_generator = eleven_client.text_to_speech.convert(
+                        text=response_text[:1000],  # Limit for TTS
+                        voice_id=voice_id,
+                        model_id="eleven_multilingual_v2",
+                        voice_settings=VoiceSettings(
+                            stability=0.5,
+                            similarity_boost=0.75
+                        )
+                    )
+                    
+                    audio_data = b""
+                    for chunk in audio_generator:
+                        audio_data += chunk
+                    
+                    audio_base64 = base64.b64encode(audio_data).decode()
+            except Exception as e:
+                logger.warning(f"ElevenLabs TTS failed: {e}")
+                # Fall back to OpenAI TTS
+                try:
+                    tts = OpenAITextToSpeech(api_key=api_key)
+                    audio_base64 = await tts.text_to_audio(
+                        text=response_text[:500],
+                        voice=interaction.voice_id or "nova"
+                    )
+                except Exception as e2:
+                    logger.warning(f"OpenAI TTS fallback also failed: {e2}")
+        
+        # Store interaction in history
+        await db.ai_agent_history.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": current_user["id"],
+            "institution_id": current_user.get("institution_id"),
+            "agent_type": interaction.agent_type,
+            "exam_type": interaction.exam_type,
+            "session_id": session_id,
+            "user_message": interaction.message,
+            "agent_response": response_text,
+            "credits_consumed": credits_needed,
+            "voice_used": audio_base64 is not None,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {
+            "success": True,
+            "response": response_text,
+            "audio_base64": audio_base64,
+            "session_id": session_id,
+            "agent": {
+                "type": interaction.agent_type,
+                "name": agent["name"],
+                "icon": agent["icon"]
+            },
+            "credits_consumed": credits_needed
+        }
+        
+    except Exception as e:
+        logger.error(f"AI Agent interaction error: {e}")
+        # Refund credits on error
+        await db.ai_credits.update_one(
+            {"user_id": user_id},
+            {"$inc": {"used_credits": -credits_needed}}
+        )
+        raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")
+
+@api_router.get("/ai-agents/history/{session_id}")
+async def get_agent_history(session_id: str, current_user: dict = Depends(get_current_user)):
+    """Get conversation history for a specific session"""
+    history = await db.ai_agent_history.find(
+        {"session_id": session_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(100)
+    
+    return {"history": history}
+
+@api_router.get("/ai-agents/sessions")
+async def get_agent_sessions(current_user: dict = Depends(get_current_user), limit: int = 20):
+    """Get recent AI agent sessions for user"""
+    pipeline = [
+        {"$match": {"user_id": current_user["id"]}},
+        {"$group": {
+            "_id": "$session_id",
+            "agent_type": {"$first": "$agent_type"},
+            "exam_type": {"$first": "$exam_type"},
+            "message_count": {"$sum": 1},
+            "last_message": {"$max": "$created_at"},
+            "first_message": {"$first": "$user_message"}
+        }},
+        {"$sort": {"last_message": -1}},
+        {"$limit": limit}
+    ]
+    
+    sessions = await db.ai_agent_history.aggregate(pipeline).to_list(limit)
+    
+    # Add agent info
+    for session in sessions:
+        agent_type = session.get("agent_type")
+        if agent_type in AI_AGENTS:
+            session["agent_name"] = AI_AGENTS[agent_type]["name"]
+            session["agent_icon"] = AI_AGENTS[agent_type]["icon"]
+    
+    return {"sessions": sessions}
+
+# ==================== MOCK COACH SPECIFIC ENDPOINTS ====================
+
+@api_router.post("/ai-agents/mock-coach/start-question")
+async def start_mock_question(exam_type: str, section: str = "reading", current_user: dict = Depends(get_current_user)):
+    """Start a new practice question session with Mock Coach"""
+    
+    # Get a random question based on exam type and section
+    # In production, this would pull from the exam bank
+    sample_questions = {
+        "reading": [
+            {
+                "question": "Read the passage and answer: What is the main idea of paragraph 2?",
+                "passage": "Climate change affects ecosystems worldwide...",
+                "correct_answer": "Climate change causes biodiversity loss",
+                "hints": [
+                    "Look at the topic sentence",
+                    "Focus on cause and effect",
+                    "What environmental impact is mentioned?",
+                    "Think about the relationship between climate and species"
+                ]
+            }
+        ],
+        "grammar": [
+            {
+                "question": "Choose the correct form: 'If I ___ (know) about the meeting, I would have attended.'",
+                "correct_answer": "had known",
+                "hints": [
+                    "This is a conditional sentence",
+                    "What type of conditional expresses past regret?",
+                    "Third conditional uses past perfect",
+                    "The structure is: If + past perfect, would have + past participle"
+                ]
+            }
+        ]
+    }
+    
+    section_questions = sample_questions.get(section, sample_questions["reading"])
+    question = random.choice(section_questions)
+    
+    session_id = str(uuid.uuid4())
+    
+    # Store question session
+    await db.mock_coach_sessions.insert_one({
+        "session_id": session_id,
+        "user_id": current_user["id"],
+        "exam_type": exam_type,
+        "section": section,
+        "question": question,
+        "attempts": 0,
+        "solved": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "session_id": session_id,
+        "question": question["question"],
+        "passage": question.get("passage"),
+        "max_attempts": 5,
+        "hints_available": len(question["hints"])
+    }
+
+@api_router.post("/ai-agents/mock-coach/check-answer")
+async def check_mock_answer(
+    session_id: str,
+    answer: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Check answer for Mock Coach practice question"""
+    
+    session = await db.mock_coach_sessions.find_one(
+        {"session_id": session_id, "user_id": current_user["id"]}
+    )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    if session.get("solved"):
+        return {"already_solved": True, "correct_answer": session["question"]["correct_answer"]}
+    
+    attempts = session.get("attempts", 0) + 1
+    question = session["question"]
+    
+    # Simple answer checking (in production, use AI for more sophisticated matching)
+    is_correct = answer.lower().strip() in question["correct_answer"].lower()
+    
+    # Update attempts
+    await db.mock_coach_sessions.update_one(
+        {"session_id": session_id},
+        {
+            "$set": {"attempts": attempts, "solved": is_correct},
+            "$push": {"answer_history": {"answer": answer, "timestamp": datetime.now(timezone.utc).isoformat()}}
+        }
+    )
+    
+    if is_correct:
+        return {
+            "correct": True,
+            "message": "¡Excelente! Respuesta correcta.",
+            "attempts_used": attempts
+        }
+    
+    if attempts >= 5:
+        return {
+            "correct": False,
+            "max_attempts_reached": True,
+            "correct_answer": question["correct_answer"],
+            "explanation": "Has agotado tus 5 intentos. La respuesta correcta era: " + question["correct_answer"]
+        }
+    
+    # Provide hint
+    hint_index = min(attempts - 1, len(question["hints"]) - 1)
+    hint = question["hints"][hint_index]
+    
+    return {
+        "correct": False,
+        "attempts_remaining": 5 - attempts,
+        "hint": hint,
+        "message": f"Intento {attempts}/5 incorrecto. Aquí tienes una pista:"
+    }
+
 @api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
