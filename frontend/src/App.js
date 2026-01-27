@@ -147,7 +147,7 @@ function AppRoutes() {
         path="/student/dashboard" 
         element={
           <ProtectedRoute allowedTypes={['student', 'individual', 'admin']}>
-            <StudentDashboard />
+            <StudentDashboardRouter />
           </ProtectedRoute>
         } 
       />
