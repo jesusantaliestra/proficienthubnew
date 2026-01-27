@@ -796,9 +796,258 @@ const GamificationConfigSection = ({ config, onSave }) => {
   );
 };
 
+// AI Agents Configuration Section
+const AIAgentsConfigSection = () => {
+  const [agents, setAgents] = useState([]);
+  const [credits, setCredits] = useState({ remaining_credits: 0, total_credits: 0 });
+  const [agentConfig, setAgentConfig] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      const [agentsRes, creditsRes, configRes] = await Promise.all([
+        axios.get(`${API_URL}/ai-agents/available`, { headers }),
+        axios.get(`${API_URL}/ai-agents/credits`, { headers }),
+        axios.get(`${API_URL}/ai-agents/config`, { headers })
+      ]);
+      
+      setAgents(configRes.data.agents || []);
+      setCredits(creditsRes.data);
+      
+      // Build config state
+      const config = {};
+      (configRes.data.agents || []).forEach(agent => {
+        config[agent.id] = { enabled: agent.enabled, voice_id: agent.custom_voice_id };
+      });
+      setAgentConfig(config);
+    } catch (error) {
+      console.error('Failed to fetch AI agents data:', error);
+      toast.error('Error loading AI agents configuration');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleAgent = (agentId) => {
+    setAgentConfig(prev => ({
+      ...prev,
+      [agentId]: { ...prev[agentId], enabled: !prev[agentId]?.enabled }
+    }));
+  };
+
+  const handleSaveConfig = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/ai-agents/config`, {
+        agents: agentConfig
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success('AI Agents configuration saved!');
+    } catch (error) {
+      console.error('Failed to save config:', error);
+      toast.error('Error saving configuration');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const creditPrices = [
+    { credits: 100, price: 10, savings: null },
+    { credits: 500, price: 40, savings: '20%' },
+    { credits: 1000, price: 70, savings: '30%' },
+    { credits: 5000, price: 300, savings: '40%' }
+  ];
+
+  const handlePurchaseCredits = async (creditsAmount) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/ai-agents/credits/purchase`, {
+        credits: creditsAmount,
+        payment_method: 'stripe'
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success(`${creditsAmount} créditos añadidos correctamente!`);
+      fetchData();
+    } catch (error) {
+      console.error('Failed to purchase credits:', error);
+      toast.error('Error al comprar créditos');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-10">
+        <div className="w-8 h-8 border-4 border-[#58CC02] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  const AgentIcon = {
+    official_tutor: GraduationCap,
+    mock_coach: Trophy,
+    planner: Calendar
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <Sparkles className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900">Multi-Agent AI Tutor System</h3>
+            <p className="text-sm text-gray-500">Configure AI tutors and manage credits for your students</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Credits Overview */}
+      <Card className="bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center">
+                <Coins className="w-7 h-7 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm text-amber-700 font-medium">AI Credits Balance</p>
+                <p className="text-3xl font-bold text-amber-800">{credits.remaining_credits}</p>
+                <p className="text-xs text-amber-600">
+                  {credits.used_credits} used of {credits.total_credits} total
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-amber-600 mb-1">Free credits: {credits.free_credits || 0}</p>
+              <Progress 
+                value={(credits.remaining_credits / Math.max(credits.total_credits, 1)) * 100}
+                className="w-32 h-2"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Purchase Credits */}
+      <div className="bg-gray-50 rounded-xl p-4">
+        <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <ShoppingCart className="w-4 h-4" />
+          Purchase AI Credits
+        </h4>
+        <div className="grid grid-cols-4 gap-3">
+          {creditPrices.map(tier => (
+            <button
+              key={tier.credits}
+              onClick={() => handlePurchaseCredits(tier.credits)}
+              className="p-3 rounded-lg border-2 border-gray-200 hover:border-[#58CC02] hover:bg-green-50 transition-all text-center"
+            >
+              <p className="text-xl font-bold text-gray-900">{tier.credits}</p>
+              <p className="text-sm text-gray-600">créditos</p>
+              <p className="text-lg font-semibold text-[#58CC02]">${tier.price}</p>
+              {tier.savings && (
+                <Badge className="mt-1 bg-green-100 text-green-700 text-xs">
+                  {tier.savings} OFF
+                </Badge>
+              )}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          * Credits are shared across all your students and AI agents
+        </p>
+      </div>
+
+      {/* Agent Configuration */}
+      <div>
+        <h4 className="font-semibold text-gray-900 mb-3">Configure AI Agents</h4>
+        <p className="text-sm text-gray-500 mb-4">
+          Enable or disable specific AI agents for your students. Disabled agents won't appear in the tutor interface.
+        </p>
+        
+        <div className="space-y-3">
+          {agents.map(agent => {
+            const Icon = AgentIcon[agent.id] || Bot;
+            const isEnabled = agentConfig[agent.id]?.enabled !== false;
+            
+            return (
+              <div
+                key={agent.id}
+                className={`p-4 rounded-xl border-2 transition-all ${
+                  isEnabled ? 'border-[#58CC02] bg-green-50' : 'border-gray-200 bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                      isEnabled ? 'bg-[#58CC02]' : 'bg-gray-300'
+                    }`}>
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-gray-900">{agent.name}</h5>
+                      <p className="text-sm text-gray-500">{agent.name_es}</p>
+                      <p className="text-xs text-gray-400 mt-1">{agent.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-700">
+                        {agent.credits_per_message} crédito{agent.credits_per_message > 1 ? 's' : ''}/mensaje
+                      </p>
+                      {agent.voice_enabled && (
+                        <Badge variant="outline" className="text-xs">
+                          🎤 Voz disponible
+                        </Badge>
+                      )}
+                    </div>
+                    <Switch
+                      checked={isEnabled}
+                      onCheckedChange={() => handleToggleAgent(agent.id)}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Agent Descriptions */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="p-4">
+          <h4 className="font-semibold text-blue-900 mb-2">💡 About AI Agents</h4>
+          <ul className="text-sm text-blue-800 space-y-2">
+            <li><strong>🎓 Official Tutor:</strong> Expert exam preparation with strategies, practice questions, and detailed feedback.</li>
+            <li><strong>🏆 Mock Coach:</strong> Practice mode with 5 attempts per question. Provides hints before revealing answers.</li>
+            <li><strong>📋 Study Planner:</strong> Creates personalized study schedules based on exam date and available time.</li>
+          </ul>
+        </CardContent>
+      </Card>
+
+      <Button 
+        onClick={handleSaveConfig} 
+        className="bg-[#58CC02] hover:bg-[#46A302]"
+        disabled={saving}
+      >
+        <Save className="w-4 h-4 mr-2" />
+        {saving ? 'Saving...' : 'Save Agent Configuration'}
+      </Button>
+    </div>
+  );
+};
+
 // Main Institution Settings Component
 export default function InstitutionSettings() {
-  const [activeTab, setActiveTab] = useState('avatar');
+  const [activeTab, setActiveTab] = useState('ai-agents');
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
 
