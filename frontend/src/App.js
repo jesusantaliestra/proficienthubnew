@@ -78,6 +78,19 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
+// Student Dashboard Router - shows restricted dashboard for institutional students
+const StudentDashboardRouter = () => {
+  const { user } = useAuth();
+  
+  // If student has an institution_id, they should see the restricted dashboard
+  if (user?.institution_id && user?.user_type === 'student') {
+    return <StudentDashboardRestricted />;
+  }
+  
+  // Individual users see the full dashboard
+  return <StudentDashboard />;
+};
+
 function AppRoutes() {
   return (
     <Routes>
