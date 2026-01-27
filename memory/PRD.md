@@ -64,7 +64,8 @@
 - **Student Access**: Students see upcoming classes with Join button
 
 ### 📁 New Files Created (Session 8)
-- `/app/frontend/src/components/InstitutionSettings.jsx` - Settings UI (Zoom, Email, Gamification)
+- `/app/frontend/src/components/InstitutionSettings.jsx` - Settings UI (Avatar, Zoom, Email, Gamification)
+- `/app/frontend/src/components/AIAvatar.jsx` - AI Avatar component (Animated + HeyGen)
 - `/app/frontend/src/pages/StudentDashboardRestricted.jsx` - Restricted student dashboard
 
 ## Features Implemented (Session 7) - January 27, 2026
