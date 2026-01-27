@@ -243,6 +243,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         name=current_user["name"],
         user_type=current_user["user_type"],
         institution_name=current_user.get("institution_name"),
+        institution_id=current_user.get("institution_id"),
         created_at=current_user["created_at"],
         subscription_plan=current_user.get("subscription_plan"),
         language=current_user.get("language", "en")
