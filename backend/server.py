@@ -810,13 +810,16 @@ async def delete_library_item(item_id: str, current_user: dict = Depends(get_cur
 
 from exam_questions import get_exam_questions, get_mock_test_config, get_full_exam, get_available_exams, SPEAKING_PROMPTS, WRITING_TASKS, MOCK_TESTS
 
-EXAM_TYPES = ["toefl", "ielts", "cambridge", "pte", "oet"]
+EXAM_TYPES = ["toefl", "ielts", "cambridge", "trinity", "pte", "oet", "toeic", "celpip"]
 EXAM_SECTIONS = {
     "toefl": ["reading", "listening", "speaking", "writing"],
     "ielts": ["reading", "listening", "speaking", "writing"],
     "cambridge": ["reading", "writing", "listening", "speaking", "use_of_english"],
+    "trinity": ["speaking", "listening", "reading", "writing"],
     "pte": ["speaking_writing", "reading", "listening"],
-    "oet": ["reading", "listening", "speaking", "writing"]
+    "oet": ["reading", "listening", "speaking", "writing"],
+    "toeic": ["listening", "reading", "speaking", "writing"],
+    "celpip": ["listening", "reading", "writing", "speaking"]
 }
 
 @api_router.get("/exams/types")
@@ -829,8 +832,11 @@ async def get_exam_types():
             "toefl": "Test of English as a Foreign Language - Academic English proficiency",
             "ielts": "International English Language Testing System - Global recognition",
             "cambridge": "Cambridge English Qualifications - Comprehensive assessment",
+            "trinity": "Trinity College London GESE/ISE - Communicative English assessment",
             "pte": "Pearson Test of English - Computer-based testing",
-            "oet": "Occupational English Test - Healthcare professionals"
+            "oet": "Occupational English Test - Healthcare professionals",
+            "toeic": "Test of English for International Communication - Business English",
+            "celpip": "Canadian English Language Proficiency Index Program"
         },
         "mock_tests": {exam: get_mock_test_config(exam) for exam in EXAM_TYPES}
     }
@@ -2647,7 +2653,7 @@ async def get_exam_overview(current_user: dict = Depends(get_current_user)):
     return {
         "by_type_and_status": results,
         "topic_distribution": topic_counts,
-        "exam_types": ["oet", "ielts", "toefl", "toeic", "celpip", "pte"]
+        "exam_types": ["oet", "ielts", "toefl", "toeic", "celpip", "pte", "cambridge", "trinity"]
     }
 
 # ==================== HEALTH CHECK ====================
