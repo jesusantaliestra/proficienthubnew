@@ -4068,6 +4068,923 @@ async def delete_video_class(class_id: str, current_user: dict = Depends(get_cur
     
     return {"message": "Video class deleted successfully"}
 
+# ==================== WHITE-LABEL PREMIUM SYSTEM ====================
+
+class WhiteLabelConfig(BaseModel):
+    institution_id: str
+    # Domain Configuration
+    custom_domain: Optional[str] = None  # e.g., app.oxford-academy.com
+    subdomain: Optional[str] = None  # e.g., oxford -> oxford.proficienthub.com
+    # Branding
+    platform_name: str = "ProficientHub"
+    logo_url: Optional[str] = None
+    logo_dark_url: Optional[str] = None  # For dark backgrounds
+    favicon_url: Optional[str] = None
+    # Colors
+    primary_color: str = "#58CC02"
+    secondary_color: str = "#1CB0F6"
+    accent_color: str = "#FF4B4B"
+    background_color: str = "#FFFFFF"
+    text_color: str = "#1F2937"
+    # Typography
+    font_family: str = "Inter, system-ui, sans-serif"
+    heading_font: Optional[str] = None
+    # UI Customization
+    border_radius: str = "12px"
+    button_style: str = "rounded"  # rounded, square, pill
+    card_style: str = "elevated"  # elevated, flat, bordered
+    # Features Toggle
+    show_powered_by: bool = True
+    enable_dark_mode: bool = True
+    enable_multi_language: bool = True
+    # Email Branding
+    email_from_name: Optional[str] = None
+    email_from_address: Optional[str] = None
+    email_footer_text: Optional[str] = None
+    email_logo_url: Optional[str] = None
+    # Social Links
+    website_url: Optional[str] = None
+    facebook_url: Optional[str] = None
+    instagram_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    twitter_url: Optional[str] = None
+    # Custom CSS
+    custom_css: Optional[str] = None
+    # Landing Page
+    hero_title: Optional[str] = None
+    hero_subtitle: Optional[str] = None
+    hero_image_url: Optional[str] = None
+    # Contact
+    support_email: Optional[str] = None
+    support_phone: Optional[str] = None
+
+class WhiteLabelUpdate(BaseModel):
+    custom_domain: Optional[str] = None
+    subdomain: Optional[str] = None
+    platform_name: Optional[str] = None
+    logo_url: Optional[str] = None
+    logo_dark_url: Optional[str] = None
+    favicon_url: Optional[str] = None
+    primary_color: Optional[str] = None
+    secondary_color: Optional[str] = None
+    accent_color: Optional[str] = None
+    background_color: Optional[str] = None
+    text_color: Optional[str] = None
+    font_family: Optional[str] = None
+    heading_font: Optional[str] = None
+    border_radius: Optional[str] = None
+    button_style: Optional[str] = None
+    card_style: Optional[str] = None
+    show_powered_by: Optional[bool] = None
+    enable_dark_mode: Optional[bool] = None
+    email_from_name: Optional[str] = None
+    email_footer_text: Optional[str] = None
+    website_url: Optional[str] = None
+    facebook_url: Optional[str] = None
+    instagram_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    twitter_url: Optional[str] = None
+    custom_css: Optional[str] = None
+    hero_title: Optional[str] = None
+    hero_subtitle: Optional[str] = None
+    hero_image_url: Optional[str] = None
+    support_email: Optional[str] = None
+    support_phone: Optional[str] = None
+
+@api_router.post("/whitelabel/config")
+async def create_whitelabel_config(config: WhiteLabelConfig, current_user: dict = Depends(get_current_user)):
+    """Create white-label configuration for an institution"""
+    if current_user["user_type"] not in ["admin", "institution"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    institution_id = config.institution_id if current_user["user_type"] == "admin" else current_user["id"]
+    
+    # Check if config already exists
+    existing = await db.whitelabel_configs.find_one({"institution_id": institution_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="White-label config already exists. Use PUT to update.")
+    
+    # Validate custom domain/subdomain uniqueness
+    if config.custom_domain:
+        domain_exists = await db.whitelabel_configs.find_one({"custom_domain": config.custom_domain})
+        if domain_exists:
+            raise HTTPException(status_code=400, detail="Custom domain already in use")
+    
+    if config.subdomain:
+        subdomain_exists = await db.whitelabel_configs.find_one({"subdomain": config.subdomain})
+        if subdomain_exists:
+            raise HTTPException(status_code=400, detail="Subdomain already in use")
+    
+    config_doc = {
+        "id": str(uuid.uuid4()),
+        "institution_id": institution_id,
+        **config.dict(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "is_active": True,
+        "ssl_status": "pending" if config.custom_domain else None,
+        "dns_verified": False if config.custom_domain else None
+    }
+    
+    await db.whitelabel_configs.insert_one(config_doc)
+    
+    return {"message": "White-label configuration created", "config": config_doc}
+
+@api_router.get("/whitelabel/config")
+async def get_whitelabel_config(current_user: dict = Depends(get_current_user)):
+    """Get white-label configuration for current institution"""
+    institution_id = current_user["id"] if current_user["user_type"] == "institution" else current_user.get("institution_id")
+    
+    config = await db.whitelabel_configs.find_one({"institution_id": institution_id})
+    
+    if not config:
+        # Return default config
+        return {
+            "config": {
+                "platform_name": "ProficientHub",
+                "primary_color": "#58CC02",
+                "secondary_color": "#1CB0F6",
+                "accent_color": "#FF4B4B",
+                "show_powered_by": True,
+                "is_default": True
+            }
+        }
+    
+    return {"config": config}
+
+@api_router.get("/whitelabel/by-domain/{domain}")
+async def get_whitelabel_by_domain(domain: str):
+    """Get white-label config by custom domain or subdomain (public endpoint)"""
+    # Try custom domain first
+    config = await db.whitelabel_configs.find_one({"custom_domain": domain, "is_active": True})
+    
+    if not config:
+        # Try subdomain
+        subdomain = domain.split('.')[0] if '.' in domain else domain
+        config = await db.whitelabel_configs.find_one({"subdomain": subdomain, "is_active": True})
+    
+    if not config:
+        return {"config": None, "is_default": True}
+    
+    # Get institution info
+    institution = await db.users.find_one({"id": config["institution_id"]})
+    
+    return {
+        "config": {
+            "platform_name": config.get("platform_name", "ProficientHub"),
+            "logo_url": config.get("logo_url"),
+            "logo_dark_url": config.get("logo_dark_url"),
+            "favicon_url": config.get("favicon_url"),
+            "primary_color": config.get("primary_color", "#58CC02"),
+            "secondary_color": config.get("secondary_color", "#1CB0F6"),
+            "accent_color": config.get("accent_color", "#FF4B4B"),
+            "background_color": config.get("background_color", "#FFFFFF"),
+            "text_color": config.get("text_color", "#1F2937"),
+            "font_family": config.get("font_family", "Inter, system-ui, sans-serif"),
+            "heading_font": config.get("heading_font"),
+            "border_radius": config.get("border_radius", "12px"),
+            "button_style": config.get("button_style", "rounded"),
+            "card_style": config.get("card_style", "elevated"),
+            "show_powered_by": config.get("show_powered_by", True),
+            "enable_dark_mode": config.get("enable_dark_mode", True),
+            "custom_css": config.get("custom_css"),
+            "hero_title": config.get("hero_title"),
+            "hero_subtitle": config.get("hero_subtitle"),
+            "hero_image_url": config.get("hero_image_url"),
+            "social_links": {
+                "website": config.get("website_url"),
+                "facebook": config.get("facebook_url"),
+                "instagram": config.get("instagram_url"),
+                "linkedin": config.get("linkedin_url"),
+                "twitter": config.get("twitter_url")
+            },
+            "support": {
+                "email": config.get("support_email"),
+                "phone": config.get("support_phone")
+            }
+        },
+        "institution": {
+            "name": institution.get("institution_name", "") if institution else "",
+            "slug": institution.get("institution_slug", "") if institution else ""
+        },
+        "is_default": False
+    }
+
+@api_router.put("/whitelabel/config")
+async def update_whitelabel_config(updates: WhiteLabelUpdate, current_user: dict = Depends(get_current_user)):
+    """Update white-label configuration"""
+    if current_user["user_type"] not in ["admin", "institution"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    institution_id = current_user["id"]
+    
+    config = await db.whitelabel_configs.find_one({"institution_id": institution_id})
+    if not config:
+        raise HTTPException(status_code=404, detail="White-label config not found. Create one first.")
+    
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    for field, value in updates.dict(exclude_unset=True).items():
+        if value is not None:
+            update_data[field] = value
+    
+    # Validate domain uniqueness if changed
+    if updates.custom_domain and updates.custom_domain != config.get("custom_domain"):
+        domain_exists = await db.whitelabel_configs.find_one({"custom_domain": updates.custom_domain})
+        if domain_exists:
+            raise HTTPException(status_code=400, detail="Custom domain already in use")
+        update_data["ssl_status"] = "pending"
+        update_data["dns_verified"] = False
+    
+    await db.whitelabel_configs.update_one({"institution_id": institution_id}, {"$set": update_data})
+    
+    return {"message": "White-label configuration updated"}
+
+@api_router.post("/whitelabel/verify-domain")
+async def verify_custom_domain(current_user: dict = Depends(get_current_user)):
+    """Verify custom domain DNS configuration"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    config = await db.whitelabel_configs.find_one({"institution_id": current_user["id"]})
+    if not config or not config.get("custom_domain"):
+        raise HTTPException(status_code=400, detail="No custom domain configured")
+    
+    # In production, this would check DNS records
+    # For now, we simulate verification
+    await db.whitelabel_configs.update_one(
+        {"institution_id": current_user["id"]},
+        {"$set": {"dns_verified": True, "ssl_status": "active", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {
+        "message": "Domain verified successfully",
+        "domain": config["custom_domain"],
+        "dns_verified": True,
+        "ssl_status": "active",
+        "instructions": {
+            "cname_record": f"CNAME {config['custom_domain']} -> app.proficienthub.com",
+            "txt_record": f"TXT _proficienthub-verify.{config['custom_domain']} -> {current_user['id']}"
+        }
+    }
+
+# ==================== CRM + ERM SUPREME SYSTEM ====================
+
+# Email Automation Models
+class EmailTemplate(BaseModel):
+    name: str
+    subject: str
+    body_html: str
+    body_text: Optional[str] = None
+    category: str  # welcome, follow_up, reminder, promotion, notification
+    variables: Optional[List[str]] = []  # {{name}}, {{exam_type}}, etc.
+
+class EmailSequence(BaseModel):
+    name: str
+    description: Optional[str] = None
+    trigger: str  # lead_created, demo_scheduled, no_activity_7d, exam_completed
+    steps: List[dict]  # [{delay_days: 0, template_id: "xxx"}, ...]
+    is_active: bool = True
+
+class AutomationRule(BaseModel):
+    name: str
+    trigger_type: str  # lead_stage_change, inactivity, score_threshold, date_based
+    trigger_config: dict
+    actions: List[dict]  # [{type: "send_email", template_id: "x"}, {type: "assign_to", user_id: "y"}]
+    is_active: bool = True
+
+# Communication Models
+class CommunicationLog(BaseModel):
+    lead_id: Optional[str] = None
+    student_id: Optional[str] = None
+    channel: str  # email, whatsapp, sms, call, in_app
+    direction: str  # inbound, outbound
+    subject: Optional[str] = None
+    content: str
+    status: str = "sent"  # sent, delivered, read, failed
+    metadata: Optional[dict] = None
+
+# Lead Scoring Model
+LEAD_SCORING_RULES = {
+    "students_count": {"1-50": 10, "51-200": 20, "201-500": 30, "501-1000": 40, "1000+": 50},
+    "exam_types_count": {"1": 5, "2-3": 15, "4+": 25},
+    "source": {"referral": 30, "organic": 20, "paid_ad": 15, "cold_outreach": 5},
+    "engagement": {"demo_attended": 25, "materials_downloaded": 15, "replied_email": 10},
+    "stage_velocity": {"fast": 20, "normal": 10, "slow": -10}
+}
+
+@api_router.post("/crm/email-templates")
+async def create_email_template(template: EmailTemplate, current_user: dict = Depends(get_current_user)):
+    """Create a reusable email template"""
+    if current_user["user_type"] not in ["admin", "institution"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    template_id = str(uuid.uuid4())
+    template_doc = {
+        "id": template_id,
+        "institution_id": current_user["id"],
+        **template.dict(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "usage_count": 0
+    }
+    
+    await db.email_templates.insert_one(template_doc)
+    return {"id": template_id, "message": "Email template created"}
+
+@api_router.get("/crm/email-templates")
+async def get_email_templates(current_user: dict = Depends(get_current_user)):
+    """Get all email templates"""
+    templates = await db.email_templates.find({"institution_id": current_user["id"]}).to_list(100)
+    
+    # Add default templates if none exist
+    if not templates:
+        default_templates = [
+            {
+                "id": str(uuid.uuid4()),
+                "institution_id": current_user["id"],
+                "name": "Welcome Lead",
+                "subject": "Welcome to {{platform_name}} - Let's Get Started!",
+                "body_html": "<h1>Hello {{contact_name}}!</h1><p>Thank you for your interest in {{platform_name}}. We're excited to help {{institution_name}} prepare students for success.</p><p>Your dedicated account manager will reach out within 24 hours to schedule a personalized demo.</p>",
+                "category": "welcome",
+                "variables": ["contact_name", "institution_name", "platform_name"],
+                "is_default": True
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "institution_id": current_user["id"],
+                "name": "Demo Follow-up",
+                "subject": "Thanks for attending the {{platform_name}} demo!",
+                "body_html": "<h1>Hi {{contact_name}},</h1><p>Thank you for taking the time to see {{platform_name}} in action!</p><p>As discussed, here's what we can offer {{institution_name}}:</p><ul><li>{{students_count}} student licenses</li><li>Access to {{exam_types}} preparation</li><li>AI Tutor included</li></ul><p>Ready to get started? Reply to this email or book a call.</p>",
+                "category": "follow_up",
+                "variables": ["contact_name", "institution_name", "platform_name", "students_count", "exam_types"],
+                "is_default": True
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "institution_id": current_user["id"],
+                "name": "Inactivity Reminder",
+                "subject": "We miss you, {{contact_name}}! 🎓",
+                "body_html": "<h1>Hi {{contact_name}},</h1><p>We noticed it's been a while since we last connected about {{platform_name}} for {{institution_name}}.</p><p>Is there anything we can help clarify? Our team is here to answer any questions.</p><p>Book a quick 15-minute call: [CALENDAR_LINK]</p>",
+                "category": "reminder",
+                "variables": ["contact_name", "institution_name", "platform_name"],
+                "is_default": True
+            }
+        ]
+        for t in default_templates:
+            await db.email_templates.insert_one(t)
+        templates = default_templates
+    
+    return {"templates": templates}
+
+@api_router.post("/crm/email-sequences")
+async def create_email_sequence(sequence: EmailSequence, current_user: dict = Depends(get_current_user)):
+    """Create an automated email sequence"""
+    if current_user["user_type"] not in ["admin", "institution"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    sequence_id = str(uuid.uuid4())
+    sequence_doc = {
+        "id": sequence_id,
+        "institution_id": current_user["id"],
+        **sequence.dict(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "total_enrolled": 0,
+        "total_completed": 0
+    }
+    
+    await db.email_sequences.insert_one(sequence_doc)
+    return {"id": sequence_id, "message": "Email sequence created"}
+
+@api_router.get("/crm/email-sequences")
+async def get_email_sequences(current_user: dict = Depends(get_current_user)):
+    """Get all email sequences"""
+    sequences = await db.email_sequences.find({"institution_id": current_user["id"]}).to_list(50)
+    return {"sequences": sequences}
+
+@api_router.post("/crm/automation-rules")
+async def create_automation_rule(rule: AutomationRule, current_user: dict = Depends(get_current_user)):
+    """Create an automation rule"""
+    if current_user["user_type"] not in ["admin", "institution"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    rule_id = str(uuid.uuid4())
+    rule_doc = {
+        "id": rule_id,
+        "institution_id": current_user["id"],
+        **rule.dict(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "executions_count": 0,
+        "last_executed": None
+    }
+    
+    await db.automation_rules.insert_one(rule_doc)
+    return {"id": rule_id, "message": "Automation rule created"}
+
+@api_router.get("/crm/automation-rules")
+async def get_automation_rules(current_user: dict = Depends(get_current_user)):
+    """Get all automation rules"""
+    rules = await db.automation_rules.find({"institution_id": current_user["id"]}).to_list(50)
+    
+    # Add default rules if none exist
+    if not rules:
+        default_rules = [
+            {
+                "id": str(uuid.uuid4()),
+                "institution_id": current_user["id"],
+                "name": "Welcome Email on Lead Creation",
+                "trigger_type": "lead_created",
+                "trigger_config": {},
+                "actions": [{"type": "send_email", "template": "welcome"}],
+                "is_active": True,
+                "is_default": True
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "institution_id": current_user["id"],
+                "name": "7-Day Inactivity Follow-up",
+                "trigger_type": "inactivity",
+                "trigger_config": {"days": 7},
+                "actions": [{"type": "send_email", "template": "reminder"}, {"type": "create_task", "title": "Follow up with inactive lead"}],
+                "is_active": True,
+                "is_default": True
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "institution_id": current_user["id"],
+                "name": "Hot Lead Alert",
+                "trigger_type": "score_threshold",
+                "trigger_config": {"score": 80},
+                "actions": [{"type": "notify_slack", "message": "🔥 Hot lead detected!"}, {"type": "assign_to", "role": "sales_manager"}],
+                "is_active": True,
+                "is_default": True
+            }
+        ]
+        for r in default_rules:
+            await db.automation_rules.insert_one(r)
+        rules = default_rules
+    
+    return {"rules": rules}
+
+def calculate_lead_score(lead: dict) -> dict:
+    """Calculate lead score based on multiple factors"""
+    score = 0
+    breakdown = []
+    
+    # Students count score
+    students = lead.get("students_count", 0)
+    if students >= 1000:
+        score += 50
+        breakdown.append({"factor": "Large institution (1000+ students)", "points": 50})
+    elif students >= 501:
+        score += 40
+        breakdown.append({"factor": "Medium-large institution (501-1000)", "points": 40})
+    elif students >= 201:
+        score += 30
+        breakdown.append({"factor": "Medium institution (201-500)", "points": 30})
+    elif students >= 51:
+        score += 20
+        breakdown.append({"factor": "Small-medium institution (51-200)", "points": 20})
+    elif students >= 1:
+        score += 10
+        breakdown.append({"factor": "Small institution (1-50)", "points": 10})
+    
+    # Exam types score
+    exam_count = len(lead.get("exam_types", []))
+    if exam_count >= 4:
+        score += 25
+        breakdown.append({"factor": "Multiple exam types (4+)", "points": 25})
+    elif exam_count >= 2:
+        score += 15
+        breakdown.append({"factor": "Multiple exam types (2-3)", "points": 15})
+    elif exam_count >= 1:
+        score += 5
+        breakdown.append({"factor": "Single exam type", "points": 5})
+    
+    # Source score
+    source = lead.get("source", "")
+    source_scores = {"referral": 30, "organic": 20, "free_trial_form": 25, "demo_request": 25, "paid_ad": 15, "cold_outreach": 5}
+    if source in source_scores:
+        score += source_scores[source]
+        breakdown.append({"factor": f"Lead source: {source}", "points": source_scores[source]})
+    
+    # Stage progression score
+    stage = lead.get("stage", "new")
+    stage_scores = {"new": 0, "contacted": 5, "demo_scheduled": 15, "demo_completed": 25, "proposal_sent": 35, "negotiating": 45}
+    if stage in stage_scores:
+        score += stage_scores[stage]
+        breakdown.append({"factor": f"Pipeline stage: {stage}", "points": stage_scores[stage]})
+    
+    # Activity score
+    activities = lead.get("activities", [])
+    if len(activities) >= 5:
+        score += 15
+        breakdown.append({"factor": "High engagement (5+ activities)", "points": 15})
+    elif len(activities) >= 2:
+        score += 8
+        breakdown.append({"factor": "Medium engagement (2-4 activities)", "points": 8})
+    
+    # Deal value score
+    value = lead.get("estimated_value", 0)
+    if value >= 50000:
+        score += 30
+        breakdown.append({"factor": "Enterprise deal ($50K+)", "points": 30})
+    elif value >= 20000:
+        score += 20
+        breakdown.append({"factor": "Large deal ($20K+)", "points": 20})
+    elif value >= 5000:
+        score += 10
+        breakdown.append({"factor": "Standard deal ($5K+)", "points": 10})
+    
+    # Cap at 100
+    score = min(100, score)
+    
+    # Determine grade
+    if score >= 80:
+        grade = "A"
+        label = "🔥 Hot Lead"
+    elif score >= 60:
+        grade = "B"
+        label = "⭐ Warm Lead"
+    elif score >= 40:
+        grade = "C"
+        label = "📊 Qualified Lead"
+    elif score >= 20:
+        grade = "D"
+        label = "🌱 New Lead"
+    else:
+        grade = "F"
+        label = "❄️ Cold Lead"
+    
+    return {
+        "score": score,
+        "grade": grade,
+        "label": label,
+        "breakdown": breakdown
+    }
+
+@api_router.get("/crm/leads/{lead_id}/score")
+async def get_lead_score(lead_id: str, current_user: dict = Depends(get_current_user)):
+    """Get detailed lead scoring"""
+    lead = await db.crm_leads.find_one({"id": lead_id})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    
+    scoring = calculate_lead_score(lead)
+    
+    # Update lead with score
+    await db.crm_leads.update_one(
+        {"id": lead_id},
+        {"$set": {"lead_score": scoring["score"], "lead_grade": scoring["grade"]}}
+    )
+    
+    return scoring
+
+@api_router.post("/crm/communications")
+async def log_communication(comm: CommunicationLog, current_user: dict = Depends(get_current_user)):
+    """Log a communication (email, call, WhatsApp, etc.)"""
+    comm_id = str(uuid.uuid4())
+    comm_doc = {
+        "id": comm_id,
+        "institution_id": current_user["id"],
+        **comm.dict(),
+        "logged_by": current_user["email"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.communications.insert_one(comm_doc)
+    
+    # Update lead/student last contact
+    if comm.lead_id:
+        await db.crm_leads.update_one(
+            {"id": comm.lead_id},
+            {"$set": {"last_contact": datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    return {"id": comm_id, "message": "Communication logged"}
+
+@api_router.get("/crm/communications")
+async def get_communications(
+    lead_id: Optional[str] = None,
+    student_id: Optional[str] = None,
+    channel: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get communication history"""
+    query = {"institution_id": current_user["id"]}
+    if lead_id:
+        query["lead_id"] = lead_id
+    if student_id:
+        query["student_id"] = student_id
+    if channel:
+        query["channel"] = channel
+    
+    comms = await db.communications.find(query).sort("created_at", -1).to_list(200)
+    
+    return {"communications": comms}
+
+# WhatsApp Integration Placeholder
+@api_router.post("/crm/whatsapp/send")
+async def send_whatsapp_message(
+    recipient: str,
+    message: str,
+    lead_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Send WhatsApp message (requires WhatsApp Business API setup)"""
+    # This is a placeholder - in production, integrate with WhatsApp Business API
+    
+    comm_doc = {
+        "id": str(uuid.uuid4()),
+        "institution_id": current_user["id"],
+        "lead_id": lead_id,
+        "channel": "whatsapp",
+        "direction": "outbound",
+        "content": message,
+        "recipient": recipient,
+        "status": "sent",  # Would be "pending" until confirmed by WhatsApp API
+        "logged_by": current_user["email"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.communications.insert_one(comm_doc)
+    
+    return {
+        "message": "WhatsApp message queued",
+        "note": "WhatsApp Business API integration required for actual delivery",
+        "setup_instructions": {
+            "step1": "Create WhatsApp Business Account",
+            "step2": "Apply for WhatsApp Business API access",
+            "step3": "Configure webhook URL for incoming messages",
+            "step4": "Add WHATSAPP_API_TOKEN to environment variables"
+        }
+    }
+
+# Advanced Reports & Analytics
+@api_router.get("/crm/reports/pipeline")
+async def get_pipeline_report(
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get detailed pipeline analytics report"""
+    query = {}
+    if current_user["user_type"] == "institution":
+        query["$or"] = [{"created_by": current_user["id"]}, {"assigned_to": current_user["id"]}]
+    
+    if date_from:
+        query["created_at"] = {"$gte": date_from}
+    if date_to:
+        query["created_at"] = {**query.get("created_at", {}), "$lte": date_to}
+    
+    leads = await db.crm_leads.find(query).to_list(1000)
+    
+    # Pipeline metrics
+    total_leads = len(leads)
+    total_value = sum(l.get("estimated_value", 0) for l in leads)
+    
+    # By stage
+    by_stage = {}
+    for stage in PIPELINE_STAGES.keys():
+        stage_leads = [l for l in leads if l.get("stage") == stage]
+        by_stage[stage] = {
+            "count": len(stage_leads),
+            "value": sum(l.get("estimated_value", 0) for l in stage_leads),
+            "avg_value": sum(l.get("estimated_value", 0) for l in stage_leads) / len(stage_leads) if stage_leads else 0
+        }
+    
+    # Conversion funnel
+    funnel = []
+    stage_order = ["new", "contacted", "demo_scheduled", "demo_completed", "proposal_sent", "negotiating", "won"]
+    for i, stage in enumerate(stage_order):
+        count = len([l for l in leads if l.get("stage") == stage or stage_order.index(l.get("stage", "new")) > i])
+        funnel.append({"stage": stage, "count": count, "percentage": count / total_leads * 100 if total_leads > 0 else 0})
+    
+    # Time to close
+    won_leads = [l for l in leads if l.get("stage") == "won"]
+    avg_days_to_close = 0
+    if won_leads:
+        total_days = 0
+        for lead in won_leads:
+            created = datetime.fromisoformat(lead.get("created_at", datetime.now(timezone.utc).isoformat()).replace('Z', '+00:00'))
+            updated = datetime.fromisoformat(lead.get("updated_at", datetime.now(timezone.utc).isoformat()).replace('Z', '+00:00'))
+            total_days += (updated - created).days
+        avg_days_to_close = total_days / len(won_leads)
+    
+    # Lead sources
+    by_source = {}
+    for lead in leads:
+        source = lead.get("source", "unknown")
+        if source not in by_source:
+            by_source[source] = {"count": 0, "value": 0, "won": 0}
+        by_source[source]["count"] += 1
+        by_source[source]["value"] += lead.get("estimated_value", 0)
+        if lead.get("stage") == "won":
+            by_source[source]["won"] += 1
+    
+    # Lead scores distribution
+    score_distribution = {"hot": 0, "warm": 0, "qualified": 0, "new": 0, "cold": 0}
+    for lead in leads:
+        score = calculate_lead_score(lead)["score"]
+        if score >= 80:
+            score_distribution["hot"] += 1
+        elif score >= 60:
+            score_distribution["warm"] += 1
+        elif score >= 40:
+            score_distribution["qualified"] += 1
+        elif score >= 20:
+            score_distribution["new"] += 1
+        else:
+            score_distribution["cold"] += 1
+    
+    return {
+        "summary": {
+            "total_leads": total_leads,
+            "total_pipeline_value": total_value,
+            "avg_deal_size": total_value / total_leads if total_leads > 0 else 0,
+            "conversion_rate": len(won_leads) / total_leads * 100 if total_leads > 0 else 0,
+            "avg_days_to_close": round(avg_days_to_close, 1)
+        },
+        "by_stage": by_stage,
+        "funnel": funnel,
+        "by_source": by_source,
+        "score_distribution": score_distribution
+    }
+
+@api_router.get("/crm/reports/activity")
+async def get_activity_report(current_user: dict = Depends(get_current_user)):
+    """Get activity and engagement report"""
+    institution_id = current_user["id"]
+    
+    # Get all communications
+    comms = await db.communications.find({"institution_id": institution_id}).to_list(1000)
+    
+    # By channel
+    by_channel = {}
+    for comm in comms:
+        channel = comm.get("channel", "unknown")
+        if channel not in by_channel:
+            by_channel[channel] = {"total": 0, "inbound": 0, "outbound": 0}
+        by_channel[channel]["total"] += 1
+        by_channel[channel][comm.get("direction", "outbound")] += 1
+    
+    # By day of week
+    by_day = {i: 0 for i in range(7)}
+    for comm in comms:
+        try:
+            created = datetime.fromisoformat(comm.get("created_at", "").replace('Z', '+00:00'))
+            by_day[created.weekday()] += 1
+        except:
+            pass
+    
+    # Response times (placeholder)
+    avg_response_time = "2.5 hours"
+    
+    return {
+        "total_communications": len(comms),
+        "by_channel": by_channel,
+        "by_day_of_week": {
+            "Monday": by_day[0], "Tuesday": by_day[1], "Wednesday": by_day[2],
+            "Thursday": by_day[3], "Friday": by_day[4], "Saturday": by_day[5], "Sunday": by_day[6]
+        },
+        "avg_response_time": avg_response_time
+    }
+
+@api_router.get("/crm/reports/export")
+async def export_crm_data(
+    format: str = "csv",  # csv, json, xlsx
+    current_user: dict = Depends(get_current_user)
+):
+    """Export CRM data"""
+    query = {}
+    if current_user["user_type"] == "institution":
+        query["$or"] = [{"created_by": current_user["id"]}, {"assigned_to": current_user["id"]}]
+    
+    leads = await db.crm_leads.find(query).to_list(10000)
+    
+    # Prepare export data
+    export_data = []
+    for lead in leads:
+        scoring = calculate_lead_score(lead)
+        export_data.append({
+            "id": lead["id"],
+            "institution_name": lead.get("institution_name", ""),
+            "contact_name": lead.get("contact_name", ""),
+            "email": lead.get("email", ""),
+            "phone": lead.get("phone", ""),
+            "country": lead.get("country", ""),
+            "students_count": lead.get("students_count", 0),
+            "exam_types": ", ".join(lead.get("exam_types", [])),
+            "estimated_value": lead.get("estimated_value", 0),
+            "stage": lead.get("stage", ""),
+            "source": lead.get("source", ""),
+            "lead_score": scoring["score"],
+            "lead_grade": scoring["grade"],
+            "created_at": lead.get("created_at", ""),
+            "updated_at": lead.get("updated_at", ""),
+            "activities_count": len(lead.get("activities", []))
+        })
+    
+    if format == "json":
+        return {"data": export_data, "format": "json", "count": len(export_data)}
+    else:
+        # For CSV, return structured data that frontend can convert
+        return {
+            "data": export_data,
+            "format": format,
+            "count": len(export_data),
+            "columns": list(export_data[0].keys()) if export_data else []
+        }
+
+# Tasks & Follow-ups
+@api_router.post("/crm/tasks")
+async def create_task(task_data: dict, current_user: dict = Depends(get_current_user)):
+    """Create a CRM task"""
+    task_id = str(uuid.uuid4())
+    task_doc = {
+        "id": task_id,
+        "institution_id": current_user["id"],
+        "title": task_data.get("title", ""),
+        "description": task_data.get("description", ""),
+        "type": task_data.get("type", "follow_up"),  # follow_up, call, email, meeting, demo
+        "priority": task_data.get("priority", "medium"),  # low, medium, high, urgent
+        "due_date": task_data.get("due_date"),
+        "lead_id": task_data.get("lead_id"),
+        "student_id": task_data.get("student_id"),
+        "assigned_to": task_data.get("assigned_to", current_user["id"]),
+        "status": "pending",  # pending, in_progress, completed, cancelled
+        "created_by": current_user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "completed_at": None
+    }
+    
+    await db.crm_tasks.insert_one(task_doc)
+    return {"id": task_id, "message": "Task created"}
+
+@api_router.get("/crm/tasks")
+async def get_tasks(
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all tasks"""
+    query = {"institution_id": current_user["id"]}
+    if status:
+        query["status"] = status
+    if priority:
+        query["priority"] = priority
+    
+    tasks = await db.crm_tasks.find(query).sort("due_date", 1).to_list(200)
+    
+    # Group by status
+    overdue = []
+    today = []
+    upcoming = []
+    completed = []
+    
+    now = datetime.now(timezone.utc)
+    today_str = now.date().isoformat()
+    
+    for task in tasks:
+        if task.get("status") == "completed":
+            completed.append(task)
+        elif task.get("due_date"):
+            if task["due_date"] < today_str:
+                overdue.append(task)
+            elif task["due_date"] == today_str:
+                today.append(task)
+            else:
+                upcoming.append(task)
+        else:
+            upcoming.append(task)
+    
+    return {
+        "overdue": overdue,
+        "today": today,
+        "upcoming": upcoming,
+        "completed": completed[-10:],  # Last 10 completed
+        "stats": {
+            "total_pending": len(overdue) + len(today) + len(upcoming),
+            "overdue_count": len(overdue),
+            "due_today": len(today)
+        }
+    }
+
+@api_router.put("/crm/tasks/{task_id}")
+async def update_task(task_id: str, updates: dict, current_user: dict = Depends(get_current_user)):
+    """Update a task"""
+    update_data = {}
+    for key in ["title", "description", "priority", "due_date", "status", "assigned_to"]:
+        if key in updates:
+            update_data[key] = updates[key]
+    
+    if updates.get("status") == "completed":
+        update_data["completed_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.crm_tasks.update_one({"id": task_id, "institution_id": current_user["id"]}, {"$set": update_data})
+    return {"message": "Task updated"}
+
 # ==================== HEALTH CHECK ====================
 
 @api_router.get("/")
