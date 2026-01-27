@@ -269,6 +269,53 @@ export default function InstitutionDashboard() {
     }
   };
 
+  const fetchMarketplaceData = async () => {
+    setMarketplaceLoading(true);
+    try {
+      const [listingsRes, myListingsRes] = await Promise.all([
+        axios.get(`${API_URL}/marketplace/listings${selectedCategory !== 'all' ? `?category=${selectedCategory}` : ''}`),
+        axios.get(`${API_URL}/marketplace/my-listings`)
+      ]);
+      setMarketplaceData(listingsRes.data);
+      setMyListings(myListingsRes.data.listings || []);
+    } catch (error) {
+      console.error('Failed to fetch marketplace data:', error);
+      toast.error('Failed to load marketplace');
+    } finally {
+      setMarketplaceLoading(false);
+    }
+  };
+
+  const handleCreateListing = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API_URL}/marketplace/listings`, {
+        ...newListing,
+        price: parseFloat(newListing.price) || 0
+      });
+      toast.success('Listing created successfully!');
+      setAddListingOpen(false);
+      setNewListing({
+        title: '',
+        description: '',
+        category: 'tutoring',
+        price: '',
+        price_type: 'per_student',
+        exam_types: [],
+        delivery_method: 'online'
+      });
+      fetchMarketplaceData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create listing');
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'marketplace') {
+      fetchMarketplaceData();
+    }
+  }, [activeTab, selectedCategory]);
+
   const handleLogout = () => {
     logout();
     navigate('/', { replace: true });
