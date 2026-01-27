@@ -313,28 +313,37 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - [x] React Native base structure with white-label support
 - [x] CRM Supreme UI (Email Templates, Automations, Tasks, Reports)
 - [x] Student Dashboard Restricted (only assigned exam)
-- [x] Institution Settings (Zoom, Email, Gamification)
+- [x] Institution Settings (Avatar, Zoom, Email, Gamification)
 - [x] Complete Gamification System (XP, Levels, Streaks, Badges, Leaderboard, Challenges)
 - [x] Zoom SDK Integration (meetings, signatures)
+- [x] Premium Avatar System (Animated free + HeyGen premium)
+- [x] Content Library (Materials upload, Vocabulary, Flashcards, Offline)
+- [x] Placement Test configurable (mandatory/optional/free)
+- [x] Demo data for institutions showcase
 
 ### P1 - High Priority
+- [ ] Integrate Avatar in AI Tutor (animated + premium option)
 - [ ] Complete React Native app screens (login, exam, tutor, classes)
+- [ ] WhatsApp/SMS provider configuration per institution
 - [ ] Real email sending from CRM automations
-- [ ] WhatsApp/SMS integration for CRM
-- [ ] Full Admin Panel (Users, Revenue, API Keys management)
 
 ### P2 - Medium Priority
-- [ ] Video streaming for live classes (recording + replay)
+- [ ] Video streaming with Zoom embedded in platform
 - [ ] Push notifications for mobile
-- [ ] PWA offline mode for downloaded materials
+- [ ] Superadmin dashboard for ProficientHub
 
 ### P3 - Nice to Have
+- [ ] AI-generated flashcard definitions
 - [ ] Additional language translations
-- [ ] Video tutorials
-- [ ] Community features
+
+## Business Model Notes
+- **Premium Avatar**: Included in institutional plan, institutions set credit limits
+- **Free Minutes for Students**: Institutions can offer X free minutes of premium AI tutor to students for conversion
+- **Placement Test**: Configurable per institution (mandatory/optional/free)
+- **Mock Exams**: Pre-paid by students, no impact on institution credits
 
 ## Notes
 - Voice features use OpenAI TTS/STT via Emergent LLM Key
-- Zoom integration requires institution credentials (Account ID, Client ID, Client Secret)
+- Zoom integration requires institution credentials
 - Gamification is toggle-able per institution
-- Student restricted dashboard auto-detects institutional students
+- All content can be marked for offline availability
