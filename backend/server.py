@@ -6656,6 +6656,425 @@ async def check_mock_answer(
         "message": f"Intento {attempts}/5 incorrecto. Aquí tienes una pista:"
     }
 
+# ==================== MESSAGING PROVIDERS (WhatsApp/SMS) ====================
+
+class MessagingConfig(BaseModel):
+    provider: str  # twilio, messagebird, vonage, whatsapp_business
+    api_key: Optional[str] = None
+    api_secret: Optional[str] = None
+    account_sid: Optional[str] = None  # For Twilio
+    from_number: Optional[str] = None
+    whatsapp_number: Optional[str] = None
+    enabled: bool = False
+
+@api_router.get("/institution/messaging/config")
+async def get_messaging_config(current_user: dict = Depends(get_current_user)):
+    """Get messaging configuration for institution"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can access this")
+    
+    settings = await db.institution_settings.find_one(
+        {"institution_id": current_user["id"]},
+        {"_id": 0, "messaging": 1}
+    )
+    
+    config = settings.get("messaging", {}) if settings else {}
+    
+    # Mask sensitive data
+    if config.get("api_key"):
+        config["api_key"] = config["api_key"][:8] + "***"
+    if config.get("api_secret"):
+        config["api_secret"] = "***"
+    
+    return {
+        "provider": config.get("provider", "none"),
+        "enabled": config.get("enabled", False),
+        "from_number": config.get("from_number"),
+        "whatsapp_number": config.get("whatsapp_number"),
+        "whatsapp_enabled": config.get("whatsapp_enabled", False),
+        "sms_enabled": config.get("sms_enabled", False)
+    }
+
+@api_router.post("/institution/messaging/config")
+async def update_messaging_config(config: MessagingConfig, current_user: dict = Depends(get_current_user)):
+    """Update messaging configuration"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can configure messaging")
+    
+    update_data = config.dict()
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.institution_settings.update_one(
+        {"institution_id": current_user["id"]},
+        {"$set": {"messaging": update_data}},
+        upsert=True
+    )
+    
+    return {"success": True, "message": "Messaging configuration updated"}
+
+@api_router.post("/institution/messaging/test")
+async def test_messaging(
+    message_type: str,  # sms or whatsapp
+    test_number: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Send a test message"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can test messaging")
+    
+    settings = await db.institution_settings.find_one({"institution_id": current_user["id"]})
+    messaging_config = settings.get("messaging", {}) if settings else {}
+    
+    if not messaging_config.get("enabled"):
+        raise HTTPException(status_code=400, detail="Messaging not configured")
+    
+    # For now, simulate sending (real implementation would use Twilio/MessageBird API)
+    return {
+        "success": True,
+        "message": f"Test {message_type} sent to {test_number}",
+        "note": "Integration with actual provider pending API key validation"
+    }
+
+@api_router.post("/institution/messaging/send-bulk")
+async def send_bulk_message(
+    student_ids: List[str],
+    message: str,
+    message_type: str = "sms",
+    current_user: dict = Depends(get_current_user)
+):
+    """Send bulk messages to students"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can send messages")
+    
+    # Get students
+    students = await db.users.find(
+        {"id": {"$in": student_ids}, "institution_id": current_user["id"]},
+        {"_id": 0, "id": 1, "name": 1, "phone": 1}
+    ).to_list(100)
+    
+    # Log message send attempt
+    message_log = {
+        "id": str(uuid.uuid4()),
+        "institution_id": current_user["id"],
+        "message_type": message_type,
+        "message": message,
+        "recipients": len(students),
+        "status": "queued",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.messaging_logs.insert_one(message_log)
+    
+    return {
+        "success": True,
+        "queued": len(students),
+        "message_id": message_log["id"]
+    }
+
+# ==================== WHITE-LABEL EMAIL SYSTEM ====================
+
+class EmailTemplate(BaseModel):
+    template_type: str  # welcome, password_reset, exam_reminder, progress_report, certificate
+    subject: str
+    body_html: str
+    body_text: Optional[str] = None
+
+@api_router.get("/institution/email-templates")
+async def get_email_templates(current_user: dict = Depends(get_current_user)):
+    """Get custom email templates for institution"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can access templates")
+    
+    templates = await db.email_templates.find(
+        {"institution_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(50)
+    
+    # Default templates if none exist
+    default_templates = {
+        "welcome": {
+            "subject": "Bienvenido a {institution_name}",
+            "body_html": """
+            <h1>¡Bienvenido {student_name}!</h1>
+            <p>Tu cuenta ha sido creada en {institution_name}.</p>
+            <p><strong>Email:</strong> {email}</p>
+            <p><strong>Contraseña temporal:</strong> {password}</p>
+            <p>Por favor, cambia tu contraseña en el primer inicio de sesión.</p>
+            <p><a href="{login_url}">Iniciar Sesión</a></p>
+            """
+        },
+        "exam_reminder": {
+            "subject": "Recordatorio: Tu examen {exam_type} está cerca",
+            "body_html": """
+            <h1>¡No olvides tu examen!</h1>
+            <p>Hola {student_name},</p>
+            <p>Tu examen de {exam_type} está programado para {exam_date}.</p>
+            <p>Recuerda practicar con nuestro simulador.</p>
+            """
+        },
+        "progress_report": {
+            "subject": "Tu reporte de progreso semanal",
+            "body_html": """
+            <h1>Reporte Semanal de Progreso</h1>
+            <p>Hola {student_name},</p>
+            <h3>Esta semana:</h3>
+            <ul>
+                <li>Exámenes completados: {exams_completed}</li>
+                <li>Puntuación promedio: {avg_score}%</li>
+                <li>Tiempo de estudio: {study_time} horas</li>
+                <li>XP ganados: {xp_earned}</li>
+            </ul>
+            """
+        }
+    }
+    
+    # Merge defaults with custom
+    template_dict = {t["template_type"]: t for t in templates}
+    for key, default in default_templates.items():
+        if key not in template_dict:
+            template_dict[key] = {
+                "template_type": key,
+                "subject": default["subject"],
+                "body_html": default["body_html"],
+                "is_default": True
+            }
+    
+    return {"templates": list(template_dict.values())}
+
+@api_router.post("/institution/email-templates")
+async def save_email_template(template: EmailTemplate, current_user: dict = Depends(get_current_user)):
+    """Save or update an email template"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can edit templates")
+    
+    template_doc = template.dict()
+    template_doc["institution_id"] = current_user["id"]
+    template_doc["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.email_templates.update_one(
+        {"institution_id": current_user["id"], "template_type": template.template_type},
+        {"$set": template_doc},
+        upsert=True
+    )
+    
+    return {"success": True, "message": f"Template '{template.template_type}' saved"}
+
+@api_router.post("/institution/email-templates/preview")
+async def preview_email_template(
+    template_type: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Preview an email template with sample data"""
+    templates = await get_email_templates(current_user)
+    template = next((t for t in templates["templates"] if t["template_type"] == template_type), None)
+    
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    # Sample data for preview
+    sample_data = {
+        "institution_name": current_user.get("institution_name", "Demo Academy"),
+        "student_name": "Juan García",
+        "email": "juan@example.com",
+        "password": "Temp123!",
+        "login_url": "https://proficienthub.com/login",
+        "exam_type": "IELTS",
+        "exam_date": "15 de Febrero, 2026",
+        "exams_completed": "5",
+        "avg_score": "78",
+        "study_time": "12",
+        "xp_earned": "450"
+    }
+    
+    # Replace placeholders
+    preview_subject = template["subject"]
+    preview_body = template["body_html"]
+    for key, value in sample_data.items():
+        preview_subject = preview_subject.replace(f"{{{key}}}", value)
+        preview_body = preview_body.replace(f"{{{key}}}", value)
+    
+    return {
+        "subject": preview_subject,
+        "body_html": preview_body
+    }
+
+# ==================== AUTOMATIC REPORTS SYSTEM ====================
+
+class ReportConfig(BaseModel):
+    weekly_enabled: bool = True
+    monthly_enabled: bool = True
+    send_to_admins: bool = True
+    send_to_students: bool = False
+    include_ai_usage: bool = True
+    include_exam_stats: bool = True
+    include_engagement: bool = True
+    delivery_day: int = 1  # 1=Monday, 7=Sunday
+
+@api_router.get("/institution/reports/config")
+async def get_report_config(current_user: dict = Depends(get_current_user)):
+    """Get automatic reports configuration"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can access reports config")
+    
+    settings = await db.institution_settings.find_one(
+        {"institution_id": current_user["id"]},
+        {"_id": 0, "reports": 1}
+    )
+    
+    return settings.get("reports", {
+        "weekly_enabled": True,
+        "monthly_enabled": True,
+        "send_to_admins": True,
+        "send_to_students": False,
+        "include_ai_usage": True,
+        "include_exam_stats": True,
+        "include_engagement": True,
+        "delivery_day": 1
+    })
+
+@api_router.post("/institution/reports/config")
+async def update_report_config(config: ReportConfig, current_user: dict = Depends(get_current_user)):
+    """Update automatic reports configuration"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can configure reports")
+    
+    await db.institution_settings.update_one(
+        {"institution_id": current_user["id"]},
+        {"$set": {"reports": config.dict()}},
+        upsert=True
+    )
+    
+    return {"success": True, "message": "Report configuration updated"}
+
+@api_router.get("/institution/reports/generate")
+async def generate_institution_report(
+    report_type: str = "weekly",
+    current_user: dict = Depends(get_current_user)
+):
+    """Generate an institution report on-demand"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can generate reports")
+    
+    institution_id = current_user["id"]
+    
+    # Date range
+    now = datetime.now(timezone.utc)
+    if report_type == "weekly":
+        start_date = (now - timedelta(days=7)).isoformat()
+    else:
+        start_date = (now - timedelta(days=30)).isoformat()
+    
+    # Get students
+    students = await db.users.find(
+        {"institution_id": institution_id, "user_type": "student"},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    student_ids = [s["id"] for s in students]
+    
+    # AI Usage stats
+    ai_usage = await db.ai_agent_history.aggregate([
+        {"$match": {"institution_id": institution_id, "created_at": {"$gte": start_date}}},
+        {"$group": {
+            "_id": "$agent_type",
+            "total_interactions": {"$sum": 1},
+            "total_credits": {"$sum": "$credits_consumed"}
+        }}
+    ]).to_list(10)
+    
+    # Credits stats
+    credits = await db.ai_credits.find_one({"user_id": institution_id}, {"_id": 0})
+    
+    # Exam stats
+    exam_attempts = await db.exam_attempts.aggregate([
+        {"$match": {"user_id": {"$in": student_ids}, "created_at": {"$gte": start_date}}},
+        {"$group": {
+            "_id": "$exam_type",
+            "total_attempts": {"$sum": 1},
+            "avg_score": {"$avg": "$score"}
+        }}
+    ]).to_list(20)
+    
+    # Active students
+    active_students = await db.exam_attempts.distinct("user_id", {
+        "user_id": {"$in": student_ids},
+        "created_at": {"$gte": start_date}
+    })
+    
+    # Gamification stats
+    gamification_stats = await db.gamification_profiles.aggregate([
+        {"$match": {"institution_id": institution_id}},
+        {"$group": {
+            "_id": None,
+            "total_xp": {"$sum": "$xp"},
+            "avg_level": {"$avg": "$level"},
+            "max_streak": {"$max": "$current_streak"}
+        }}
+    ]).to_list(1)
+    
+    report = {
+        "report_type": report_type,
+        "generated_at": now.isoformat(),
+        "period": {
+            "start": start_date,
+            "end": now.isoformat()
+        },
+        "institution": {
+            "name": current_user.get("institution_name", "Unknown"),
+            "total_students": len(students)
+        },
+        "engagement": {
+            "active_students": len(active_students),
+            "activity_rate": round(len(active_students) / max(len(students), 1) * 100, 1)
+        },
+        "ai_usage": {
+            "by_agent": {u["_id"]: {"interactions": u["total_interactions"], "credits": u["total_credits"]} for u in ai_usage},
+            "total_credits_used": sum(u["total_credits"] for u in ai_usage),
+            "credits_balance": credits.get("total_credits", 0) - credits.get("used_credits", 0) if credits else 0
+        },
+        "exams": {
+            "by_type": {e["_id"]: {"attempts": e["total_attempts"], "avg_score": round(e["avg_score"], 1) if e["avg_score"] else 0} for e in exam_attempts},
+            "total_attempts": sum(e["total_attempts"] for e in exam_attempts)
+        },
+        "gamification": gamification_stats[0] if gamification_stats else {"total_xp": 0, "avg_level": 1, "max_streak": 0},
+        "highlights": []
+    }
+    
+    # Generate highlights
+    if report["engagement"]["activity_rate"] > 70:
+        report["highlights"].append("🎉 Excelente tasa de actividad esta semana!")
+    if report["ai_usage"]["total_credits_used"] > 50:
+        report["highlights"].append("📈 Alto uso de tutores IA - tus estudiantes están aprovechando la tecnología")
+    if len(active_students) > len(students) * 0.5:
+        report["highlights"].append("✅ Más del 50% de estudiantes activos")
+    
+    # Store report
+    report_doc = {
+        "id": str(uuid.uuid4()),
+        "institution_id": institution_id,
+        "report_type": report_type,
+        "data": report,
+        "created_at": now.isoformat()
+    }
+    await db.institution_reports.insert_one(report_doc)
+    
+    return report
+
+@api_router.get("/institution/reports/history")
+async def get_report_history(
+    limit: int = 10,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get historical reports"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can access reports")
+    
+    reports = await db.institution_reports.find(
+        {"institution_id": current_user["id"]},
+        {"_id": 0, "data": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return {"reports": reports}
+
 @api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
