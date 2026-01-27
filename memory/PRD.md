@@ -197,13 +197,13 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - **Student (first login)**: student1@demo.com / 62Wuaor4R4Qp (requires password change)
 
 ## URLs
-- Landing: https://b2b-exam-prep.preview.emergentagent.com
-- Login: https://b2b-exam-prep.preview.emergentagent.com/login
-- Admin: https://b2b-exam-prep.preview.emergentagent.com/admin
-- Student Portal: https://b2b-exam-prep.preview.emergentagent.com/student-portal
-- White-Label Portal: https://b2b-exam-prep.preview.emergentagent.com/student-portal/demo-language-academy
-- AI Tutor: https://b2b-exam-prep.preview.emergentagent.com/tutor/ielts
-- Exam: https://b2b-exam-prep.preview.emergentagent.com/exam/ielts
+- Landing: https://ensename-la-app.preview.emergentagent.com
+- Login: https://ensename-la-app.preview.emergentagent.com/login
+- Admin: https://ensename-la-app.preview.emergentagent.com/admin
+- Student Portal: https://ensename-la-app.preview.emergentagent.com/student-portal
+- White-Label Portal: https://ensename-la-app.preview.emergentagent.com/student-portal/demo-language-academy
+- AI Tutor: https://ensename-la-app.preview.emergentagent.com/tutor/ielts
+- Exam: https://ensename-la-app.preview.emergentagent.com/exam/ielts
 
 ## Remaining Backlog
 
