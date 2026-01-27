@@ -15,7 +15,7 @@ import {
   CheckCircle, AlertCircle, Copy, ArrowLeft, Save, Eye
 } from 'lucide-react';
 import axios from 'axios';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
