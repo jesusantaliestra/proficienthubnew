@@ -2178,6 +2178,23 @@ export default function InstitutionDashboard() {
             </div>
           )}
           
+          {/* CRM Supreme Tab */}
+          {activeTab === 'crm-supreme' && (
+            <div className="space-y-6 animate-fade-in" data-testid="crm-supreme-tab">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
+                    <Zap className="w-7 h-7 text-purple-500" />
+                    CRM Supreme
+                    <span className="text-sm font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full">PRO</span>
+                  </h2>
+                  <p className="text-gray-500">Advanced email automation, templates, and reporting</p>
+                </div>
+              </div>
+              <CRMSupreme />
+            </div>
+          )}
+          
           {activeTab === 'exams' && (
             <div className="space-y-6 animate-fade-in" data-testid="exams-tab">
               <h2 className="text-2xl font-extrabold text-gray-900">Exam Management</h2>
