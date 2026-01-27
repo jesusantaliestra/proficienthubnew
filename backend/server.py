@@ -4485,7 +4485,7 @@ async def create_automation_rule(rule: AutomationRule, current_user: dict = Depe
 @api_router.get("/crm/automation-rules")
 async def get_automation_rules(current_user: dict = Depends(get_current_user)):
     """Get all automation rules"""
-    rules = await db.automation_rules.find({"institution_id": current_user["id"]}).to_list(50)
+    rules = await db.automation_rules.find({"institution_id": current_user["id"]}, {"_id": 0}).to_list(50)
     
     # Add default rules if none exist
     if not rules:
