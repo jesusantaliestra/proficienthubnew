@@ -1105,6 +1105,273 @@ export default function InstitutionDashboard() {
             </div>
           )}
           
+          {/* Video Classes Tab */}
+          {activeTab === 'classes' && (
+            <div className="space-y-6 animate-fade-in" data-testid="classes-tab">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-extrabold text-gray-900">Video Classes & Streaming</h2>
+                  <p className="text-gray-500">Schedule live classes or upload recorded lessons</p>
+                </div>
+                <Dialog open={addClassOpen} onOpenChange={setAddClassOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="btn-duo flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      Create Class
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-white border-2 border-gray-200 rounded-2xl max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="text-gray-900 font-extrabold">Create Video Class</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleCreateVideoClass} className="space-y-4">
+                      <div>
+                        <Label>Title *</Label>
+                        <Input
+                          value={newVideoClass.title}
+                          onChange={(e) => setNewVideoClass({...newVideoClass, title: e.target.value})}
+                          required
+                          className="input-duo"
+                          placeholder="e.g., IELTS Speaking Part 2 Masterclass"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>Exam Type</Label>
+                          <Select 
+                            value={newVideoClass.exam_type} 
+                            onValueChange={(v) => setNewVideoClass({...newVideoClass, exam_type: v})}
+                          >
+                            <SelectTrigger className="input-duo">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="ielts">IELTS</SelectItem>
+                              <SelectItem value="toefl">TOEFL</SelectItem>
+                              <SelectItem value="cambridge">Cambridge</SelectItem>
+                              <SelectItem value="trinity">Trinity</SelectItem>
+                              <SelectItem value="pte">PTE</SelectItem>
+                              <SelectItem value="oet">OET</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Skill Focus</Label>
+                          <Select 
+                            value={newVideoClass.skill} 
+                            onValueChange={(v) => setNewVideoClass({...newVideoClass, skill: v})}
+                          >
+                            <SelectTrigger className="input-duo">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="reading">📖 Reading</SelectItem>
+                              <SelectItem value="writing">✍️ Writing</SelectItem>
+                              <SelectItem value="listening">🎧 Listening</SelectItem>
+                              <SelectItem value="speaking">🗣️ Speaking</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>Class Type</Label>
+                          <Select 
+                            value={newVideoClass.class_type} 
+                            onValueChange={(v) => setNewVideoClass({...newVideoClass, class_type: v})}
+                          >
+                            <SelectTrigger className="input-duo">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="live">🔴 Live Class</SelectItem>
+                              <SelectItem value="recorded">📹 Recorded</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Duration (min)</Label>
+                          <Input
+                            type="number"
+                            value={newVideoClass.duration_minutes}
+                            onChange={(e) => setNewVideoClass({...newVideoClass, duration_minutes: e.target.value})}
+                            className="input-duo"
+                          />
+                        </div>
+                      </div>
+                      {newVideoClass.class_type === 'live' && (
+                        <div>
+                          <Label>Scheduled Date & Time</Label>
+                          <Input
+                            type="datetime-local"
+                            value={newVideoClass.scheduled_at}
+                            onChange={(e) => setNewVideoClass({...newVideoClass, scheduled_at: e.target.value})}
+                            className="input-duo"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <Label>Description</Label>
+                        <Textarea
+                          value={newVideoClass.description}
+                          onChange={(e) => setNewVideoClass({...newVideoClass, description: e.target.value})}
+                          className="input-duo"
+                          rows={2}
+                          placeholder="What will students learn?"
+                        />
+                      </div>
+                      <Button type="submit" className="btn-duo w-full">Create Class</Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {videoClassesLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="w-12 h-12 border-4 border-[#58CC02] border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <>
+                  {/* Stats */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl">
+                      <CardContent className="p-4 flex items-center gap-4">
+                        <Radio className="w-10 h-10" />
+                        <div>
+                          <div className="text-3xl font-extrabold">{videoClassesData?.stats?.total_live || 0}</div>
+                          <div className="text-sm opacity-90">Live Classes</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl">
+                      <CardContent className="p-4 flex items-center gap-4">
+                        <Video className="w-10 h-10" />
+                        <div>
+                          <div className="text-3xl font-extrabold">{videoClassesData?.stats?.total_recorded || 0}</div>
+                          <div className="text-sm opacity-90">Recorded</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl">
+                      <CardContent className="p-4 flex items-center gap-4">
+                        <Calendar className="w-10 h-10" />
+                        <div>
+                          <div className="text-3xl font-extrabold">{videoClassesData?.stats?.upcoming || 0}</div>
+                          <div className="text-sm opacity-90">Upcoming</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Live Classes */}
+                  <Card className="bg-white border-2 border-gray-100 rounded-2xl">
+                    <CardHeader>
+                      <CardTitle className="text-gray-900 font-extrabold flex items-center gap-2">
+                        <Radio className="w-5 h-5 text-red-500" />
+                        Live Classes ({videoClassesData?.live_classes?.length || 0})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {videoClassesData?.live_classes?.length > 0 ? (
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {videoClassesData.live_classes.map((cls) => (
+                            <div key={cls.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge className={`${
+                                  cls.status === 'live' ? 'bg-red-100 text-red-700 border-red-200' :
+                                  cls.status === 'scheduled' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
+                                  'bg-gray-100 text-gray-700 border-gray-200'
+                                }`}>
+                                  {cls.status === 'live' ? '🔴 LIVE' : cls.status === 'scheduled' ? '📅 Scheduled' : cls.status}
+                                </Badge>
+                                <Badge variant="outline">{cls.exam_type.toUpperCase()}</Badge>
+                              </div>
+                              <h4 className="font-bold text-gray-900 mb-1">{cls.title}</h4>
+                              <p className="text-sm text-gray-500 line-clamp-2 mb-3">{cls.description}</p>
+                              <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
+                                <span>⏱️ {cls.duration_minutes} min</span>
+                                <span>👥 {cls.enrolled_count}/{cls.max_students}</span>
+                              </div>
+                              {cls.scheduled_at && (
+                                <p className="text-xs text-gray-400 mb-3">
+                                  📅 {new Date(cls.scheduled_at).toLocaleString()}
+                                </p>
+                              )}
+                              {cls.room_code && (
+                                <div className="bg-blue-50 rounded-lg p-2 text-center mb-3">
+                                  <p className="text-xs text-blue-600">Room Code</p>
+                                  <p className="text-lg font-bold text-blue-700">{cls.room_code}</p>
+                                </div>
+                              )}
+                              <div className="flex gap-2">
+                                {cls.status === 'scheduled' && (
+                                  <Button size="sm" onClick={() => handleStartClass(cls.id)} className="flex-1 bg-red-500 hover:bg-red-600 text-white">
+                                    <Play className="w-3 h-3 mr-1" /> Start
+                                  </Button>
+                                )}
+                                {cls.status === 'live' && (
+                                  <Button size="sm" onClick={() => handleEndClass(cls.id)} variant="outline" className="flex-1">
+                                    End Class
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Radio className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                          <p className="text-gray-500">No live classes scheduled</p>
+                          <Button onClick={() => setAddClassOpen(true)} variant="outline" className="mt-3">
+                            Schedule a Live Class
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Recorded Classes */}
+                  <Card className="bg-white border-2 border-gray-100 rounded-2xl">
+                    <CardHeader>
+                      <CardTitle className="text-gray-900 font-extrabold flex items-center gap-2">
+                        <Video className="w-5 h-5 text-blue-500" />
+                        Recorded Classes ({videoClassesData?.recorded_classes?.length || 0})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {videoClassesData?.recorded_classes?.length > 0 ? (
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {videoClassesData.recorded_classes.map((cls) => (
+                            <div key={cls.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge variant="outline">{cls.exam_type.toUpperCase()}</Badge>
+                                <span className="text-xs text-gray-400">{cls.skill}</span>
+                              </div>
+                              <h4 className="font-bold text-gray-900 mb-1">{cls.title}</h4>
+                              <p className="text-sm text-gray-500 line-clamp-2 mb-3">{cls.description}</p>
+                              <div className="flex items-center justify-between text-sm text-gray-500">
+                                <span>⏱️ {cls.duration_minutes} min</span>
+                                <span>👁️ {cls.views_count || 0} views</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Video className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                          <p className="text-gray-500">No recorded classes yet</p>
+                          <Button onClick={() => { setNewVideoClass({...newVideoClass, class_type: 'recorded'}); setAddClassOpen(true); }} variant="outline" className="mt-3">
+                            Upload a Recording
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
+          )}
+          
           {activeTab === 'library' && (
             <div className="space-y-6 animate-fade-in" data-testid="library-tab">
               <div className="flex items-center justify-between">
