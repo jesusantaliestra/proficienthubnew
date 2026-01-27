@@ -1,0 +1,166 @@
+<analysis>An excellent summary of the previous fork would be:
+
+**original_problem_statement**: The user initially asked for a tour of the application and to add Cambridge and Trinity exams. The project rapidly escalated to a Supreme tier, requiring a full-stack implementation of numerous advanced features. These include a native mobile app (iOS/Android), a powerful CRM/ERM system, advanced white-labeling, PWA/offline capabilities, institutional settings for Zoom and SMTP, a comprehensive gamification system, a content management library for institutional materials, and a sophisticated, multi-agent AI tutor system with customizable avatars (Rive/HeyGen) and a credit-based activation model. The most recent request is to build this multi-agent system.
+
+**User's preferred language**: Spanish. The next agent MUST respond in Spanish.
+
+**what currently exists?**:
+The application has been significantly expanded with a suite of Supreme features:
+-   **React Native App Structure**: A complete, though non-functional, project skeleton for the iOS/Android mobile app exists in .
+-   **Advanced CRM**: A CRM Supreme UI () with Kanban board, email templates, automation rules, tasks, and reports is integrated into the .
+-   **Institutional Settings**: A dedicated settings component () allows institutions to configure Zoom credentials, custom SMTP for emails, enable/disable gamification features, and choose an AI Tutor avatar.
+-   **Gamification System**: Backend and frontend for XP points, levels, streaks, badges, and leaderboards are implemented.
+-   **AI Avatar System**: A hybrid avatar system is in place, allowing institutions to choose between a free, animated Rive avatar or a Premium Avatar (formerly HeyGen) for the AI Tutor.
+-   **Content Management**: A  component allows institutions to upload and manage educational materials (Videos, PDFs), create custom vocabulary lists, and generate flashcards.
+-   **Restricted Student View**: A  page ensures that students belonging to an institution can only see and access the specific exam they are assigned.
+-   **Demo Data**: A script at  populates the CRM and other features with realistic data for institutional demos.
+-   **Backend**: The  file contains endpoints for all the features mentioned above, including placeholder logic for Zoom, SMTP, and the AI Avatar integrations.
+
+**Last working item**:
+-   **Last item agent was working**: The agent was beginning the implementation of the **multi-agent AI tutor system**. Based on user requirements, this system will feature three distinct agents (Official Tutor, Mock Coach, Planner) powered by ElevenLabs for voice and a powerful LLM (like GPT-4). The agent's last action was to request and receive the integration playbook for ElevenLabs. The actual coding has not started.
+-   **Status**: NOT STARTED
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: both. This is a complex feature requiring backend testing for the AI credit system and external API calls (ElevenLabs, LLM), and frontend testing for the new AI tutor interface and interactions.
+-   **User Testing Done**: N
+
+**All Pending/In progress Issue list**:
+There are no pending bugs or issues. The work is focused on new feature development.
+
+**In progress Task List**:
+-   **Task 1: Implement Multi-Agent AI Tutor System (P0)**
+    -   **Where to resume**: The agent has the integration playbook for ElevenLabs. The immediate next step is to get the playbook for the core LLM (e.g., GPT-4) via the  tool.
+    -   **What will be achieved with this?**: A fully functional, institution-configurable AI agent system. This includes:
+        -   Backend logic for a credit system where institutions purchase AI credits.
+        -   Backend logic for institutions to enable/disable specific agents (Tutor, Coach, Planner).
+        -   Backend endpoints to handle interactions with the three agents, orchestrating calls to the LLM and ElevenLabs.
+        -   Frontend updates to the AI Tutor to integrate the new agents and their functionalities.
+    -   **Status**: IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?**: Both
+    -   **Blocked on something**: No.
+
+**Upcoming and Future Tasks**
+-   **Upcoming Tasks**:
+    -   **P1: Full React Native App Development**: Build out the complete application functionality within the existing  skeleton. This is a large, high-priority task requested by the user.
+    -   **P2: Full White-Label Customization**: Extend white-labeling to all remaining parts of the platform, such as system emails and the complete student portal, to ensure total brand customization.
+-   **Future Tasks**:
+    -   **Implement Configurable Placement Test**: Implement the logic for institutions to make the initial placement test optional, mandatory, or free to improve student conversion.
+    -   **Implement Offline Content Access**: Enhance the  and the mobile app to allow students to download and access materials (videos, PDFs, flashcards) while offline.
+    -   **Replace Mocked Backend Logic**: The backend logic for Predictive Analytics remains mocked. This needs to be replaced with real database aggregations and calculations.
+
+**Completed work in this session**
+-   **React Native Base Structure**: Fully scaffolded the project in , including config files, initial components, and theme structure.
+-   **CRM Supreme UI**: Implemented in .
+-   **Institution Settings Module**: Implemented in  for Zoom, SMTP, Gamification, and Avatar settings.
+-   **Gamification System**: Implemented backend logic in  and frontend UI in .
+-   **AI Avatar System**: Implemented hybrid Rive/Premium Avatar selection UI and backend configuration models. Renamed HeyGen to Premium Avatar in the UI for branding purposes.
+-   **Content Management Library**: Implemented in  with backend endpoints for file uploads.
+-   **Restricted Student Dashboard**: Implemented in .
+-   **Demo Data Generation**: Created  to populate the app with realistic demo data.
+-   **Testing & Bug Fixes**: Successfully used the testing agent, which identified and fixed a critical bug in the login response (missing ) and several MongoDB ObjectId serialization issues.
+
+**Earlier issues found/mentioned but not fixed**
+None.
+
+**Known issue recurrence from previous fork**
+None.
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Frontend**: React, TailwindCSS, Recharts, Shadcn UI, Axios, 
+-   **Backend**: FastAPI, Motor (async MongoDB), JWT,  for file uploads
+-   **Mobile**: React Native
+-   **Database**: MongoDB
+-   **Integrations**: Zoom, Custom SMTP, Rive (planned), HeyGen (planned, as Premium Avatar), ElevenLabs (planned)
+
+**key DB schema**
+-   **institutions**: Heavily extended with  sub-document for , , , .
+-   **users** (students): Extended with , , and  (xp, level, badges).
+-   **content_library_items**: 
+-   **vocabulary_lists**: 
+-   **flashcard_sets**: 
+-   **(New/Planned)** : 
+-   **(New/Planned)** : 
+
+**changes in tech stack**
+-   **React Native** project added for mobile apps.
+-   ****: Added for free animated avatars.
+-   ****, ****, ****: Added to  in preparation for AI integrations.
+
+**All files of reference**
+-   : Massively expanded to over 5700 lines. Contains logic for all new features.
+-   : Heavily modified to integrate new feature tabs (CRM Supreme, Settings, Library).
+-   : New file for all institutional configurations.
+-   : New file for material management.
+-   : New file for AI tutor avatar display.
+-   : New file for the specific student view.
+-   : New script for seeding demo data.
+-   : Entire new directory for the React Native project.
+-   : Modified to include all new routes and protected logic.
+
+**Areas that need refactoring**:
+-   **/app/backend/server.py**: **CRITICAL**. At over 5700 lines, this monolithic file is unmaintainable. It MUST be broken down into smaller, feature-specific routers (e.g., , , ).
+-   **/app/frontend/src/pages/InstitutionDashboard.jsx**: This component has become a router for other large components. While better than before, the state management is complex. Each tab's state should be fully encapsulated within its respective component.
+
+**key api endpoints**
+-   : GET/POST for all institutional settings (Zoom, SMTP, Gamification, Avatar).
+-   : POST for uploading materials to the content library.
+-   , : CRUD endpoints.
+-   : GET for leaderboard data.
+-   : GET endpoint for the restricted student view.
+-   **(Planned)** : POST for interacting with the AI tutors.
+-   **(Planned)** : GET/POST for managing institutional AI credits.
+
+**Critical Info for New Agent**
+-   **Business Logic is Key**: The core business model revolves around institutional customization. Institutions buy AI credits and then decide which specific AI agents (trained on custom content) to enable for their students. This flexibility is a major selling point.
+-   **User Expectations**: The user has extremely high standards and wants features that are the best on the market.
+-   **Native App, Not PWA**: The user has explicitly rejected a PWA in favor of a native iOS/Android app.
+-   **Integration Playbooks**: The agent has playbooks for HeyGen and ElevenLabs. It needs to acquire one for the core LLM (e.g., GPT-4) to proceed.
+
+**documents and test reports created in this job**
+-   
+-   
+-    (heavily updated)
+-   
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User**: Specify the 3 agent types (Tutor, Coach, Planner), how they should work, and the business model (institutions buy credits, then enable agents). This is the current P0 task. (Completed)
+2.  **User**: Wants the best agents (suggested ElevenLabs + GPT-4), specifies Mock Coach logic (5 tries then solve), confirms Rive vs HeyGen pricing, and emphasizes the core business logic of institution-specific agents. (Completed)
+3.  **Agent**: Asks for clarification on agent implementation details. (Pending - User responded in #2)
+4.  **User**: Requests to rename HeyGen to Premium Avatar, create realistic demos for CRM, implement a configurable placement test, and implement content management (uploads, vocab, flashcards, offline). (Completed - All but offline access are done)
+5.  **Agent**: Proposes plan to implement the above. (Pending - User responded in #4)
+6.  **User**: Clarifies avatar choice (1c, 2a, 3a) - Rive default, HeyGen premium, realistic style. (Completed)
+7.  **Agent**: Asks about avatar preferences. (Pending - User responded in #6)
+8.  **User**: Requests AI avatar for speaking practice (HeyGen?), mentions Rive, and emphasizes cost control. (Completed)
+9.  **User**: Confirms plan to implement all requested features together (Restricted dashboard, Zoom, Gamification, etc.). (Completed)
+10. **Agent**: Proposes plan to do Zoom, Gamification, and student dashboard separately. (Pending - User responded in #9)
+
+**Project Health Check:**
+-   **Broken**: The React Native app in  is a skeleton and not runnable or functional.
+-   **Mocked**: Predictive analytics logic is still using placeholder data. The new AI integrations (Zoom, SMTP, Avatars) have UI and config models but the actual API call logic is mostly placeholder and needs to be fully implemented and tested with real credentials.
+
+**3rd Party Integrations**
+-   **OpenAI GPT-4 (or similar)**: Planned for the core logic of the AI agents. Requires .
+-   **ElevenLabs**: Planned for Text-to-Speech in the AI agent system. Playbook has been acquired.
+-   **HeyGen (as Premium Avatar)**: Planned as a premium avatar option. Playbook has been acquired.
+-   **Rive**: Planned as the free, animated avatar option. Requires  library.
+-   **Zoom**: UI for configuration is complete. Backend integration is placeholder.
+
+**Testing status**
+-   **Testing agent used after significant changes**: YES. Used twice, successfully finding and fixing critical bugs.
+-   **Troubleshoot agent used after agent stuck in loop**: NO
+-   **Test files created**: None, but a demo data script was created at .
+-   **Known regressions**: None.
+
+**Credentials to test flow:**
+-   **Institution Login**:  / 
+-   **Seeding Data**: Run Creating comprehensive demo data...
+✅ Demo data created successfully!
+   - Institution: demo_academy@test.com / Demo123!
+   - 12 Students
+   - 8 CRM Leads
+   - 3 Vocabulary Lists to populate the application with comprehensive test data for the CRM, content library, and other features.
+
+**What agent forgot to execute**
+The agent is at the very beginning of the multi-agent AI tutor task. It has not yet acquired the integration playbook for the core LLM (e.g., GPT-4) and has not written any of the backend (credit system, agent config) or frontend code for this feature. The long-term tasks of building the full React Native app and implementing offline content access are also pending.</analysis>
