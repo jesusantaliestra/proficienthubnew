@@ -8298,8 +8298,17 @@ async def get_institution_details(
     # Get students
     students = await db.users.find(
         {"institution_id": institution_id},
-        {"_id": 0, "password_hash": 0, "id": 1, "name": 1, "email": 1, "created_at": 1, "current_exam": 1}
+        {"_id": 0, "password_hash": 0}
     ).limit(100).to_list(100)
+    
+    # Filter to only include needed fields
+    students = [{
+        "id": s.get("id"),
+        "name": s.get("name"),
+        "email": s.get("email"),
+        "created_at": s.get("created_at"),
+        "current_exam": s.get("current_exam")
+    } for s in students]
     
     # Get settings
     settings = await db.institution_settings.find_one({"institution_id": institution_id}, {"_id": 0})
