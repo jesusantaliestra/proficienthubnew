@@ -2088,6 +2088,13 @@ export default function InstitutionDashboard() {
             </div>
           )}
 
+          {/* Push Notifications Tab */}
+          {activeTab === 'notifications' && (
+            <div className="space-y-6 animate-fade-in" data-testid="notifications-tab">
+              <PushNotificationsPanel />
+            </div>
+          )}
+
           {/* Settings Tab */}
           {activeTab === 'settings' && (
             <div className="space-y-6 animate-fade-in" data-testid="settings-tab">
