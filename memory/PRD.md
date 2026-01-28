@@ -455,14 +455,27 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 ### P2 - Medium Priority
 - [ ] Video streaming with Zoom embedded in platform
 - [ ] Push notifications for mobile
-- [ ] Superadmin dashboard for ProficientHub
 - [ ] ElevenLabs voice integration for AI Tutor (currently using OpenAI TTS)
 - [ ] Real SMS/WhatsApp sending (currently MOCKED - need actual provider integration)
+- [x] **Push Notifications System** - Expo Push for mobile, backend endpoints, institution panel
 
 ### P3 - Nice to Have
 - [ ] AI-generated flashcard definitions
 - [ ] Additional language translations
 - [ ] Offline content access in mobile app
+- [ ] Superadmin dashboard for ProficientHub
+
+## Exam Types (Updated)
+- TOEFL
+- **IELTS Academic** - For university admissions and professional registration
+- **IELTS General** - For migration and work experience
+- Cambridge (FCE, CAE, CPE)
+- Trinity (GESE, ISE)
+- TOEIC
+- CELPIP
+- **PTE Academic** - For study abroad and immigration
+- **PTE Core** - For Canadian immigration and citizenship
+- OET
 
 ## Business Model Notes
 - **AI Credits**: Institutions buy credits, students consume them per interaction
