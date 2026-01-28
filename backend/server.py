@@ -8355,6 +8355,16 @@ async def update_notification_settings(
 # Include router and middleware
 app.include_router(api_router)
 
+# Import and include modular routers
+try:
+    from routers.superadmin import router as superadmin_router
+    from routers.zoom import router as zoom_router
+    app.include_router(superadmin_router, prefix="/api", tags=["Superadmin"])
+    app.include_router(zoom_router, prefix="/api", tags=["Zoom"])
+    logger.info("Modular routers loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not load modular routers: {e}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
