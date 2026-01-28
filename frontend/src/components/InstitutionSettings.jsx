@@ -1050,20 +1050,27 @@ const MessagingConfigSection = () => {
   const [config, setConfig] = useState({
     provider: 'twilio',
     account_sid: '',
+    auth_token: '',
     api_key: '',
     api_secret: '',
     from_number: '',
     whatsapp_number: '',
+    base_url: '',
     enabled: false,
     sms_enabled: false,
     whatsapp_enabled: false
   });
+  const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [testNumber, setTestNumber] = useState('');
+  const [testMessage, setTestMessage] = useState('');
+  const [testResult, setTestResult] = useState(null);
 
   useEffect(() => {
     fetchConfig();
+    fetchProviders();
   }, []);
 
   const fetchConfig = async () => {
@@ -1077,6 +1084,26 @@ const MessagingConfigSection = () => {
       console.error('Failed to fetch messaging config:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchProviders = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/institution/messaging/providers`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProviders(response.data.providers || []);
+    } catch (error) {
+      // Fallback providers
+      setProviders([
+        { id: 'twilio', name: 'Twilio', supports_whatsapp: true, supports_sms: true },
+        { id: 'messagebird', name: 'MessageBird', supports_whatsapp: true, supports_sms: true },
+        { id: 'vonage', name: 'Vonage', supports_whatsapp: false, supports_sms: true },
+        { id: 'infobip', name: 'Infobip', supports_whatsapp: true, supports_sms: true },
+        { id: 'clicksend', name: 'ClickSend', supports_whatsapp: false, supports_sms: true },
+        { id: 'plivo', name: 'Plivo', supports_whatsapp: false, supports_sms: true }
+      ]);
     }
   };
 
@@ -1100,14 +1127,29 @@ const MessagingConfigSection = () => {
       toast.error('Enter a test phone number');
       return;
     }
+    setTesting(true);
+    setTestResult(null);
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/institution/messaging/test?message_type=${type}&test_number=${testNumber}`, {}, {
+      const response = await axios.post(`${API_URL}/institution/messaging/test`, {
+        to_number: testNumber,
+        message: testMessage || `Test ${type} from ProficientHub`,
+        message_type: type
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(`Test ${type.toUpperCase()} sent to ${testNumber}`);
+      setTestResult(response.data);
+      if (response.data.success) {
+        toast.success(`Test ${type.toUpperCase()} sent successfully!`);
+      } else {
+        toast.error(response.data.error || 'Failed to send test message');
+      }
     } catch (error) {
-      toast.error('Failed to send test message');
+      const errorMsg = error.response?.data?.detail || 'Failed to send test message';
+      setTestResult({ success: false, error: errorMsg });
+      toast.error(errorMsg);
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -1115,11 +1157,15 @@ const MessagingConfigSection = () => {
     return <div className="flex justify-center py-10"><div className="w-8 h-8 border-4 border-[#58CC02] border-t-transparent rounded-full animate-spin"></div></div>;
   }
 
-  const providers = [
-    { id: 'twilio', name: 'Twilio', icon: '📱' },
-    { id: 'messagebird', name: 'MessageBird', icon: '🐦' },
-    { id: 'vonage', name: 'Vonage', icon: '📞' }
-  ];
+  const selectedProvider = providers.find(p => p.id === config.provider);
+  const providerIcons = {
+    twilio: '📱',
+    messagebird: '🐦',
+    vonage: '📞',
+    infobip: '🌐',
+    clicksend: '📨',
+    plivo: '☎️'
+  };
 
   return (
     <div className="space-y-6">
