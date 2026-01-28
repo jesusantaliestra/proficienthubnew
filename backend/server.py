@@ -7435,6 +7435,374 @@ async def get_report_history(
     
     return {"reports": reports}
 
+# ==================== AI-POWERED FLASHCARDS ====================
+
+class AIFlashcardGenerate(BaseModel):
+    words: List[str]
+    target_language: str = "en"
+    include_examples: bool = True
+    difficulty_level: str = "intermediate"  # beginner, intermediate, advanced
+
+@api_router.post("/ai/generate-definitions")
+async def generate_flashcard_definitions(
+    request: AIFlashcardGenerate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Generate AI-powered definitions for flashcards"""
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        api_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="AI service not configured")
+        
+        # Check credits
+        user_id = current_user.get("institution_id") or current_user["id"]
+        credits_needed = len(request.words)
+        
+        # Build prompt
+        prompt = f"""Generate flashcard definitions for the following English words.
+For each word provide:
+1. A clear, concise definition suitable for {request.difficulty_level} learners
+2. The part of speech (noun, verb, adjective, etc.)
+3. {"An example sentence using the word" if request.include_examples else ""}
+4. A phonetic pronunciation guide
+
+Words: {', '.join(request.words)}
+
+Return as a JSON array with objects containing: word, definition, part_of_speech, example (if requested), pronunciation"""
+        
+        chat = LlmChat(
+            api_key=api_key,
+            system_message="You are a helpful English language learning assistant. Generate clear, accurate definitions for flashcards."
+        ).with_model("openai", "gpt-5.2")
+        
+        response = await chat.send_message(UserMessage(text=prompt))
+        
+        # Try to parse JSON from response
+        import json
+        try:
+            # Find JSON in response
+            start = response.find('[')
+            end = response.rfind(']') + 1
+            if start != -1 and end > start:
+                definitions = json.loads(response[start:end])
+            else:
+                # Fallback: parse as best we can
+                definitions = []
+                for word in request.words:
+                    definitions.append({
+                        "word": word,
+                        "definition": f"Definition for {word}",
+                        "part_of_speech": "noun",
+                        "example": f"Example with {word}.",
+                        "pronunciation": ""
+                    })
+        except json.JSONDecodeError:
+            definitions = []
+            for word in request.words:
+                definitions.append({
+                    "word": word,
+                    "definition": response[:200],
+                    "part_of_speech": "unknown"
+                })
+        
+        return {
+            "success": True,
+            "definitions": definitions,
+            "words_processed": len(request.words)
+        }
+        
+    except Exception as e:
+        logger.error(f"AI definition generation error: {e}")
+        raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")
+
+@api_router.post("/ai/generate-flashcards-from-text")
+async def generate_flashcards_from_text(
+    text: str,
+    max_cards: int = 10,
+    current_user: dict = Depends(get_current_user)
+):
+    """Generate flashcards from a text passage using AI"""
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        api_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="AI service not configured")
+        
+        prompt = f"""Analyze this text and extract the {max_cards} most important vocabulary words or concepts.
+For each, create a flashcard with:
+1. The word or phrase (front)
+2. Its definition in context (back)
+3. Why it's important
+
+Text: {text[:2000]}
+
+Return as JSON array with objects: front, back, importance"""
+        
+        chat = LlmChat(
+            api_key=api_key,
+            system_message="You are an educational content creator specializing in vocabulary extraction."
+        ).with_model("openai", "gpt-5.2")
+        
+        response = await chat.send_message(UserMessage(text=prompt))
+        
+        # Parse response
+        import json
+        try:
+            start = response.find('[')
+            end = response.rfind(']') + 1
+            if start != -1 and end > start:
+                flashcards = json.loads(response[start:end])
+            else:
+                flashcards = []
+        except:
+            flashcards = []
+        
+        return {
+            "success": True,
+            "flashcards": flashcards,
+            "count": len(flashcards)
+        }
+        
+    except Exception as e:
+        logger.error(f"AI flashcard generation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ==================== OFFLINE CONTENT ACCESS ====================
+
+@api_router.get("/content/offline-manifest/{institution_id}")
+async def get_offline_manifest(
+    institution_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get manifest of content available for offline download"""
+    if current_user.get("institution_id") != institution_id and current_user["id"] != institution_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Get all downloadable content
+    materials = await db.library_items.find(
+        {"institution_id": institution_id, "offline_enabled": True},
+        {"_id": 0, "id": 1, "title": 1, "item_type": 1, "file_size": 1, "file_url": 1, "updated_at": 1}
+    ).to_list(500)
+    
+    vocabulary = await db.vocabulary_lists.find(
+        {"institution_id": institution_id},
+        {"_id": 0, "id": 1, "name": 1, "words": 1, "updated_at": 1}
+    ).to_list(100)
+    
+    flashcards = await db.flashcard_sets.find(
+        {"institution_id": institution_id},
+        {"_id": 0, "id": 1, "name": 1, "cards": 1, "updated_at": 1}
+    ).to_list(100)
+    
+    # Calculate total size
+    total_size = sum(m.get("file_size", 0) for m in materials)
+    
+    return {
+        "institution_id": institution_id,
+        "manifest_version": datetime.now(timezone.utc).isoformat(),
+        "total_items": len(materials) + len(vocabulary) + len(flashcards),
+        "total_size_bytes": total_size,
+        "content": {
+            "materials": materials,
+            "vocabulary": vocabulary,
+            "flashcards": flashcards
+        }
+    }
+
+@api_router.post("/content/mark-offline")
+async def mark_content_for_offline(
+    item_id: str,
+    item_type: str,  # material, vocabulary, flashcard
+    offline_enabled: bool = True,
+    current_user: dict = Depends(get_current_user)
+):
+    """Mark content for offline availability"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can manage offline content")
+    
+    collection_map = {
+        "material": "library_items",
+        "vocabulary": "vocabulary_lists",
+        "flashcard": "flashcard_sets"
+    }
+    
+    collection = collection_map.get(item_type)
+    if not collection:
+        raise HTTPException(status_code=400, detail="Invalid item type")
+    
+    result = await db[collection].update_one(
+        {"id": item_id, "institution_id": current_user["id"]},
+        {"$set": {"offline_enabled": offline_enabled, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    return {"success": True, "message": f"Offline access {'enabled' if offline_enabled else 'disabled'}"}
+
+@api_router.get("/content/download/{item_id}")
+async def download_content_for_offline(
+    item_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get content data for offline storage"""
+    # Check in library items
+    item = await db.library_items.find_one(
+        {"id": item_id},
+        {"_id": 0}
+    )
+    
+    if not item:
+        item = await db.vocabulary_lists.find_one({"id": item_id}, {"_id": 0})
+    
+    if not item:
+        item = await db.flashcard_sets.find_one({"id": item_id}, {"_id": 0})
+    
+    if not item:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    # Verify access
+    user_institution = current_user.get("institution_id") or current_user.get("id")
+    if item.get("institution_id") != user_institution:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    return {
+        "success": True,
+        "item": item,
+        "downloaded_at": datetime.now(timezone.utc).isoformat()
+    }
+
+@api_router.post("/content/sync-progress")
+async def sync_offline_progress(
+    progress_data: List[Dict[str, Any]],
+    current_user: dict = Depends(get_current_user)
+):
+    """Sync progress made while offline"""
+    synced = 0
+    
+    for progress in progress_data:
+        await db.user_progress.update_one(
+            {"user_id": current_user["id"], "item_id": progress.get("item_id")},
+            {
+                "$set": {
+                    "progress": progress.get("progress", 0),
+                    "completed": progress.get("completed", False),
+                    "last_accessed": progress.get("timestamp"),
+                    "synced_at": datetime.now(timezone.utc).isoformat()
+                }
+            },
+            upsert=True
+        )
+        synced += 1
+    
+    return {"success": True, "synced_items": synced}
+
+# ==================== SUPERADMIN DASHBOARD ====================
+
+@api_router.get("/superadmin/stats")
+async def get_superadmin_stats(current_user: dict = Depends(get_current_user)):
+    """Get platform-wide statistics for superadmin"""
+    if current_user.get("user_type") != "admin" or not current_user.get("is_superadmin"):
+        raise HTTPException(status_code=403, detail="Superadmin access required")
+    
+    # Count institutions
+    institutions_count = await db.users.count_documents({"user_type": "institution"})
+    
+    # Count students
+    students_count = await db.users.count_documents({"user_type": "student"})
+    
+    # Active users (last 7 days)
+    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    active_users = await db.exam_attempts.distinct("user_id", {"created_at": {"$gte": week_ago}})
+    
+    # Total exams taken
+    total_exams = await db.exam_attempts.count_documents({})
+    
+    # AI usage
+    ai_interactions = await db.ai_agent_history.count_documents({})
+    
+    # Revenue (if using credits)
+    credits_purchased = await db.ai_credits.aggregate([
+        {"$group": {"_id": None, "total": {"$sum": "$purchased_credits"}}}
+    ]).to_list(1)
+    
+    return {
+        "platform_stats": {
+            "total_institutions": institutions_count,
+            "total_students": students_count,
+            "active_users_7d": len(active_users),
+            "total_exams_taken": total_exams,
+            "total_ai_interactions": ai_interactions,
+            "total_credits_purchased": credits_purchased[0]["total"] if credits_purchased else 0
+        },
+        "generated_at": datetime.now(timezone.utc).isoformat()
+    }
+
+@api_router.get("/superadmin/institutions")
+async def get_all_institutions(
+    limit: int = 50,
+    skip: int = 0,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all institutions for superadmin"""
+    if current_user.get("user_type") != "admin" or not current_user.get("is_superadmin"):
+        raise HTTPException(status_code=403, detail="Superadmin access required")
+    
+    institutions = await db.users.find(
+        {"user_type": "institution"},
+        {"_id": 0, "password_hash": 0}
+    ).skip(skip).limit(limit).to_list(limit)
+    
+    # Add student counts
+    for inst in institutions:
+        student_count = await db.users.count_documents({"institution_id": inst["id"]})
+        inst["student_count"] = student_count
+        
+        # Get AI credits
+        credits = await db.ai_credits.find_one({"user_id": inst["id"]}, {"_id": 0})
+        inst["ai_credits"] = credits.get("total_credits", 0) - credits.get("used_credits", 0) if credits else 0
+    
+    total = await db.users.count_documents({"user_type": "institution"})
+    
+    return {
+        "institutions": institutions,
+        "total": total,
+        "limit": limit,
+        "skip": skip
+    }
+
+@api_router.post("/superadmin/grant-credits")
+async def grant_ai_credits(
+    institution_id: str,
+    credits: int,
+    reason: str = "Promotional credits",
+    current_user: dict = Depends(get_current_user)
+):
+    """Grant AI credits to an institution (superadmin only)"""
+    if current_user.get("user_type") != "admin" or not current_user.get("is_superadmin"):
+        raise HTTPException(status_code=403, detail="Superadmin access required")
+    
+    await db.ai_credits.update_one(
+        {"user_id": institution_id},
+        {
+            "$inc": {"total_credits": credits, "free_credits": credits},
+            "$push": {
+                "credit_grants": {
+                    "amount": credits,
+                    "reason": reason,
+                    "granted_by": current_user["id"],
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        },
+        upsert=True
+    )
+    
+    return {"success": True, "message": f"Granted {credits} credits to institution"}
+
 @api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
