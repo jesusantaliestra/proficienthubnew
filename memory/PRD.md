@@ -2,9 +2,34 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 8.0  
+**Version:** 8.1  
 **Date:** January 28, 2026  
 **Status:** Production Ready - Full Feature Set Complete
+
+## Bug Fixes (Session 12) - January 28, 2026
+
+### 🐛 Student Dashboard Stats Display Fix (COMPLETE)
+- **Issue**: Student dashboard metrics (Exams Completed, Average Score, Credits Left, Badges Earned) were showing as blank
+- **Root Cause**: CSS conflict - `metric-card` class had `bg-white` while text used `text-white` (white on white = invisible)
+- **Fix**: Changed Card components to use dark theme classes (`bg-slate-900/50 border-slate-800`) consistent with the dashboard theme
+- **File Modified**: `/app/frontend/src/pages/StudentDashboardRestricted.jsx`
+
+### ✅ Verified Working Features
+- **Institution Dashboard**: All metrics displaying correctly (Total Students, Pass Probability, At Risk, Exams Completed)
+- **Student Dashboard**: Now shows Exams Completed (3), Average Score (73%), Credits Left (100), Badges (0)
+- **AI Tutor**: Fully functional for all students
+- **Login Flow**: Working correctly for all user types
+
+### 📊 API Verification Results
+| Endpoint | Status | Notes |
+|----------|--------|-------|
+| Institution Login | ✅ | Working |
+| Institution Metrics | ✅ | 8 students |
+| Student Login | ✅ | Working |
+| Student Exam History | ✅ | 3 exams |
+| AI Agents Available | ✅ | 3 agents |
+| Superadmin Login | ✅ | Working |
+| Superadmin Stats | ✅ | 2 institutions |
 
 ## Features Implemented (Session 11 - Part 3) - January 28, 2026
 
