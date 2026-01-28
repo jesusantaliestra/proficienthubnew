@@ -1,65 +1,234 @@
-<analysis>An excellent summary of the previous fork would be:
+<analysis>**original_problem_statement**: The user wants to build a Supreme tier, full-stack educational platform named . The platform includes a multi-agent AI tutor, advanced institutional settings, CRM, content management, and white-labeling.
 
-**original_problem_statement**: The user initially asked for a tour of the application and to add Cambridge and Trinity exams. The project rapidly escalated to a Supreme tier, requiring a full-stack implementation of numerous advanced features. These include a native mobile app (iOS/Android), a powerful CRM/ERM system, advanced white-labeling, PWA/offline capabilities, institutional settings for Zoom and SMTP, a comprehensive gamification system, a content management library for institutional materials, and a sophisticated, multi-agent AI tutor system with customizable avatars (Rive/HeyGen) and a credit-based activation model. The most recent request is to build this multi-agent system.
+Recent user requests focused on:
+1.  Implementing full Zoom integration and a Superadmin frontend dashboard.
+2.  Refactoring the monolithic backend.
+3.  Defining a mobile app strategy, settling on a Capacitor-wrapped PWA with an upsell option for fully native, per-institution apps.
+4.  Implementing dynamic pricing configurable from the Superadmin dashboard.
+5.  Building real predictive analytics instead of using mocked data.
+6.  Adding offline content capabilities to the mobile app.
+7.  Conducting a thorough, multi-persona test to ensure all functionality works as expected and to identify improvements.
 
 **User's preferred language**: Spanish. The next agent MUST respond in Spanish.
 
 **what currently exists?**:
-The application has been significantly expanded with a suite of Supreme features:
--   **React Native App Structure**: A complete, though non-functional, project skeleton for the iOS/Android mobile app exists in .
--   **Advanced CRM**: A CRM Supreme UI () with Kanban board, email templates, automation rules, tasks, and reports is integrated into the .
--   **Institutional Settings**: A dedicated settings component () allows institutions to configure Zoom credentials, custom SMTP for emails, enable/disable gamification features, and choose an AI Tutor avatar.
--   **Gamification System**: Backend and frontend for XP points, levels, streaks, badges, and leaderboards are implemented.
--   **AI Avatar System**: A hybrid avatar system is in place, allowing institutions to choose between a free, animated Rive avatar or a Premium Avatar (formerly HeyGen) for the AI Tutor.
--   **Content Management**: A  component allows institutions to upload and manage educational materials (Videos, PDFs), create custom vocabulary lists, and generate flashcards.
--   **Restricted Student View**: A  page ensures that students belonging to an institution can only see and access the specific exam they are assigned.
--   **Demo Data**: A script at  populates the CRM and other features with realistic data for institutional demos.
--   **Backend**: The  file contains endpoints for all the features mentioned above, including placeholder logic for Zoom, SMTP, and the AI Avatar integrations.
+A comprehensive full-stack educational platform (FastAPI/React).
+-   **Backend Refactoring**: The backend is in the process of being refactored from a monolithic  file into a modular structure under . Several routers are now active (, , , , , , , , ).
+-   **Superadmin Dashboard**: A functional dashboard at  displays platform-wide metrics, institution lists, an activity log, and a new alerting system for issues like low credits or inactivity.
+-   **Dynamic Pricing**: A new backend router and a frontend page () allow administrators to dynamically manage prices for exam plans and credit packages.
+-   **Predictive Analytics**: The backend analytics endpoint now uses real student data to calculate pass probability and provide recommendations.
+-   **Mobile App Foundation**: The project is configured with Capacitor, allowing the React frontend to be bundled as a native mobile application. Services for push notifications, white-labeling, and offline content have been created.
+-   **Offline Content**: A service worker and a frontend service have been implemented to manage offline content caching and availability for the mobile app.
 
 **Last working item**:
--   **Last item agent was working**: The agent was beginning the implementation of the **multi-agent AI tutor system**. Based on user requirements, this system will feature three distinct agents (Official Tutor, Mock Coach, Planner) powered by ElevenLabs for voice and a powerful LLM (like GPT-4). The agent's last action was to request and receive the integration playbook for ElevenLabs. The actual coding has not started.
--   **Status**: NOT STARTED
--   **Agent Testing Done**: N
--   **Which testing method agent to use?**: both. This is a complex feature requiring backend testing for the AI credit system and external API calls (ElevenLabs, LLM), and frontend testing for the new AI tutor interface and interactions.
+-   **Last item agent was working**: The agent conducted an extensive, multi-persona testing session as requested by the user, simulating a Senior Developer, an Institution Owner, two different students (OET & PTE), and a Startup Investor. This process uncovered several critical bugs and areas for improvement.
+-   **Status**: IN PROGRESS
+-   **Agent Testing Done**: Y
+-   **Which testing method agent to use?**: both (Backend for API errors, Frontend for UI bugs and data display).
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-There are no pending bugs or issues. The work is focused on new feature development.
+-   **Issue 1: Critical - Institution Owner Dashboard Crash (P0)**
+-   **Issue 2: OET Student Data Not Displaying (P1)**
+-   **Issue 3: PTE Student AI Tutor Not Configured (P1)**
+-   **Issue 4: Frontend Login Page Timeout (P2)**
+
+**Issues Detail**:
+-   **Issue 1: Critical - Institution Owner Dashboard Crash (P0)**
+    -   **Description**: The test simulating an Institution Owner failed with a Python . This completely blocks institution owners from accessing their dashboard and using the platform.
+    -   **Attempted fixes**: None. The issue was just discovered.
+    -   **Next debug checklist**:
+        1.  Examine the Python script from the failed test to identify the exact API call.
+        2.  Trace the API call (likely related to dashboard stats) in the corresponding backend router ( or ).
+        3.  The error strongly suggests a database query is returning a list of documents () where a single document () is expected. Locate the faulty MongoDB query and correct it.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is a showstopper bug. Fixing it is essential for the platform to be usable by its primary customers (institutions).
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: Both.
+
+-   **Issue 2: OET Student Data Not Displaying (P1)**
+    -   **Description**: The test for an OET Student showed a blank slate: No exam attempts yet, a generic predictive analytics message, and no configured AI Tutor, despite demo data existing.
+    -   **Attempted fixes**: None.
+    -   **Next debug checklist**:
+        1.  Review  to ensure OET data is being created and correctly associated with the student and institution.
+        2.  Inspect the backend endpoints that serve the student dashboard (, ) and verify the queries are correct.
+    -   **Why fix this issue and what will be achieved with the fix?**: The core student experience for the OET exam is broken.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: Both.
+
+-   **Issue 3: PTE Student AI Tutor Not Configured (P1)**
+    -   **Description**: The test for a PTE Student revealed the AI agents were listed as Not configured for the demo institution.
+    -   **Attempted fixes**: None.
+    -   **Next debug checklist**:
+        1.  Check the default institution settings in  to ensure the AI agents are enabled and configured by default for the demo academy.
+        2.  Verify the backend endpoint that fetches AI agent configuration for a given student's institution.
+    -   **Why fix this issue and what will be achieved with the fix?**: The AI Tutor is a premium feature and a key selling point.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: Backend.
+
+-   **Issue 4: Frontend Login Page Timeout (P2)**
+    -   **Description**: The automated screenshot tool timed out while testing the landing page, unable to find the email input field. This could indicate a page loading issue or an unreliable test locator.
+    -   **Attempted fixes**: None.
+    -   **Next debug checklist**:
+        1.  Check frontend logs for startup errors (==> /var/log/supervisor/frontend.err.log <==
+(node:179) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:179) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:85) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:85) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:78) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:78) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:83) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:83) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:83) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:83) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+
+==> /var/log/supervisor/frontend.out.log <==
+Compiled successfully!
+webpack compiled successfully
+Compiling...
+Compiled successfully!
+webpack compiled successfully
+Compiling...
+Compiled successfully!
+webpack compiled successfully
+Compiling...
+Compiled successfully!
+webpack compiled successfully
+Compiling...
+Compiled successfully!
+webpack compiled successfully
+yarn run v1.22.22
+$ craco start
+Attempting to bind to HOST environment variable: 0.0.0.0
+If this was unintentional, check that you haven't mistakenly set it in your shell.
+Learn more here: https://cra.link/advanced-config
+
+Starting the development server...
+
+Compiled with warnings.
+
+[eslint] 
+src/contexts/AuthContext.jsx
+  Line 20:6:  React Hook useEffect has a missing dependency: 'fetchUser'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/AITutor.jsx
+  Line 64:6:  React Hook useEffect has missing dependencies: 'examInfo' and 'loadHistory'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/AITutorMultiAgent.jsx
+  Line 82:6:  React Hook useEffect has a missing dependency: 'fetchAgents'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/AdminPanel.jsx
+  Line 390:6:  React Hook useEffect has missing dependencies: 'calculateAllROI' and 'calculateIncomeSimulation'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/ExamBankAdmin.jsx
+  Line 29:6:  React Hook useEffect has a missing dependency: 'fetchExams'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/ExamSimulator.jsx
+  Line 59:6:  React Hook useEffect has a missing dependency: 'fetchExamData'. Either include it or remove the dependency array                              react-hooks/exhaustive-deps
+  Line 98:6:  React Hook useEffect has missing dependencies: 'handleSubmitSection' and 'timeRemaining'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/IncomeCalculator.jsx
+  Line 195:6:  React Hook useEffect has a missing dependency: 'calculateIncomeSimulation'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/InstitutionDashboard.jsx
+  Line 336:6:  React Hook useEffect has a missing dependency: 'fetchMarketplaceData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/PaymentSuccess.jsx
+  Line 25:6:  React Hook useEffect has a missing dependency: 'pollPaymentStatus'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/StudentPortal.jsx
+  Line 34:6:  React Hook useEffect has a missing dependency: 'fetchInstitutionBranding'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/contexts/AuthContext.jsx
+  Line 20:6:  React Hook useEffect has a missing dependency: 'fetchUser'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/AITutor.jsx
+  Line 64:6:  React Hook useEffect has missing dependencies: 'examInfo' and 'loadHistory'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/AITutorMultiAgent.jsx
+  Line 82:6:  React Hook useEffect has a missing dependency: 'fetchAgents'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/AdminPanel.jsx
+  Line 390:6:  React Hook useEffect has missing dependencies: 'calculateAllROI' and 'calculateIncomeSimulation'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/ExamBankAdmin.jsx
+  Line 29:6:  React Hook useEffect has a missing dependency: 'fetchExams'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/ExamSimulator.jsx
+  Line 59:6:  React Hook useEffect has a missing dependency: 'fetchExamData'. Either include it or remove the dependency array                              react-hooks/exhaustive-deps
+  Line 98:6:  React Hook useEffect has missing dependencies: 'handleSubmitSection' and 'timeRemaining'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/IncomeCalculator.jsx
+  Line 195:6:  React Hook useEffect has a missing dependency: 'calculateIncomeSimulation'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/InstitutionDashboard.jsx
+  Line 336:6:  React Hook useEffect has a missing dependency: 'fetchMarketplaceData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/PaymentSuccess.jsx
+  Line 25:6:  React Hook useEffect has a missing dependency: 'pollPaymentStatus'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/StudentPortal.jsx
+  Line 34:6:  React Hook useEffect has a missing dependency: 'fetchInstitutionBranding'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+yarn run v1.22.22
+$ craco start
+Attempting to bind to HOST environment variable: 0.0.0.0
+If this was unintentional, check that you haven't mistakenly set it in your shell.
+Learn more here: https://cra.link/advanced-config
+
+Starting the development server...).
+        2.  Review  for any conditional rendering that might delay the login form's appearance.
+        3.  Add a  to the email input field for a more robust selector in tests.
+    -   **Why fix this issue and what will be achieved with the fix?**: Prevents potential login issues for all users.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: Frontend.
 
 **In progress Task List**:
--   **Task 1: Implement Multi-Agent AI Tutor System (P0)**
-    -   **Where to resume**: The agent has the integration playbook for ElevenLabs. The immediate next step is to get the playbook for the core LLM (e.g., GPT-4) via the  tool.
-    -   **What will be achieved with this?**: A fully functional, institution-configurable AI agent system. This includes:
-        -   Backend logic for a credit system where institutions purchase AI credits.
-        -   Backend logic for institutions to enable/disable specific agents (Tutor, Coach, Planner).
-        -   Backend endpoints to handle interactions with the three agents, orchestrating calls to the LLM and ElevenLabs.
-        -   Frontend updates to the AI Tutor to integrate the new agents and their functionalities.
+-   **Task 1: Complete Backend Refactoring (P1)**
+    -   **Where to resume**: Key logic for  and  endpoints still resides in the monolithic . The next step is to move this code into the respective router files (, ), delete the legacy code from , and perform regression testing.
+    -   **What will be achieved with this?**: A stable, maintainable, and scalable backend architecture, which is critical for future development.
     -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?**: Both
-    -   **Blocked on something**: No.
+    -   **Should Test frontend/backend/both after fix?**: Backend.
+    -   **Blocked on something**: No, but bug fixes from the persona tests should be prioritized first.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks**:
-    -   **P1: Full React Native App Development**: Build out the complete application functionality within the existing  skeleton. This is a large, high-priority task requested by the user.
-    -   **P2: Full White-Label Customization**: Extend white-labeling to all remaining parts of the platform, such as system emails and the complete student portal, to ensure total brand customization.
--   **Future Tasks**:
-    -   **Implement Configurable Placement Test**: Implement the logic for institutions to make the initial placement test optional, mandatory, or free to improve student conversion.
-    -   **Implement Offline Content Access**: Enhance the  and the mobile app to allow students to download and access materials (videos, PDFs, flashcards) while offline.
-    -   **Replace Mocked Backend Logic**: The backend logic for Predictive Analytics remains mocked. This needs to be replaced with real database aggregations and calculations.
+    -   **P1: Implement ElevenLabs Integration**: Integrate ElevenLabs, allowing institutions to provide their own API key. The user has a key ready for deployment but has requested using OpenAI TTS for now. Use the  for this.
+    -   **P2: Provide Final Mobile App Build Scripts**: Finalize the  document with comprehensive, step-by-step instructions for the user to build the  (Android) and  (iOS) files from the Capacitor project on their local machine.
+
+-   **Future Tasks (From Backlog & Investor Persona)**:
+    -   **A/B Testing Framework**: Implement a framework for testing pricing, features, and UI to optimize conversion.
+    -   **Advanced Gamification**: Add platform-wide leaderboards, badges, and achievements.
+    -   **Community Features**: Build forums or study groups to foster user interaction.
+    -   **Deeper CRM Integration**: Explore integrations with platforms like HubSpot or Salesforce.
+    -   **Full White-Label Customization**: Extend white-labeling to cover all student-facing components.
 
 **Completed work in this session**
--   **React Native Base Structure**: Fully scaffolded the project in , including config files, initial components, and theme structure.
--   **CRM Supreme UI**: Implemented in .
--   **Institution Settings Module**: Implemented in  for Zoom, SMTP, Gamification, and Avatar settings.
--   **Gamification System**: Implemented backend logic in  and frontend UI in .
--   **AI Avatar System**: Implemented hybrid Rive/Premium Avatar selection UI and backend configuration models. Renamed HeyGen to Premium Avatar in the UI for branding purposes.
--   **Content Management Library**: Implemented in  with backend endpoints for file uploads.
--   **Restricted Student Dashboard**: Implemented in .
--   **Demo Data Generation**: Created  to populate the app with realistic demo data.
--   **Testing & Bug Fixes**: Successfully used the testing agent, which identified and fixed a critical bug in the login response (missing ) and several MongoDB ObjectId serialization issues.
+-   **Backend Refactoring**: Initiated and significantly progressed the refactoring of  into 9+ modular routers.
+-   **Superadmin Dashboard**: Built a complete Superadmin Dashboard with metrics, alerts, and institution management.
+-   **Dynamic Pricing & Analytics**: Implemented admin-configurable pricing and replaced mocked analytics with real, data-driven logic.
+-   **Mobile App Readiness**: Set up Capacitor to package the web app for iOS/Android and created services for offline content, white-labeling, and push notifications.
+-   **Bug Fix**: Resolved the unresponsive SMS/WhatsApp toggle by adding a .
+-   **Multi-Persona Testing**: Performed a comprehensive testing cycle that identified several critical bugs.
 
 **Earlier issues found/mentioned but not fixed**
-None.
+-   All known issues are captured in the All Pending/In progress Issue list section above, based on the most recent multi-persona testing.
 
 **Known issue recurrence from previous fork**
 None.
@@ -68,99 +237,90 @@ None.
 
 
 **Key Technical Concepts**
--   **Frontend**: React, TailwindCSS, Recharts, Shadcn UI, Axios, 
--   **Backend**: FastAPI, Motor (async MongoDB), JWT,  for file uploads
--   **Mobile**: React Native
+-   **Frontend**: React, TailwindCSS, Shadcn UI
+-   **Backend**: FastAPI, Motor (async MongoDB), JWT
+-   **Mobile**: Capacitor (wrapping the React web app)
 -   **Database**: MongoDB
--   **Integrations**: Zoom, Custom SMTP, Rive (planned), HeyGen (planned, as Premium Avatar), ElevenLabs (planned)
+-   **Integrations**: OpenAI, Zoom, Multi-Provider SMS (Twilio, Vonage, etc.), Expo Push Notifications, ElevenLabs (planned)
 
 **key DB schema**
--   **institutions**: Heavily extended with  sub-document for , , , .
--   **users** (students): Extended with , , and  (xp, level, badges).
--   **content_library_items**: 
--   **vocabulary_lists**: 
--   **flashcard_sets**: 
--   **(New/Planned)** : 
--   **(New/Planned)** : 
+-   **pricing_config**: Stores dynamic pricing tiers for credits and plans.
+-   **institutions**: Holds all institution data, including configurations for AI, messaging, and branding.
+-   **users**: Stores user data, including roles (, , , ).
 
 **changes in tech stack**
--   **React Native** project added for mobile apps.
--   ****: Added for free animated avatars.
--   ****, ****, ****: Added to  in preparation for AI integrations.
+-   **Capacitor**: Added to the frontend project to enable native mobile app builds.
 
 **All files of reference**
--   : Massively expanded to over 5700 lines. Contains logic for all new features.
--   : Heavily modified to integrate new feature tabs (CRM Supreme, Settings, Library).
--   : New file for all institutional configurations.
--   : New file for material management.
--   : New file for AI tutor avatar display.
--   : New file for the specific student view.
--   : New script for seeding demo data.
--   : Entire new directory for the React Native project.
--   : Modified to include all new routes and protected logic.
+-    (new directory and all files within)
+-    (heavily modified during refactoring)
+-    (new)
+-    (new)
+-    (modified with new routes)
+-    (new)
+-    (new service files for mobile features)
+-    (new)
+-    (new)
+-    (new)
 
 **Areas that need refactoring**:
--   **/app/backend/server.py**: **CRITICAL**. At over 5700 lines, this monolithic file is unmaintainable. It MUST be broken down into smaller, feature-specific routers (e.g., , , ).
--   **/app/frontend/src/pages/InstitutionDashboard.jsx**: This component has become a router for other large components. While better than before, the state management is complex. Each tab's state should be fully encapsulated within its respective component.
+-   **/app/backend/server.py**: **URGENT/CRITICAL**. The refactoring is incomplete. All remaining business logic must be migrated to the appropriate modular routers.
+-   **/app/frontend/src/components/InstitutionSettings.jsx**: This file is still over 1,400 lines and should be broken down into smaller, more manageable components per settings tab.
+-   **/app/frontend/src/pages/SuperadminDashboard.jsx**: This new page is already large. It should be refactored into smaller components for each section (Stats, Alerts, Lists, etc.) to improve maintainability.
 
 **key api endpoints**
--   : GET/POST for all institutional settings (Zoom, SMTP, Gamification, Avatar).
--   : POST for uploading materials to the content library.
--   , : CRUD endpoints.
--   : GET for leaderboard data.
--   : GET endpoint for the restricted student view.
--   **(Planned)** : POST for interacting with the AI tutors.
--   **(Planned)** : GET/POST for managing institutional AI credits.
+-   , , 
+-   
+-    (GET/POST for admins)
+-    (GET for public-facing pages)
+-   
 
 **Critical Info for New Agent**
--   **Business Logic is Key**: The core business model revolves around institutional customization. Institutions buy AI credits and then decide which specific AI agents (trained on custom content) to enable for their students. This flexibility is a major selling point.
--   **User Expectations**: The user has extremely high standards and wants features that are the best on the market.
--   **Native App, Not PWA**: The user has explicitly rejected a PWA in favor of a native iOS/Android app.
--   **Integration Playbooks**: The agent has playbooks for HeyGen and ElevenLabs. It needs to acquire one for the core LLM (e.g., GPT-4) to proceed.
+-   **FIX BUGS FIRST**: The multi-persona testing revealed showstopper bugs. The Institution Owner Dashboard Crash (P0) is the absolute highest priority. The platform is not usable for institutions until this is fixed.
+-   **CONTINUE REFACTORING**: Do not add new features until the  refactoring is complete. All new endpoints must be created in the correct modular router file.
+-   **MOBILE STRATEGY CONFIRMED**: The user has approved the tiered mobile strategy (Capacitor PWA for all, with dedicated compiled apps as an upsell). Future development should align with this.
 
 **documents and test reports created in this job**
 -   
 -   
--    (heavily updated)
+-   
+-   
 -   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Specify the 3 agent types (Tutor, Coach, Planner), how they should work, and the business model (institutions buy credits, then enable agents). This is the current P0 task. (Completed)
-2.  **User**: Wants the best agents (suggested ElevenLabs + GPT-4), specifies Mock Coach logic (5 tries then solve), confirms Rive vs HeyGen pricing, and emphasizes the core business logic of institution-specific agents. (Completed)
-3.  **Agent**: Asks for clarification on agent implementation details. (Pending - User responded in #2)
-4.  **User**: Requests to rename HeyGen to Premium Avatar, create realistic demos for CRM, implement a configurable placement test, and implement content management (uploads, vocab, flashcards, offline). (Completed - All but offline access are done)
-5.  **Agent**: Proposes plan to implement the above. (Pending - User responded in #4)
-6.  **User**: Clarifies avatar choice (1c, 2a, 3a) - Rive default, HeyGen premium, realistic style. (Completed)
-7.  **Agent**: Asks about avatar preferences. (Pending - User responded in #6)
-8.  **User**: Requests AI avatar for speaking practice (HeyGen?), mentions Rive, and emphasizes cost control. (Completed)
-9.  **User**: Confirms plan to implement all requested features together (Restricted dashboard, Zoom, Gamification, etc.). (Completed)
-10. **Agent**: Proposes plan to do Zoom, Gamification, and student dashboard separately. (Pending - User responded in #9)
+1.  **User**: Requested an exhaustive, multi-persona test to verify all functionality and suggest improvements. - **Status**: IN PROGRESS (Testing completed, bug fixing is the next step).
+2.  **User**: Provided a detailed plan including finishing next actions, implementing offline content, real analytics, and dynamic pricing, with the goal of getting the app ready for deploy. - **Status**: Partially Completed (Features implemented, but new bugs were found).
+3.  **User**: Confirmed the upsell strategy for offering dedicated, per-institution mobile apps. - **Status**: Completed (Strategy documented).
+4.  **User**: Asked for clarification on how a single app can serve multiple institutions with their own content. - **Status**: Completed (Agent explained the multi-tenant architecture).
+5.  **User**: Asked about mobile app store publishing options. - **Status**: Completed (Agent explained Capacitor).
 
 **Project Health Check:**
--   **Broken**: The React Native app in  is a skeleton and not runnable or functional.
--   **Mocked**: Predictive analytics logic is still using placeholder data. The new AI integrations (Zoom, SMTP, Avatars) have UI and config models but the actual API call logic is mostly placeholder and needs to be fully implemented and tested with real credentials.
+-   **Broken**:
+    -   The Institution Owner Dashboard is non-functional due to a backend .
+    -   Student dashboards (OET, PTE) are not displaying the correct exam and AI tutor data.
+    -   The frontend login page may have a loading issue causing test timeouts.
+-   **Mocked**:
+    -   ElevenLabs integration is using OpenAI TTS as a temporary placeholder.
 
 **3rd Party Integrations**
--   **OpenAI GPT-4 (or similar)**: Planned for the core logic of the AI agents. Requires .
--   **ElevenLabs**: Planned for Text-to-Speech in the AI agent system. Playbook has been acquired.
--   **HeyGen (as Premium Avatar)**: Planned as a premium avatar option. Playbook has been acquired.
--   **Rive**: Planned as the free, animated avatar option. Requires  library.
--   **Zoom**: UI for configuration is complete. Backend integration is placeholder.
+-   **OpenAI**: Used for AI Tutor functionality.
+-   **Zoom**: Backend endpoints exist; full integration is pending.
+-   **Multi-Provider SMS/WhatsApp (Twilio, etc.)**: Configurable, SDKs need installation.
+-   **Expo Push Notifications**: Integrated on the backend.
+-   **Capacitor**: Added to frontend for native mobile builds.
+-   **ElevenLabs**: Planned; awaiting full implementation.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES. Used twice, successfully finding and fixing critical bugs.
+-   **Testing agent used after significant changes**: YES
 -   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: None, but a demo data script was created at .
--   **Known regressions**: None.
+-   **Test files created**: None. Ad-hoc test scripts were used via .
+-   **Known regressions**: A major regression was introduced that crashes the Institution Owner dashboard.
 
 **Credentials to test flow:**
 -   **Institution Login**:  / 
--   **Seeding Data**: Run Creating comprehensive demo data...
-✅ Demo data created successfully!
-   - Institution: demo_academy@test.com / Demo123!
-   - 12 Students
-   - 8 CRM Leads
-   - 3 Vocabulary Lists to populate the application with comprehensive test data for the CRM, content library, and other features.
+-   **Superadmin Login**:  / 
+-   **Student Login**:  / 
 
 **What agent forgot to execute**
-The agent is at the very beginning of the multi-agent AI tutor task. It has not yet acquired the integration playbook for the core LLM (e.g., GPT-4) and has not written any of the backend (credit system, agent config) or frontend code for this feature. The long-term tasks of building the full React Native app and implementing offline content access are also pending.</analysis>
+-   The backend refactoring of  remains incomplete, with significant logic still in the monolithic file.
+-   The agent has not yet fixed the critical bugs discovered during the final multi-persona testing phase.</analysis>
