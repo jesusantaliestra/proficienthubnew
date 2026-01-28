@@ -1180,10 +1180,19 @@ const MessagingConfigSection = () => {
       </div>
 
       <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-        <div className="flex items-center gap-3">
-          <Switch checked={config.enabled} onCheckedChange={(v) => setConfig({...config, enabled: v})} />
-          <Label className="font-medium">Enable Messaging</Label>
-        </div>
+        <label 
+          htmlFor="messaging-toggle"
+          className="flex items-center gap-3 cursor-pointer"
+          data-testid="messaging-toggle-label"
+        >
+          <Switch 
+            id="messaging-toggle"
+            data-testid="messaging-enable-switch"
+            checked={config.enabled} 
+            onCheckedChange={(v) => setConfig({...config, enabled: v})} 
+          />
+          <span className="font-medium">Enable Messaging</span>
+        </label>
       </div>
 
       {config.enabled && (
