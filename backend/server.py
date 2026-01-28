@@ -7474,6 +7474,7 @@ Return as a JSON array with objects containing: word, definition, part_of_speech
         
         chat = LlmChat(
             api_key=api_key,
+            session_id=f"flashcard_gen_{uuid.uuid4()}",
             system_message="You are a helpful English language learning assistant. Generate clear, accurate definitions for flashcards."
         ).with_model("openai", "gpt-5.2")
         
