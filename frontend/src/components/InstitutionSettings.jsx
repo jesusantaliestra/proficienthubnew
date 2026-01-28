@@ -1375,25 +1375,69 @@ const MessagingConfigSection = () => {
               <Switch checked={config.sms_enabled} onCheckedChange={(v) => setConfig({...config, sms_enabled: v})} />
               <Label>Enable SMS</Label>
             </div>
-            <div className="flex items-center gap-2">
-              <Switch checked={config.whatsapp_enabled} onCheckedChange={(v) => setConfig({...config, whatsapp_enabled: v})} />
-              <Label>Enable WhatsApp</Label>
-            </div>
+            {selectedProvider?.supports_whatsapp && (
+              <div className="flex items-center gap-2">
+                <Switch checked={config.whatsapp_enabled} onCheckedChange={(v) => setConfig({...config, whatsapp_enabled: v})} />
+                <Label>Enable WhatsApp</Label>
+              </div>
+            )}
           </div>
 
+          {/* Test Section */}
           <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="p-4">
-              <h4 className="font-semibold text-blue-900 mb-2">Test Message</h4>
-              <div className="flex gap-2">
-                <Input
-                  value={testNumber}
-                  onChange={(e) => setTestNumber(e.target.value)}
-                  placeholder="+1234567890"
-                  className="flex-1"
-                />
-                <Button variant="outline" onClick={() => handleTest('sms')}>Test SMS</Button>
-                <Button variant="outline" onClick={() => handleTest('whatsapp')}>Test WhatsApp</Button>
+            <CardContent className="p-4 space-y-3">
+              <h4 className="font-semibold text-blue-900">🧪 Test Your Configuration</h4>
+              <div className="grid md:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm">Recipient Number</Label>
+                  <Input
+                    value={testNumber}
+                    onChange={(e) => setTestNumber(e.target.value)}
+                    placeholder="+1234567890"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Test Message (optional)</Label>
+                  <Input
+                    value={testMessage}
+                    onChange={(e) => setTestMessage(e.target.value)}
+                    placeholder="Hello from ProficientHub!"
+                  />
+                </div>
               </div>
+              <div className="flex gap-2">
+                {config.sms_enabled && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleTest('sms')} 
+                    disabled={testing || !testNumber}
+                    className="flex-1"
+                  >
+                    {testing ? 'Sending...' : '📱 Test SMS'}
+                  </Button>
+                )}
+                {config.whatsapp_enabled && selectedProvider?.supports_whatsapp && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleTest('whatsapp')} 
+                    disabled={testing || !testNumber}
+                    className="flex-1"
+                  >
+                    {testing ? 'Sending...' : '💬 Test WhatsApp'}
+                  </Button>
+                )}
+              </div>
+              
+              {/* Test Result */}
+              {testResult && (
+                <div className={`p-3 rounded-lg ${testResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  {testResult.success ? (
+                    <p className="text-sm">✅ Message sent successfully! {testResult.message_sid && `(ID: ${testResult.message_sid})`}</p>
+                  ) : (
+                    <p className="text-sm">❌ Failed: {testResult.error}</p>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </>
