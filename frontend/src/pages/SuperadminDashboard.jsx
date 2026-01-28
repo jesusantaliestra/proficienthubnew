@@ -245,6 +245,16 @@ const SuperadminDashboard = () => {
               <Button 
                 variant="outline" 
                 size="sm"
+                onClick={() => navigate('/superadmin/pricing')}
+                className="border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/20"
+                data-testid="pricing-config-btn"
+              >
+                <DollarSign className="w-4 h-4 mr-2" />
+                Pricing
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
                 onClick={() => navigate('/admin')}
                 className="border-white/20 text-white hover:bg-white/10"
               >
