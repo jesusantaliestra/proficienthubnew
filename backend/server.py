@@ -6917,14 +6917,389 @@ async def send_via_plivo(config: dict, to_number: str, message: str, msg_type: s
         logger.error(f"Plivo send error: {e}")
         return {"success": False, "error": str(e)}
 
-# Provider dispatcher
+# ===== REGIONAL PROVIDERS =====
+
+async def send_via_msg91(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via MSG91 (India)"""
+    try:
+        import httpx
+        
+        auth_key = config.get("api_key")
+        sender_id = config.get("sender_id") or config.get("from_number")
+        
+        if not all([auth_key, sender_id]):
+            return {"success": False, "error": "Missing MSG91 credentials"}
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.msg91.com/api/v5/flow/",
+                headers={"authkey": auth_key, "Content-Type": "application/json"},
+                json={
+                    "sender": sender_id,
+                    "route": "4",
+                    "country": "91",
+                    "sms": [{"message": message, "to": [to_number.replace("+", "")]}]
+                }
+            )
+            
+            if response.status_code == 200:
+                return {"success": True, "response": response.json()}
+            return {"success": False, "error": response.text}
+    except Exception as e:
+        logger.error(f"MSG91 send error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_via_gupshup(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via Gupshup (India/Global WhatsApp)"""
+    try:
+        import httpx
+        
+        api_key = config.get("api_key")
+        app_name = config.get("app_name") or config.get("from_number")
+        
+        if not all([api_key, app_name]):
+            return {"success": False, "error": "Missing Gupshup credentials"}
+        
+        if msg_type == "whatsapp":
+            url = "https://api.gupshup.io/sm/api/v1/msg"
+            data = {
+                "channel": "whatsapp",
+                "source": config.get("whatsapp_number", app_name),
+                "destination": to_number.replace("+", ""),
+                "message": {"type": "text", "text": message},
+                "src.name": app_name
+            }
+        else:
+            url = "https://enterprise.smsgupshup.com/GatewayAPI/rest"
+            data = {
+                "method": "SendMessage",
+                "send_to": to_number.replace("+", ""),
+                "msg": message,
+                "msg_type": "TEXT",
+                "userid": config.get("user_id"),
+                "auth_scheme": "plain",
+                "password": config.get("api_secret"),
+                "v": "1.1",
+                "format": "json"
+            }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, headers={"apikey": api_key}, data=data)
+            if response.status_code == 200:
+                return {"success": True, "response": response.json() if response.text.startswith("{") else response.text}
+            return {"success": False, "error": response.text}
+    except Exception as e:
+        logger.error(f"Gupshup send error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_via_kaleyra(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via Kaleyra (India/APAC/EMEA)"""
+    try:
+        import httpx
+        
+        api_key = config.get("api_key")
+        sid = config.get("account_sid")
+        sender = config.get("from_number")
+        
+        if not all([api_key, sid]):
+            return {"success": False, "error": "Missing Kaleyra credentials"}
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"https://api.kaleyra.io/v1/{sid}/messages",
+                headers={"api-key": api_key, "Content-Type": "application/json"},
+                json={
+                    "to": to_number,
+                    "sender": sender,
+                    "body": message,
+                    "type": "OTP" if len(message) < 50 else "TXN"
+                }
+            )
+            
+            if response.status_code in [200, 202]:
+                return {"success": True, "response": response.json()}
+            return {"success": False, "error": response.text}
+    except Exception as e:
+        logger.error(f"Kaleyra send error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_via_africas_talking(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via Africa's Talking (Africa)"""
+    try:
+        import httpx
+        
+        api_key = config.get("api_key")
+        username = config.get("username") or config.get("account_sid")
+        sender = config.get("from_number")
+        
+        if not all([api_key, username]):
+            return {"success": False, "error": "Missing Africa's Talking credentials"}
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.africastalking.com/version1/messaging",
+                headers={
+                    "apiKey": api_key,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Accept": "application/json"
+                },
+                data={
+                    "username": username,
+                    "to": to_number,
+                    "message": message,
+                    "from": sender
+                }
+            )
+            
+            if response.status_code == 201:
+                return {"success": True, "response": response.json()}
+            return {"success": False, "error": response.text}
+    except Exception as e:
+        logger.error(f"Africa's Talking send error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_via_termii(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via Termii (Nigeria/Africa)"""
+    try:
+        import httpx
+        
+        api_key = config.get("api_key")
+        sender = config.get("from_number")
+        
+        if not api_key:
+            return {"success": False, "error": "Missing Termii API key"}
+        
+        if msg_type == "whatsapp":
+            url = "https://api.ng.termii.com/api/send/whatsapp"
+            payload = {
+                "api_key": api_key,
+                "to": to_number.replace("+", ""),
+                "from": config.get("whatsapp_number"),
+                "type": "text",
+                "channel": "whatsapp",
+                "message": message
+            }
+        else:
+            url = "https://api.ng.termii.com/api/sms/send"
+            payload = {
+                "api_key": api_key,
+                "to": to_number.replace("+", ""),
+                "from": sender,
+                "sms": message,
+                "type": "plain",
+                "channel": "generic"
+            }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, json=payload)
+            if response.status_code == 200:
+                return {"success": True, "response": response.json()}
+            return {"success": False, "error": response.text}
+    except Exception as e:
+        logger.error(f"Termii send error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_via_esendex(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via Esendex (UK/Europe)"""
+    try:
+        import httpx
+        import base64
+        
+        username = config.get("api_key")
+        password = config.get("api_secret")
+        account_ref = config.get("account_sid")
+        
+        if not all([username, password, account_ref]):
+            return {"success": False, "error": "Missing Esendex credentials"}
+        
+        auth = base64.b64encode(f"{username}:{password}".encode()).decode()
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.esendex.com/v1.0/messagedispatcher",
+                headers={
+                    "Authorization": f"Basic {auth}",
+                    "Content-Type": "application/xml"
+                },
+                content=f"""<?xml version='1.0' encoding='UTF-8'?>
+                <messages>
+                    <accountreference>{account_ref}</accountreference>
+                    <message>
+                        <to>{to_number}</to>
+                        <body>{message}</body>
+                    </message>
+                </messages>"""
+            )
+            
+            if response.status_code in [200, 201]:
+                return {"success": True, "message_id": "sent"}
+            return {"success": False, "error": response.text}
+    except Exception as e:
+        logger.error(f"Esendex send error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_via_textlocal(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via Textlocal (UK/India)"""
+    try:
+        import httpx
+        
+        api_key = config.get("api_key")
+        sender = config.get("from_number")
+        
+        if not api_key:
+            return {"success": False, "error": "Missing Textlocal API key"}
+        
+        # Textlocal has different endpoints for different regions
+        base_url = config.get("base_url", "https://api.textlocal.in")
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{base_url}/send/",
+                data={
+                    "apikey": api_key,
+                    "numbers": to_number.replace("+", ""),
+                    "message": message,
+                    "sender": sender
+                }
+            )
+            
+            data = response.json()
+            if data.get("status") == "success":
+                return {"success": True, "response": data}
+            return {"success": False, "error": data.get("errors", [{}])[0].get("message", "Unknown error")}
+    except Exception as e:
+        logger.error(f"Textlocal send error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_via_burstsms(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via Burst SMS (Australia/NZ)"""
+    try:
+        import httpx
+        
+        api_key = config.get("api_key")
+        api_secret = config.get("api_secret")
+        sender = config.get("from_number")
+        
+        if not all([api_key, api_secret]):
+            return {"success": False, "error": "Missing Burst SMS credentials"}
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.burstsms.com/sms/",
+                auth=(api_key, api_secret),
+                data={
+                    "to": to_number.replace("+", ""),
+                    "message": message,
+                    "from": sender
+                }
+            )
+            
+            data = response.json()
+            if data.get("error", {}).get("code") == "SUCCESS" or response.status_code == 200:
+                return {"success": True, "response": data}
+            return {"success": False, "error": data.get("error", {}).get("description", "Unknown error")}
+    except Exception as e:
+        logger.error(f"Burst SMS send error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_via_sinch(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via Sinch (Global)"""
+    try:
+        import httpx
+        
+        api_key = config.get("api_key")
+        api_secret = config.get("api_secret")
+        service_plan_id = config.get("account_sid")
+        sender = config.get("from_number")
+        
+        if not all([api_key, api_secret, service_plan_id]):
+            return {"success": False, "error": "Missing Sinch credentials"}
+        
+        if msg_type == "whatsapp":
+            url = f"https://whatsapp.api.sinch.com/whatsapp/v1/{service_plan_id}/messages"
+            payload = {
+                "to": [to_number],
+                "message": {"type": "text", "text": message}
+            }
+        else:
+            url = f"https://sms.api.sinch.com/xms/v1/{service_plan_id}/batches"
+            payload = {
+                "to": [to_number],
+                "from": sender,
+                "body": message
+            }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url,
+                auth=(service_plan_id, api_secret),
+                json=payload
+            )
+            
+            if response.status_code in [200, 201]:
+                return {"success": True, "response": response.json()}
+            return {"success": False, "error": response.text}
+    except Exception as e:
+        logger.error(f"Sinch send error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_via_bandwidth(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via Bandwidth (US/Canada)"""
+    try:
+        import httpx
+        
+        api_token = config.get("api_key")
+        api_secret = config.get("api_secret")
+        account_id = config.get("account_sid")
+        application_id = config.get("application_id")
+        sender = config.get("from_number")
+        
+        if not all([api_token, api_secret, account_id]):
+            return {"success": False, "error": "Missing Bandwidth credentials"}
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"https://messaging.bandwidth.com/api/v2/users/{account_id}/messages",
+                auth=(api_token, api_secret),
+                json={
+                    "to": [to_number],
+                    "from": sender,
+                    "text": message,
+                    "applicationId": application_id
+                }
+            )
+            
+            if response.status_code in [200, 201, 202]:
+                return {"success": True, "response": response.json()}
+            return {"success": False, "error": response.text}
+    except Exception as e:
+        logger.error(f"Bandwidth send error: {e}")
+        return {"success": False, "error": str(e)}
+
+# Provider dispatcher - Global Coverage
 MESSAGING_PROVIDERS = {
+    # Global
     "twilio": send_via_twilio,
     "messagebird": send_via_messagebird,
     "vonage": send_via_vonage,
     "infobip": send_via_infobip,
+    "sinch": send_via_sinch,
+    # US/Canada
+    "plivo": send_via_plivo,
+    "bandwidth": send_via_bandwidth,
+    # UK/Europe
     "clicksend": send_via_clicksend,
-    "plivo": send_via_plivo
+    "esendex": send_via_esendex,
+    "textlocal": send_via_textlocal,
+    # India/Asia
+    "msg91": send_via_msg91,
+    "gupshup": send_via_gupshup,
+    "kaleyra": send_via_kaleyra,
+    # Africa
+    "africas_talking": send_via_africas_talking,
+    "termii": send_via_termii,
+    # Australia/NZ
+    "burstsms": send_via_burstsms
 }
 
 async def send_message(institution_id: str, to_number: str, message: str, msg_type: str = "sms"):
