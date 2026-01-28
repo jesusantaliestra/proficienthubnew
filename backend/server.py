@@ -8646,13 +8646,19 @@ try:
     from routers.messaging import router as messaging_router
     from routers.exams import router as exams_router
     from routers.institution import router as institution_router
+    from routers.pricing import router as pricing_router
+    from routers.analytics import router as analytics_router
+    from routers.email import router as email_router
+    
     app.include_router(superadmin_router, prefix="/api", tags=["Superadmin"])
     app.include_router(zoom_router, prefix="/api", tags=["Zoom"])
     app.include_router(alerts_router, prefix="/api", tags=["Alerts"])
     app.include_router(messaging_router, prefix="/api", tags=["Messaging"])
-    # Note: exams_router and institution_router not included yet to avoid duplicate routes with main server.py
-    # They are prepared for future migration
-    logger.info("Modular routers loaded successfully (5 active)")
+    app.include_router(pricing_router, prefix="/api", tags=["Pricing"])
+    app.include_router(analytics_router, prefix="/api", tags=["Analytics"])
+    app.include_router(email_router, prefix="/api", tags=["Email"])
+    
+    logger.info("Modular routers loaded successfully (7 active)")
 except ImportError as e:
     logger.warning(f"Could not load modular routers: {e}")
 
