@@ -10,7 +10,8 @@ import {
   Building2, Users, GraduationCap, BookOpen, Brain, TrendingUp, 
   DollarSign, Activity, Search, RefreshCw, ChevronRight, Settings,
   BarChart3, Award, Zap, Clock, Globe, Shield, Gift, ArrowUpRight,
-  ArrowDownRight, Eye, MessageSquare
+  ArrowDownRight, Eye, MessageSquare, Bell, AlertTriangle, CheckCircle,
+  Info, X, BellRing
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -24,6 +25,9 @@ const SuperadminDashboard = () => {
   const [institutions, setInstitutions] = useState([]);
   const [activities, setActivities] = useState([]);
   const [revenueReport, setRevenueReport] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+  const [alertsSummary, setAlertsSummary] = useState({ total_active: 0, critical: 0, warning: 0 });
+  const [showAlertsPanel, setShowAlertsPanel] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('month');
