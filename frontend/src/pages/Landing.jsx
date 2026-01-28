@@ -1262,7 +1262,7 @@ export default function Landing() {
       </section>
 
       {/* ROI Calculator Section - Operations */}
-      <section id="calculator-ops" className="py-20">
+      <section id="calculator" className="py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Calculate Your ROI</h2>
