@@ -1189,44 +1189,163 @@ const MessagingConfigSection = () => {
       {config.enabled && (
         <>
           <div>
-            <Label className="font-semibold mb-3 block">Provider</Label>
-            <div className="grid grid-cols-3 gap-3">
+            <Label className="font-semibold mb-3 block">Select Provider</Label>
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
               {providers.map(p => (
                 <button
                   key={p.id}
                   onClick={() => setConfig({...config, provider: p.id})}
-                  className={`p-4 rounded-xl border-2 text-center transition-all ${
+                  className={`p-3 rounded-xl border-2 text-center transition-all ${
                     config.provider === p.id ? 'border-[#58CC02] bg-green-50' : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <span className="text-2xl block mb-1">{p.icon}</span>
-                  <span className="text-sm font-medium">{p.name}</span>
+                  <span className="text-xl block mb-1">{providerIcons[p.id]}</span>
+                  <span className="text-xs font-medium">{p.name}</span>
+                  <div className="flex justify-center gap-1 mt-1">
+                    {p.supports_sms && <span className="text-[10px] bg-blue-100 text-blue-600 px-1 rounded">SMS</span>}
+                    {p.supports_whatsapp && <span className="text-[10px] bg-green-100 text-green-600 px-1 rounded">WA</span>}
+                  </div>
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label>Account SID / API Key</Label>
-              <Input
-                type="password"
-                value={config.account_sid || config.api_key}
-                onChange={(e) => setConfig({...config, account_sid: e.target.value, api_key: e.target.value})}
-                placeholder="Enter API credentials"
-              />
-            </div>
-            <div>
-              <Label>API Secret</Label>
-              <Input
-                type="password"
-                value={config.api_secret}
-                onChange={(e) => setConfig({...config, api_secret: e.target.value})}
-                placeholder="Enter secret"
-              />
-            </div>
-          </div>
+          {/* Dynamic credentials based on provider */}
+          <Card className="bg-gray-50 border-gray-200">
+            <CardContent className="p-4 space-y-4">
+              <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                {providerIcons[config.provider]} {providers.find(p => p.id === config.provider)?.name} Credentials
+              </h4>
+              
+              {/* Twilio */}
+              {config.provider === 'twilio' && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Account SID</Label>
+                    <Input
+                      value={config.account_sid}
+                      onChange={(e) => setConfig({...config, account_sid: e.target.value})}
+                      placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    />
+                  </div>
+                  <div>
+                    <Label>Auth Token</Label>
+                    <Input
+                      type="password"
+                      value={config.auth_token}
+                      onChange={(e) => setConfig({...config, auth_token: e.target.value})}
+                      placeholder="Your Twilio Auth Token"
+                    />
+                  </div>
+                </div>
+              )}
 
+              {/* MessageBird */}
+              {config.provider === 'messagebird' && (
+                <div>
+                  <Label>API Key</Label>
+                  <Input
+                    value={config.api_key}
+                    onChange={(e) => setConfig({...config, api_key: e.target.value})}
+                    placeholder="Your MessageBird API Key"
+                  />
+                </div>
+              )}
+
+              {/* Vonage */}
+              {config.provider === 'vonage' && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>API Key</Label>
+                    <Input
+                      value={config.api_key}
+                      onChange={(e) => setConfig({...config, api_key: e.target.value})}
+                      placeholder="Your Vonage API Key"
+                    />
+                  </div>
+                  <div>
+                    <Label>API Secret</Label>
+                    <Input
+                      type="password"
+                      value={config.api_secret}
+                      onChange={(e) => setConfig({...config, api_secret: e.target.value})}
+                      placeholder="Your Vonage API Secret"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Infobip */}
+              {config.provider === 'infobip' && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>API Key</Label>
+                    <Input
+                      value={config.api_key}
+                      onChange={(e) => setConfig({...config, api_key: e.target.value})}
+                      placeholder="Your Infobip API Key"
+                    />
+                  </div>
+                  <div>
+                    <Label>Base URL (optional)</Label>
+                    <Input
+                      value={config.base_url}
+                      onChange={(e) => setConfig({...config, base_url: e.target.value})}
+                      placeholder="api.infobip.com"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* ClickSend */}
+              {config.provider === 'clicksend' && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Username</Label>
+                    <Input
+                      value={config.api_key}
+                      onChange={(e) => setConfig({...config, api_key: e.target.value})}
+                      placeholder="Your ClickSend Username"
+                    />
+                  </div>
+                  <div>
+                    <Label>API Key</Label>
+                    <Input
+                      type="password"
+                      value={config.api_secret}
+                      onChange={(e) => setConfig({...config, api_secret: e.target.value})}
+                      placeholder="Your ClickSend API Key"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Plivo */}
+              {config.provider === 'plivo' && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Auth ID</Label>
+                    <Input
+                      value={config.account_sid}
+                      onChange={(e) => setConfig({...config, account_sid: e.target.value})}
+                      placeholder="Your Plivo Auth ID"
+                    />
+                  </div>
+                  <div>
+                    <Label>Auth Token</Label>
+                    <Input
+                      type="password"
+                      value={config.auth_token}
+                      onChange={(e) => setConfig({...config, auth_token: e.target.value})}
+                      placeholder="Your Plivo Auth Token"
+                    />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Phone Numbers */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label>SMS From Number</Label>
@@ -1235,18 +1354,23 @@ const MessagingConfigSection = () => {
                 onChange={(e) => setConfig({...config, from_number: e.target.value})}
                 placeholder="+1234567890"
               />
+              <p className="text-xs text-gray-500 mt-1">Your registered sender number</p>
             </div>
-            <div>
-              <Label>WhatsApp Number</Label>
-              <Input
-                value={config.whatsapp_number}
-                onChange={(e) => setConfig({...config, whatsapp_number: e.target.value})}
-                placeholder="whatsapp:+1234567890"
-              />
-            </div>
+            {selectedProvider?.supports_whatsapp && (
+              <div>
+                <Label>WhatsApp Number</Label>
+                <Input
+                  value={config.whatsapp_number}
+                  onChange={(e) => setConfig({...config, whatsapp_number: e.target.value})}
+                  placeholder="+1234567890"
+                />
+                <p className="text-xs text-gray-500 mt-1">Your WhatsApp Business number</p>
+              </div>
+            )}
           </div>
 
-          <div className="flex gap-4">
+          {/* Enable toggles */}
+          <div className="flex gap-6">
             <div className="flex items-center gap-2">
               <Switch checked={config.sms_enabled} onCheckedChange={(v) => setConfig({...config, sms_enabled: v})} />
               <Label>Enable SMS</Label>
