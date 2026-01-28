@@ -21,6 +21,7 @@ import ChangePassword from './pages/ChangePassword';
 import IncomeCalculator from './pages/IncomeCalculator';
 import ExamBankAdmin from './pages/ExamBankAdmin';
 import WhiteLabelSettings from './pages/WhiteLabelSettings';
+import SuperadminDashboard from './pages/SuperadminDashboard';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
