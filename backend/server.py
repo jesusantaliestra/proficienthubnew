@@ -8641,8 +8641,12 @@ app.include_router(api_router)
 try:
     from routers.superadmin import router as superadmin_router
     from routers.zoom import router as zoom_router
+    from routers.alerts import router as alerts_router
+    from routers.auth import router as auth_router
     app.include_router(superadmin_router, prefix="/api", tags=["Superadmin"])
     app.include_router(zoom_router, prefix="/api", tags=["Zoom"])
+    app.include_router(alerts_router, prefix="/api", tags=["Alerts"])
+    # Note: auth_router not included yet to avoid duplicate routes
     logger.info("Modular routers loaded successfully")
 except ImportError as e:
     logger.warning(f"Could not load modular routers: {e}")
