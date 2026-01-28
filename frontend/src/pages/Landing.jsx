@@ -237,12 +237,14 @@ export default function Landing() {
 
   const examTypes = [
     { id: 'toefl', name: 'TOEFL', color: 'bg-blue-600', description: 'Test of English as a Foreign Language' },
-    { id: 'ielts', name: 'IELTS', color: 'bg-red-600', description: 'International English Language Testing System' },
+    { id: 'ielts-academic', name: 'IELTS Academic', color: 'bg-red-600', description: 'For university admissions and professional registration' },
+    { id: 'ielts-general', name: 'IELTS General', color: 'bg-red-500', description: 'For migration and work experience' },
     { id: 'cambridge', name: 'Cambridge', color: 'bg-purple-600', description: 'Cambridge English Qualifications (FCE, CAE, CPE)' },
     { id: 'trinity', name: 'Trinity', color: 'bg-pink-600', description: 'Trinity College London GESE & ISE Exams' },
     { id: 'toeic', name: 'TOEIC', color: 'bg-indigo-600', description: 'Test of English for International Communication' },
     { id: 'celpip', name: 'CELPIP', color: 'bg-cyan-600', description: 'Canadian English Language Proficiency Index' },
-    { id: 'pte', name: 'PTE', color: 'bg-orange-600', description: 'Pearson Test of English' },
+    { id: 'pte-academic', name: 'PTE Academic', color: 'bg-orange-600', description: 'For study abroad and immigration' },
+    { id: 'pte-core', name: 'PTE Core', color: 'bg-orange-500', description: 'For Canadian immigration and citizenship' },
     { id: 'oet', name: 'OET', color: 'bg-emerald-600', description: 'Occupational English Test' }
   ];
 
