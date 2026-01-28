@@ -490,6 +490,7 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - Landing: https://edutech-platform-5.preview.emergentagent.com
 - Login: https://edutech-platform-5.preview.emergentagent.com/login
 - Admin: https://edutech-platform-5.preview.emergentagent.com/admin
+- **Superadmin**: https://edutech-platform-5.preview.emergentagent.com/superadmin
 - Student Portal: https://edutech-platform-5.preview.emergentagent.com/student-portal
 - White-Label Portal: https://edutech-platform-5.preview.emergentagent.com/student-portal/demo-language-academy
 - AI Tutor: https://edutech-platform-5.preview.emergentagent.com/tutor/ielts
