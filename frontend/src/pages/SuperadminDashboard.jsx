@@ -88,14 +88,48 @@ const SuperadminDashboard = () => {
     }
   }, [token, selectedPeriod]);
 
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const [alertsRes, summaryRes] = await Promise.all([
+        axios.get(`${API_URL}/superadmin/alerts`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { limit: 20 }
+        }),
+        axios.get(`${API_URL}/superadmin/alerts/summary`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      setAlerts(alertsRes.data.alerts || []);
+      setAlertsSummary(summaryRes.data);
+    } catch (error) {
+      console.error('Failed to fetch alerts:', error);
+    }
+  }, [token]);
+
+  const dismissAlert = async (alertId) => {
+    try {
+      await axios.post(`${API_URL}/superadmin/alerts/${alertId}/dismiss`, null, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAlerts(prev => prev.filter(a => a.id !== alertId));
+      setAlertsSummary(prev => ({
+        ...prev,
+        total_active: Math.max(0, prev.total_active - 1)
+      }));
+      toast.success('Alerta descartada');
+    } catch (error) {
+      toast.error('Error al descartar alerta');
+    }
+  };
+
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
-      await Promise.all([fetchStats(), fetchInstitutions(), fetchActivities(), fetchRevenueReport()]);
+      await Promise.all([fetchStats(), fetchInstitutions(), fetchActivities(), fetchRevenueReport(), fetchAlerts()]);
       setLoading(false);
     };
     fetchAll();
-  }, [fetchStats, fetchInstitutions, fetchActivities, fetchRevenueReport]);
+  }, [fetchStats, fetchInstitutions, fetchActivities, fetchRevenueReport, fetchAlerts]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
