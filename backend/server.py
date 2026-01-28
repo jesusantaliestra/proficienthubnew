@@ -6662,16 +6662,295 @@ async def check_mock_answer(
         "message": f"Intento {attempts}/5 incorrecto. Aquí tienes una pista:"
     }
 
-# ==================== MESSAGING PROVIDERS (WhatsApp/SMS) ====================
+# ==================== MESSAGING PROVIDERS (WhatsApp/SMS) - REAL INTEGRATION ====================
 
 class MessagingConfig(BaseModel):
-    provider: str  # twilio, messagebird, vonage, whatsapp_business
+    provider: str  # twilio, messagebird, vonage, infobip, clicksend, plivo
     api_key: Optional[str] = None
     api_secret: Optional[str] = None
     account_sid: Optional[str] = None  # For Twilio
+    auth_token: Optional[str] = None   # For Twilio
     from_number: Optional[str] = None
     whatsapp_number: Optional[str] = None
     enabled: bool = False
+    sms_enabled: bool = False
+    whatsapp_enabled: bool = False
+
+class SendMessageRequest(BaseModel):
+    to_number: str
+    message: str
+    message_type: str = "sms"  # sms or whatsapp
+
+# Messaging provider implementations
+async def send_via_twilio(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via Twilio"""
+    try:
+        import httpx
+        
+        account_sid = config.get("account_sid")
+        auth_token = config.get("auth_token") or config.get("api_secret")
+        from_number = config.get("whatsapp_number") if msg_type == "whatsapp" else config.get("from_number")
+        
+        if not all([account_sid, auth_token, from_number]):
+            return {"success": False, "error": "Missing Twilio credentials"}
+        
+        url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+        
+        # Format numbers for WhatsApp
+        if msg_type == "whatsapp":
+            from_number = f"whatsapp:{from_number}" if not from_number.startswith("whatsapp:") else from_number
+            to_number = f"whatsapp:{to_number}" if not to_number.startswith("whatsapp:") else to_number
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url,
+                auth=(account_sid, auth_token),
+                data={
+                    "From": from_number,
+                    "To": to_number,
+                    "Body": message
+                }
+            )
+            
+            if response.status_code in [200, 201]:
+                data = response.json()
+                return {"success": True, "message_sid": data.get("sid"), "status": data.get("status")}
+            else:
+                return {"success": False, "error": response.text}
+                
+    except Exception as e:
+        logger.error(f"Twilio send error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_via_messagebird(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via MessageBird"""
+    try:
+        import httpx
+        
+        api_key = config.get("api_key")
+        from_number = config.get("from_number")
+        
+        if not all([api_key, from_number]):
+            return {"success": False, "error": "Missing MessageBird credentials"}
+        
+        url = "https://rest.messagebird.com/messages"
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url,
+                headers={"Authorization": f"AccessKey {api_key}"},
+                json={
+                    "originator": from_number,
+                    "recipients": [to_number.replace("+", "")],
+                    "body": message
+                }
+            )
+            
+            if response.status_code in [200, 201]:
+                data = response.json()
+                return {"success": True, "message_id": data.get("id")}
+            else:
+                return {"success": False, "error": response.text}
+                
+    except Exception as e:
+        logger.error(f"MessageBird send error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_via_vonage(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via Vonage (Nexmo)"""
+    try:
+        import httpx
+        
+        api_key = config.get("api_key")
+        api_secret = config.get("api_secret")
+        from_number = config.get("from_number")
+        
+        if not all([api_key, api_secret, from_number]):
+            return {"success": False, "error": "Missing Vonage credentials"}
+        
+        url = "https://rest.nexmo.com/sms/json"
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url,
+                json={
+                    "api_key": api_key,
+                    "api_secret": api_secret,
+                    "from": from_number,
+                    "to": to_number.replace("+", ""),
+                    "text": message
+                }
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("messages", [{}])[0].get("status") == "0":
+                    return {"success": True, "message_id": data["messages"][0].get("message-id")}
+                else:
+                    return {"success": False, "error": data["messages"][0].get("error-text")}
+            else:
+                return {"success": False, "error": response.text}
+                
+    except Exception as e:
+        logger.error(f"Vonage send error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_via_infobip(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via Infobip"""
+    try:
+        import httpx
+        
+        api_key = config.get("api_key")
+        base_url = config.get("base_url", "api.infobip.com")
+        from_number = config.get("from_number")
+        
+        if not all([api_key, from_number]):
+            return {"success": False, "error": "Missing Infobip credentials"}
+        
+        if msg_type == "whatsapp":
+            url = f"https://{base_url}/whatsapp/1/message/text"
+            payload = {
+                "from": from_number,
+                "to": to_number,
+                "content": {"text": message}
+            }
+        else:
+            url = f"https://{base_url}/sms/2/text/advanced"
+            payload = {
+                "messages": [{
+                    "from": from_number,
+                    "destinations": [{"to": to_number}],
+                    "text": message
+                }]
+            }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url,
+                headers={
+                    "Authorization": f"App {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json=payload
+            )
+            
+            if response.status_code in [200, 201]:
+                return {"success": True, "response": response.json()}
+            else:
+                return {"success": False, "error": response.text}
+                
+    except Exception as e:
+        logger.error(f"Infobip send error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_via_clicksend(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via ClickSend"""
+    try:
+        import httpx
+        import base64
+        
+        username = config.get("api_key")  # ClickSend uses username as API key
+        api_key = config.get("api_secret")
+        from_number = config.get("from_number")
+        
+        if not all([username, api_key]):
+            return {"success": False, "error": "Missing ClickSend credentials"}
+        
+        auth = base64.b64encode(f"{username}:{api_key}".encode()).decode()
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://rest.clicksend.com/v3/sms/send",
+                headers={
+                    "Authorization": f"Basic {auth}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "messages": [{
+                        "source": "sdk",
+                        "from": from_number,
+                        "to": to_number,
+                        "body": message
+                    }]
+                }
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return {"success": True, "response": data}
+            else:
+                return {"success": False, "error": response.text}
+                
+    except Exception as e:
+        logger.error(f"ClickSend send error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_via_plivo(config: dict, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message via Plivo"""
+    try:
+        import httpx
+        
+        auth_id = config.get("account_sid") or config.get("api_key")
+        auth_token = config.get("auth_token") or config.get("api_secret")
+        from_number = config.get("from_number")
+        
+        if not all([auth_id, auth_token, from_number]):
+            return {"success": False, "error": "Missing Plivo credentials"}
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"https://api.plivo.com/v1/Account/{auth_id}/Message/",
+                auth=(auth_id, auth_token),
+                json={
+                    "src": from_number,
+                    "dst": to_number.replace("+", ""),
+                    "text": message
+                }
+            )
+            
+            if response.status_code in [200, 201, 202]:
+                return {"success": True, "response": response.json()}
+            else:
+                return {"success": False, "error": response.text}
+                
+    except Exception as e:
+        logger.error(f"Plivo send error: {e}")
+        return {"success": False, "error": str(e)}
+
+# Provider dispatcher
+MESSAGING_PROVIDERS = {
+    "twilio": send_via_twilio,
+    "messagebird": send_via_messagebird,
+    "vonage": send_via_vonage,
+    "infobip": send_via_infobip,
+    "clicksend": send_via_clicksend,
+    "plivo": send_via_plivo
+}
+
+async def send_message(institution_id: str, to_number: str, message: str, msg_type: str = "sms"):
+    """Send message using institution's configured provider"""
+    settings = await db.institution_settings.find_one({"institution_id": institution_id})
+    
+    if not settings or not settings.get("messaging"):
+        return {"success": False, "error": "Messaging not configured"}
+    
+    config = settings["messaging"]
+    
+    if not config.get("enabled"):
+        return {"success": False, "error": "Messaging is disabled"}
+    
+    if msg_type == "sms" and not config.get("sms_enabled"):
+        return {"success": False, "error": "SMS is not enabled"}
+    
+    if msg_type == "whatsapp" and not config.get("whatsapp_enabled"):
+        return {"success": False, "error": "WhatsApp is not enabled"}
+    
+    provider = config.get("provider")
+    if provider not in MESSAGING_PROVIDERS:
+        return {"success": False, "error": f"Unknown provider: {provider}"}
+    
+    send_func = MESSAGING_PROVIDERS[provider]
+    return await send_func(config, to_number, message, msg_type)
 
 @api_router.get("/institution/messaging/config")
 async def get_messaging_config(current_user: dict = Depends(get_current_user)):
@@ -6687,18 +6966,36 @@ async def get_messaging_config(current_user: dict = Depends(get_current_user)):
     config = settings.get("messaging", {}) if settings else {}
     
     # Mask sensitive data
-    if config.get("api_key"):
-        config["api_key"] = config["api_key"][:8] + "***"
-    if config.get("api_secret"):
-        config["api_secret"] = "***"
-    
-    return {
+    masked_config = {
         "provider": config.get("provider", "none"),
         "enabled": config.get("enabled", False),
         "from_number": config.get("from_number"),
         "whatsapp_number": config.get("whatsapp_number"),
         "whatsapp_enabled": config.get("whatsapp_enabled", False),
-        "sms_enabled": config.get("sms_enabled", False)
+        "sms_enabled": config.get("sms_enabled", False),
+        "has_credentials": bool(config.get("api_key") or config.get("account_sid"))
+    }
+    
+    return masked_config
+
+@api_router.get("/institution/messaging/providers")
+async def get_messaging_providers():
+    """Get list of supported messaging providers"""
+    return {
+        "providers": [
+            {"id": "twilio", "name": "Twilio", "supports_whatsapp": True, "supports_sms": True, 
+             "fields": ["account_sid", "auth_token", "from_number", "whatsapp_number"]},
+            {"id": "messagebird", "name": "MessageBird", "supports_whatsapp": True, "supports_sms": True,
+             "fields": ["api_key", "from_number"]},
+            {"id": "vonage", "name": "Vonage (Nexmo)", "supports_whatsapp": False, "supports_sms": True,
+             "fields": ["api_key", "api_secret", "from_number"]},
+            {"id": "infobip", "name": "Infobip", "supports_whatsapp": True, "supports_sms": True,
+             "fields": ["api_key", "base_url", "from_number"]},
+            {"id": "clicksend", "name": "ClickSend", "supports_whatsapp": False, "supports_sms": True,
+             "fields": ["api_key", "api_secret", "from_number"]},
+            {"id": "plivo", "name": "Plivo", "supports_whatsapp": False, "supports_sms": True,
+             "fields": ["account_sid", "auth_token", "from_number"]}
+        ]
     }
 
 @api_router.post("/institution/messaging/config")
@@ -6720,26 +7017,32 @@ async def update_messaging_config(config: MessagingConfig, current_user: dict = 
 
 @api_router.post("/institution/messaging/test")
 async def test_messaging(
-    message_type: str,  # sms or whatsapp
-    test_number: str,
+    request: SendMessageRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Send a test message"""
+    """Send a test message using configured provider"""
     if current_user["user_type"] != "institution":
         raise HTTPException(status_code=403, detail="Only institutions can test messaging")
     
-    settings = await db.institution_settings.find_one({"institution_id": current_user["id"]})
-    messaging_config = settings.get("messaging", {}) if settings else {}
+    result = await send_message(
+        current_user["id"],
+        request.to_number,
+        request.message or f"Test message from {current_user.get('institution_name', 'ProficientHub')}",
+        request.message_type
+    )
     
-    if not messaging_config.get("enabled"):
-        raise HTTPException(status_code=400, detail="Messaging not configured")
+    # Log the test
+    await db.messaging_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "institution_id": current_user["id"],
+        "type": "test",
+        "message_type": request.message_type,
+        "to_number": request.to_number,
+        "result": result,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
     
-    # For now, simulate sending (real implementation would use Twilio/MessageBird API)
-    return {
-        "success": True,
-        "message": f"Test {message_type} sent to {test_number}",
-        "note": "Integration with actual provider pending API key validation"
-    }
+    return result
 
 @api_router.post("/institution/messaging/send-bulk")
 async def send_bulk_message(
