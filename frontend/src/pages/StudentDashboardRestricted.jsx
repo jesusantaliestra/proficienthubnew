@@ -283,7 +283,7 @@ export default function StudentDashboardRestricted() {
             <div className="space-y-8 animate-fade-in" data-testid="overview-section">
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <Card className="metric-card" data-testid="stat-exams">
+                <Card className="bg-slate-900/50 border-slate-800" data-testid="stat-exams">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
@@ -297,7 +297,7 @@ export default function StudentDashboardRestricted() {
                   </CardContent>
                 </Card>
                 
-                <Card className="metric-card" data-testid="stat-avg-score">
+                <Card className="bg-slate-900/50 border-slate-800" data-testid="stat-avg-score">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
@@ -315,7 +315,7 @@ export default function StudentDashboardRestricted() {
                   </CardContent>
                 </Card>
                 
-                <Card className="metric-card" data-testid="stat-credits">
+                <Card className="bg-slate-900/50 border-slate-800" data-testid="stat-credits">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
@@ -330,7 +330,7 @@ export default function StudentDashboardRestricted() {
                 </Card>
                 
                 {gamificationData?.gamification_enabled && (
-                  <Card className="metric-card" data-testid="stat-badges">
+                  <Card className="bg-slate-900/50 border-slate-800" data-testid="stat-badges">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
