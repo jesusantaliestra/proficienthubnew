@@ -7055,11 +7055,14 @@ async def send_bulk_message(
     if current_user["user_type"] != "institution":
         raise HTTPException(status_code=403, detail="Only institutions can send messages")
     
-    # Get students
+    # Get students with phone numbers
     students = await db.users.find(
-        {"id": {"$in": student_ids}, "institution_id": current_user["id"]},
+        {"id": {"$in": student_ids}, "institution_id": current_user["id"], "phone": {"$exists": True, "$ne": ""}},
         {"_id": 0, "id": 1, "name": 1, "phone": 1}
-    ).to_list(100)
+    ).to_list(500)
+    
+    if not students:
+        return {"success": False, "error": "No students with phone numbers found", "sent": 0, "failed": 0}
     
     # Log message send attempt
     message_log = {
@@ -7067,16 +7070,60 @@ async def send_bulk_message(
         "institution_id": current_user["id"],
         "message_type": message_type,
         "message": message,
-        "recipients": len(students),
-        "status": "queued",
+        "total_recipients": len(students),
+        "sent": 0,
+        "failed": 0,
+        "status": "processing",
+        "results": [],
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.messaging_logs.insert_one(message_log)
     
+    # Send to each student
+    sent = 0
+    failed = 0
+    results = []
+    
+    for student in students:
+        phone = student.get("phone")
+        if not phone:
+            continue
+            
+        # Personalize message with student name
+        personalized_msg = message.replace("{name}", student.get("name", "Student"))
+        
+        result = await send_message(current_user["id"], phone, personalized_msg, message_type)
+        
+        if result.get("success"):
+            sent += 1
+        else:
+            failed += 1
+        
+        results.append({
+            "student_id": student["id"],
+            "phone": phone[:6] + "****",  # Mask phone
+            "success": result.get("success"),
+            "error": result.get("error") if not result.get("success") else None
+        })
+    
+    # Update log with final results
+    await db.messaging_logs.update_one(
+        {"id": message_log["id"]},
+        {"$set": {
+            "sent": sent,
+            "failed": failed,
+            "status": "completed",
+            "results": results,
+            "completed_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
     return {
         "success": True,
-        "queued": len(students),
-        "message_id": message_log["id"]
+        "message_id": message_log["id"],
+        "total": len(students),
+        "sent": sent,
+        "failed": failed
     }
 
 # ==================== WHITE-LABEL EMAIL SYSTEM ====================
