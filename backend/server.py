@@ -7089,6 +7089,142 @@ async def get_report_history(
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
+# ==================== PUSH NOTIFICATIONS ====================
+
+class PushTokenRegister(BaseModel):
+    token: str
+    device_type: str = "mobile"  # mobile, web
+    device_info: Optional[Dict[str, Any]] = None
+
+class PushNotificationSend(BaseModel):
+    user_ids: Optional[List[str]] = None
+    institution_id: Optional[str] = None
+    title: str
+    body: str
+    data: Optional[Dict[str, Any]] = None
+    notification_type: str = "general"
+
+@api_router.post("/notifications/register-token")
+async def register_push_token(token_data: PushTokenRegister, current_user: dict = Depends(get_current_user)):
+    """Register push notification token for user"""
+    await db.push_tokens.update_one(
+        {"user_id": current_user["id"]},
+        {
+            "$set": {
+                "user_id": current_user["id"],
+                "token": token_data.token,
+                "device_type": token_data.device_type,
+                "device_info": token_data.device_info,
+                "institution_id": current_user.get("institution_id"),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            },
+            "$setOnInsert": {
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    return {"success": True, "message": "Push token registered"}
+
+@api_router.delete("/notifications/unregister-token")
+async def unregister_push_token(current_user: dict = Depends(get_current_user)):
+    """Remove push notification token"""
+    await db.push_tokens.delete_one({"user_id": current_user["id"]})
+    return {"success": True, "message": "Push token removed"}
+
+@api_router.post("/notifications/send")
+async def send_push_notification(notification: PushNotificationSend, current_user: dict = Depends(get_current_user)):
+    """Send push notification to users (institution only)"""
+    if current_user["user_type"] not in ["institution", "admin"]:
+        raise HTTPException(status_code=403, detail="Only institutions can send notifications")
+    
+    # Build query for recipients
+    query = {}
+    if notification.user_ids:
+        query["user_id"] = {"$in": notification.user_ids}
+    elif notification.institution_id:
+        query["institution_id"] = notification.institution_id
+    else:
+        # Send to all students of this institution
+        query["institution_id"] = current_user["id"]
+    
+    # Get tokens
+    tokens = await db.push_tokens.find(query, {"_id": 0, "token": 1, "user_id": 1}).to_list(1000)
+    
+    if not tokens:
+        return {"success": False, "message": "No registered devices found", "sent": 0}
+    
+    # Log notification
+    notification_log = {
+        "id": str(uuid.uuid4()),
+        "institution_id": current_user.get("id") or current_user.get("institution_id"),
+        "title": notification.title,
+        "body": notification.body,
+        "notification_type": notification.notification_type,
+        "data": notification.data,
+        "recipients": len(tokens),
+        "status": "sent",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notification_logs.insert_one(notification_log)
+    
+    # In production, send via Expo Push API
+    # For now, we log and return success
+    # Expo Push URL: https://exp.host/--/api/v2/push/send
+    
+    return {
+        "success": True,
+        "message": f"Notification queued for {len(tokens)} devices",
+        "sent": len(tokens),
+        "notification_id": notification_log["id"]
+    }
+
+@api_router.get("/notifications/history")
+async def get_notification_history(
+    limit: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get notification history for institution"""
+    institution_id = current_user.get("id") if current_user["user_type"] == "institution" else current_user.get("institution_id")
+    
+    notifications = await db.notification_logs.find(
+        {"institution_id": institution_id},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return {"notifications": notifications}
+
+@api_router.get("/notifications/settings")
+async def get_notification_settings(current_user: dict = Depends(get_current_user)):
+    """Get user's notification preferences"""
+    settings = await db.notification_settings.find_one(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    return settings or {
+        "study_reminders": True,
+        "class_reminders": True,
+        "streak_warnings": True,
+        "badge_notifications": True,
+        "tutor_responses": True,
+        "marketing": False,
+        "reminder_time": "18:00"
+    }
+
+@api_router.post("/notifications/settings")
+async def update_notification_settings(
+    settings: Dict[str, Any],
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user's notification preferences"""
+    await db.notification_settings.update_one(
+        {"user_id": current_user["id"]},
+        {"$set": {**settings, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"success": True, "message": "Notification settings updated"}
+
 # Include router and middleware
 app.include_router(api_router)
 
