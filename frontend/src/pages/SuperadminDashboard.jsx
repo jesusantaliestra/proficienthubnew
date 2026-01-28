@@ -218,6 +218,23 @@ const SuperadminDashboard = () => {
               <Button 
                 variant="outline" 
                 size="sm"
+                onClick={() => setShowAlertsPanel(!showAlertsPanel)}
+                className={`relative border-purple-500/50 text-purple-300 hover:bg-purple-500/20 ${alertsSummary.has_critical ? 'animate-pulse' : ''}`}
+                data-testid="alerts-btn"
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                Alertas
+                {alertsSummary.total_active > 0 && (
+                  <span className={`absolute -top-2 -right-2 w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold ${
+                    alertsSummary.critical > 0 ? 'bg-red-500' : 'bg-amber-500'
+                  } text-white`}>
+                    {alertsSummary.total_active}
+                  </span>
+                )}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
                 onClick={refresh}
                 className="border-purple-500/50 text-purple-300 hover:bg-purple-500/20"
                 data-testid="refresh-stats-btn"
@@ -239,7 +256,92 @@ const SuperadminDashboard = () => {
         </div>
       </header>
 
+      {/* Alerts Panel */}
+      {showAlertsPanel && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" onClick={() => setShowAlertsPanel(false)}>
+          <div 
+            className="absolute right-0 top-0 h-full w-full max-w-md bg-slate-900 border-l border-white/10 shadow-2xl overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <BellRing className="w-5 h-5 text-purple-400" />
+                <h3 className="text-lg font-bold text-white">Alertas del Sistema</h3>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowAlertsPanel(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            {/* Summary */}
+            <div className="p-4 bg-white/5 border-b border-white/10">
+              <div className="flex gap-4">
+                {alertsSummary.critical > 0 && (
+                  <div className="flex items-center gap-2 text-red-400">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span className="text-sm font-medium">{alertsSummary.critical} críticas</span>
+                  </div>
+                )}
+                {alertsSummary.warning > 0 && (
+                  <div className="flex items-center gap-2 text-amber-400">
+                    <Info className="w-4 h-4" />
+                    <span className="text-sm font-medium">{alertsSummary.warning} advertencias</span>
+                  </div>
+                )}
+                {alertsSummary.total_active === 0 && (
+                  <div className="flex items-center gap-2 text-emerald-400">
+                    <CheckCircle className="w-4 h-4" />
+                    <span className="text-sm font-medium">Sin alertas activas</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Alerts List */}
+            <div className="overflow-y-auto h-[calc(100vh-180px)] p-4 space-y-3">
+              {alerts.length === 0 ? (
+                <div className="text-center py-12">
+                  <CheckCircle className="w-16 h-16 text-emerald-500/50 mx-auto mb-4" />
+                  <p className="text-gray-400">Todo está funcionando correctamente</p>
+                </div>
+              ) : (
+                alerts.map(alert => (
+                  <AlertCard key={alert.id} alert={alert} onDismiss={dismissAlert} />
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="container mx-auto px-6 py-8" data-testid="superadmin-dashboard">
+        {/* Critical Alerts Banner */}
+        {alertsSummary.critical > 0 && (
+          <div className="mb-6 p-4 rounded-xl bg-red-500/20 border border-red-500/50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-6 h-6 text-red-400" />
+              <div>
+                <p className="font-semibold text-red-300">
+                  {alertsSummary.critical} alerta{alertsSummary.critical > 1 ? 's' : ''} crítica{alertsSummary.critical > 1 ? 's' : ''} requiere{alertsSummary.critical > 1 ? 'n' : ''} atención
+                </p>
+                <p className="text-sm text-red-400/70">Revisa las alertas para más detalles</p>
+              </div>
+            </div>
+            <Button 
+              onClick={() => setShowAlertsPanel(true)}
+              className="bg-red-500 hover:bg-red-600 text-white"
+              size="sm"
+            >
+              Ver Alertas
+            </Button>
+          </div>
+        )}
+
         {/* Main Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <StatCard
