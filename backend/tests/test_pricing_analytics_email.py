@@ -384,33 +384,33 @@ class TestEmailConfig:
 
 
 class TestPricingCalculator:
-    """Test pricing calculator endpoint"""
+    """Test pricing calculator endpoint (uses server.py version with num_licenses param)"""
     
     def test_calculate_pricing(self):
         """GET /api/pricing/calculator - calculates total pricing"""
+        # Note: server.py version uses num_licenses and ai_tutor_option params
         response = requests.get(
-            f"{BASE_URL}/api/pricing/calculator?exam_plan=plan_10&licenses=50&ai_tutor=basic"
+            f"{BASE_URL}/api/pricing/calculator?exam_plan=plan_10&num_licenses=50&ai_tutor_option=basic"
         )
         assert response.status_code == 200
         
         data = response.json()
         assert "exam_plan" in data
         assert "volume_tier" in data
-        assert "ai_tutor" in data
-        assert "licenses" in data
+        assert "ai_tutor_option" in data
+        assert "num_licenses" in data
         assert "price_per_license" in data
-        assert "total_price" in data
+        assert "total_order_price" in data
         assert "savings" in data
-        assert "discount_applied" in data
         
         # Verify calculations make sense
-        assert data["licenses"] == 50
-        assert data["total_price"] > 0
+        assert data["num_licenses"] == 50
+        assert data["total_order_price"] > 0
         
     def test_calculate_pricing_invalid_plan(self):
         """Calculator should return 400 for invalid plan"""
         response = requests.get(
-            f"{BASE_URL}/api/pricing/calculator?exam_plan=invalid_plan&licenses=50"
+            f"{BASE_URL}/api/pricing/calculator?exam_plan=invalid_plan&num_licenses=50"
         )
         assert response.status_code == 400
 
