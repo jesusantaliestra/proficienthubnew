@@ -395,17 +395,20 @@ class TestPricingCalculator:
         assert response.status_code == 200
         
         data = response.json()
-        assert "exam_plan" in data
+        # Verify structure matches server.py response
+        assert "plan" in data
         assert "volume_tier" in data
-        assert "ai_tutor_option" in data
-        assert "num_licenses" in data
-        assert "price_per_license" in data
-        assert "total_order_price" in data
-        assert "savings" in data
+        assert "ai_tutor" in data
+        assert "pricing" in data
+        assert "summary" in data
+        
+        # Verify pricing details
+        assert "price_per_license" in data["pricing"]
+        assert "total_order_price" in data["pricing"]
         
         # Verify calculations make sense
-        assert data["num_licenses"] == 50
-        assert data["total_order_price"] > 0
+        assert data["volume_tier"]["num_licenses"] == 50
+        assert data["pricing"]["total_order_price"] > 0
         
     def test_calculate_pricing_invalid_plan(self):
         """Calculator should return 400 for invalid plan"""
