@@ -7544,6 +7544,7 @@ Return as JSON array with objects: front, back, importance"""
         
         chat = LlmChat(
             api_key=api_key,
+            session_id=f"text_flashcard_{uuid.uuid4()}",
             system_message="You are an educational content creator specializing in vocabulary extraction."
         ).with_model("openai", "gpt-5.2")
         
