@@ -453,17 +453,15 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - [x] Automatic Reports System (weekly/monthly with AI usage, exam stats, engagement)
 
 ### P2 - Medium Priority
-- [ ] Video streaming with Zoom embedded in platform
-- [ ] Push notifications for mobile
-- [ ] ElevenLabs voice integration for AI Tutor (currently using OpenAI TTS)
-- [ ] Real SMS/WhatsApp sending (currently MOCKED - need actual provider integration)
 - [x] **Push Notifications System** - Expo Push for mobile, backend endpoints, institution panel
+- [ ] Video streaming with Zoom embedded in platform
+- [ ] ElevenLabs voice integration for AI Tutor (currently using OpenAI TTS)
+- [ ] Real SMS/WhatsApp sending (configured for any provider - Twilio/MessageBird/Vonage/Infobip/ClickSend/Plivo)
 
-### P3 - Nice to Have
-- [ ] AI-generated flashcard definitions
-- [ ] Additional language translations
-- [ ] Offline content access in mobile app
-- [ ] Superadmin dashboard for ProficientHub
+### P3 - Completed ✅
+- [x] **AI-generated flashcard definitions** - Generate definitions from words or extract from text
+- [x] **Offline content access** - Manifest, download, sync progress endpoints
+- [x] **Superadmin dashboard** - Platform stats, all institutions, grant credits
 
 ## Exam Types (Updated)
 - TOEFL
