@@ -476,6 +476,7 @@ export default function InstitutionDashboard() {
             { id: 'marketplace', icon: Store, label: 'Marketplace' },
             { id: 'classes', icon: Video, label: 'Video Classes' },
             { id: 'library', icon: FolderOpen, label: 'Library' },
+            { id: 'notifications', icon: Radio, label: 'Push Notif.', badge: 'NEW' },
             { id: 'analytics', icon: Activity, label: 'Analytics' },
             { id: 'exams', icon: BookOpen, label: 'Exams' },
             { id: 'settings', icon: Cog, label: 'Settings' }
