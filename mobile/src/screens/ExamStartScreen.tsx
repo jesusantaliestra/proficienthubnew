@@ -42,6 +42,26 @@ const ExamStartScreen: React.FC<{ route: any; navigation: any }> = ({ route, nav
         { id: 'speaking', name: 'Speaking', icon: 'mic', color: '#F59E0B', duration: 15, questions: 3 },
       ]
     },
+    'ielts-academic': {
+      name: 'IELTS Academic',
+      color: '#EF4444',
+      sections: [
+        { id: 'reading', name: 'Academic Reading', icon: 'book', color: '#3B82F6', duration: 60, questions: 40 },
+        { id: 'listening', name: 'Listening', icon: 'headset', color: '#8B5CF6', duration: 30, questions: 40 },
+        { id: 'writing', name: 'Academic Writing', icon: 'create', color: '#10B981', duration: 60, questions: 2 },
+        { id: 'speaking', name: 'Speaking', icon: 'mic', color: '#F59E0B', duration: 15, questions: 3 },
+      ]
+    },
+    'ielts-general': {
+      name: 'IELTS General',
+      color: '#F87171',
+      sections: [
+        { id: 'reading', name: 'General Reading', icon: 'book', color: '#3B82F6', duration: 60, questions: 40 },
+        { id: 'listening', name: 'Listening', icon: 'headset', color: '#8B5CF6', duration: 30, questions: 40 },
+        { id: 'writing', name: 'General Writing', icon: 'create', color: '#10B981', duration: 60, questions: 2 },
+        { id: 'speaking', name: 'Speaking', icon: 'mic', color: '#F59E0B', duration: 15, questions: 3 },
+      ]
+    },
     toefl: {
       name: 'TOEFL',
       color: '#3B82F6',
@@ -62,6 +82,24 @@ const ExamStartScreen: React.FC<{ route: any; navigation: any }> = ({ route, nav
         { id: 'speaking', name: 'Speaking', icon: 'mic', color: '#F59E0B', duration: 14, questions: 4 },
       ]
     },
+    'pte-academic': {
+      name: 'PTE Academic',
+      color: '#F97316',
+      sections: [
+        { id: 'speaking_writing', name: 'Speaking & Writing', icon: 'mic', color: '#F59E0B', duration: 77, questions: 25 },
+        { id: 'reading', name: 'Reading', icon: 'book', color: '#3B82F6', duration: 32, questions: 15 },
+        { id: 'listening', name: 'Listening', icon: 'headset', color: '#8B5CF6', duration: 45, questions: 15 },
+      ]
+    },
+    'pte-core': {
+      name: 'PTE Core',
+      color: '#FB923C',
+      sections: [
+        { id: 'speaking_writing', name: 'Speaking & Writing', icon: 'mic', color: '#F59E0B', duration: 54, questions: 20 },
+        { id: 'reading', name: 'Reading', icon: 'book', color: '#3B82F6', duration: 29, questions: 15 },
+        { id: 'listening', name: 'Listening', icon: 'headset', color: '#8B5CF6', duration: 30, questions: 12 },
+      ]
+    },
     pte: {
       name: 'PTE Academic',
       color: '#F97316',
@@ -73,7 +111,7 @@ const ExamStartScreen: React.FC<{ route: any; navigation: any }> = ({ route, nav
     }
   };
 
-  const exam = examInfo[examType] || examInfo.ielts;
+  const exam = examInfo[examType] || examInfo['ielts-academic'];
 
   const startExam = async (sectionId: string) => {
     setLoading(true);
