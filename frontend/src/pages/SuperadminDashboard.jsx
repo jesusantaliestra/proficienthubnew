@@ -730,4 +730,73 @@ const MetricCard = ({ title, value, icon: Icon }) => (
   </Card>
 );
 
+// Alert Card Component
+const AlertCard = ({ alert, onDismiss }) => {
+  const severityConfig = {
+    critical: {
+      bg: 'bg-red-500/20 border-red-500/50',
+      icon: AlertTriangle,
+      iconColor: 'text-red-400',
+      badge: 'bg-red-500 text-white'
+    },
+    warning: {
+      bg: 'bg-amber-500/20 border-amber-500/50',
+      icon: Info,
+      iconColor: 'text-amber-400',
+      badge: 'bg-amber-500 text-white'
+    },
+    info: {
+      bg: 'bg-blue-500/20 border-blue-500/50',
+      icon: Info,
+      iconColor: 'text-blue-400',
+      badge: 'bg-blue-500 text-white'
+    },
+    success: {
+      bg: 'bg-emerald-500/20 border-emerald-500/50',
+      icon: CheckCircle,
+      iconColor: 'text-emerald-400',
+      badge: 'bg-emerald-500 text-white'
+    }
+  };
+
+  const config = severityConfig[alert.severity] || severityConfig.info;
+  const Icon = config.icon;
+
+  return (
+    <div className={`p-4 rounded-xl border ${config.bg}`} data-testid={`alert-${alert.id}`}>
+      <div className="flex items-start gap-3">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-white/10`}>
+          <Icon className={`w-5 h-5 ${config.iconColor}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h4 className="font-semibold text-white">{alert.title}</h4>
+            <Badge className={`text-xs ${config.badge}`}>
+              {alert.severity === 'critical' ? 'Crítico' : 
+               alert.severity === 'warning' ? 'Advertencia' :
+               alert.severity === 'success' ? 'Éxito' : 'Info'}
+            </Badge>
+          </div>
+          <p className="text-sm text-gray-300">{alert.description}</p>
+          {alert.institution_name && (
+            <p className="text-xs text-gray-400 mt-1">
+              Institución: {alert.institution_name}
+            </p>
+          )}
+          <p className="text-xs text-gray-500 mt-2">
+            {new Date(alert.created_at).toLocaleString()}
+          </p>
+        </div>
+        <button
+          onClick={() => onDismiss(alert.id)}
+          className="text-gray-400 hover:text-white transition-colors"
+          title="Descartar alerta"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export default SuperadminDashboard;
