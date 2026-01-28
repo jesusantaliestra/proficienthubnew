@@ -7355,22 +7355,54 @@ async def get_messaging_config(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/institution/messaging/providers")
 async def get_messaging_providers():
-    """Get list of supported messaging providers"""
+    """Get list of supported messaging providers - Global Coverage"""
     return {
         "providers": [
-            {"id": "twilio", "name": "Twilio", "supports_whatsapp": True, "supports_sms": True, 
+            # === GLOBAL ===
+            {"id": "twilio", "name": "Twilio", "region": "Global", "supports_whatsapp": True, "supports_sms": True, 
              "fields": ["account_sid", "auth_token", "from_number", "whatsapp_number"]},
-            {"id": "messagebird", "name": "MessageBird", "supports_whatsapp": True, "supports_sms": True,
+            {"id": "messagebird", "name": "MessageBird", "region": "Global", "supports_whatsapp": True, "supports_sms": True,
              "fields": ["api_key", "from_number"]},
-            {"id": "vonage", "name": "Vonage (Nexmo)", "supports_whatsapp": False, "supports_sms": True,
+            {"id": "vonage", "name": "Vonage (Nexmo)", "region": "Global", "supports_whatsapp": True, "supports_sms": True,
              "fields": ["api_key", "api_secret", "from_number"]},
-            {"id": "infobip", "name": "Infobip", "supports_whatsapp": True, "supports_sms": True,
+            {"id": "infobip", "name": "Infobip", "region": "Global", "supports_whatsapp": True, "supports_sms": True,
              "fields": ["api_key", "base_url", "from_number"]},
-            {"id": "clicksend", "name": "ClickSend", "supports_whatsapp": False, "supports_sms": True,
+            {"id": "sinch", "name": "Sinch", "region": "Global", "supports_whatsapp": True, "supports_sms": True,
+             "fields": ["account_sid", "api_key", "api_secret", "from_number"]},
+            
+            # === US / CANADA ===
+            {"id": "plivo", "name": "Plivo", "region": "US/Canada", "supports_whatsapp": False, "supports_sms": True,
+             "fields": ["account_sid", "auth_token", "from_number"]},
+            {"id": "bandwidth", "name": "Bandwidth", "region": "US/Canada", "supports_whatsapp": False, "supports_sms": True,
+             "fields": ["account_sid", "api_key", "api_secret", "application_id", "from_number"]},
+            
+            # === UK / EUROPE ===
+            {"id": "clicksend", "name": "ClickSend", "region": "UK/Europe", "supports_whatsapp": False, "supports_sms": True,
              "fields": ["api_key", "api_secret", "from_number"]},
-            {"id": "plivo", "name": "Plivo", "supports_whatsapp": False, "supports_sms": True,
-             "fields": ["account_sid", "auth_token", "from_number"]}
-        ]
+            {"id": "esendex", "name": "Esendex", "region": "UK/Europe", "supports_whatsapp": False, "supports_sms": True,
+             "fields": ["account_sid", "api_key", "api_secret"]},
+            {"id": "textlocal", "name": "Textlocal", "region": "UK/India", "supports_whatsapp": False, "supports_sms": True,
+             "fields": ["api_key", "from_number", "base_url"]},
+            
+            # === INDIA / ASIA ===
+            {"id": "msg91", "name": "MSG91", "region": "India", "supports_whatsapp": False, "supports_sms": True,
+             "fields": ["api_key", "sender_id"]},
+            {"id": "gupshup", "name": "Gupshup", "region": "India/Global", "supports_whatsapp": True, "supports_sms": True,
+             "fields": ["api_key", "app_name", "user_id", "api_secret", "whatsapp_number"]},
+            {"id": "kaleyra", "name": "Kaleyra", "region": "India/APAC/EMEA", "supports_whatsapp": True, "supports_sms": True,
+             "fields": ["account_sid", "api_key", "from_number"]},
+            
+            # === AFRICA ===
+            {"id": "africas_talking", "name": "Africa's Talking", "region": "Africa", "supports_whatsapp": False, "supports_sms": True,
+             "fields": ["api_key", "username", "from_number"]},
+            {"id": "termii", "name": "Termii", "region": "Nigeria/Africa", "supports_whatsapp": True, "supports_sms": True,
+             "fields": ["api_key", "from_number", "whatsapp_number"]},
+            
+            # === AUSTRALIA / NZ ===
+            {"id": "burstsms", "name": "Burst SMS", "region": "Australia/NZ", "supports_whatsapp": False, "supports_sms": True,
+             "fields": ["api_key", "api_secret", "from_number"]}
+        ],
+        "regions": ["Global", "US/Canada", "UK/Europe", "India/Asia", "Africa", "Australia/NZ"]
     }
 
 @api_router.post("/institution/messaging/config")
