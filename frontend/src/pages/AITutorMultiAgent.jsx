@@ -62,11 +62,15 @@ export default function AITutorMultiAgent() {
 
   const examInfo = {
     toefl: { name: 'TOEFL', color: 'bg-blue-500' },
+    'ielts-academic': { name: 'IELTS Academic', color: 'bg-red-500' },
+    'ielts-general': { name: 'IELTS General', color: 'bg-red-400' },
     ielts: { name: 'IELTS', color: 'bg-red-500' },
     cambridge: { name: 'Cambridge', color: 'bg-purple-500' },
     trinity: { name: 'Trinity', color: 'bg-pink-500' },
     toeic: { name: 'TOEIC', color: 'bg-indigo-500' },
     celpip: { name: 'CELPIP', color: 'bg-cyan-500' },
+    'pte-academic': { name: 'PTE Academic', color: 'bg-orange-500' },
+    'pte-core': { name: 'PTE Core', color: 'bg-orange-400' },
     pte: { name: 'PTE', color: 'bg-orange-500' },
     oet: { name: 'OET', color: 'bg-green-500' }
   };
