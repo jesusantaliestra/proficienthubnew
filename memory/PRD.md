@@ -547,7 +547,8 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - [x] Automatic Reports System (weekly/monthly with AI usage, exam stats, engagement)
 
 ### P2 - Medium Priority (In Progress)
-- [ ] **Backend Refactoring** - Break server.py (~8500 lines) into modular routers (URGENT)
+- [x] **Backend Refactoring** - Created modular routers (7 routers prepared, 5 active)
+- [ ] **Capacitor Mobile App** - Convert React to native app with white-label dinámico
 - [ ] Video streaming with Zoom embedded in platform
 - [ ] ElevenLabs voice integration for AI Tutor (currently using OpenAI TTS)
 - [x] **Push Notifications System** - Expo Push for mobile, backend endpoints, institution panel
@@ -556,13 +557,55 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - [x] **AI-generated flashcard definitions** - Generate definitions from words or extract from text
 - [x] **Offline content access** - Manifest, download, sync progress endpoints
 - [x] **Superadmin dashboard** - Platform stats, all institutions, grant credits
+- [x] **Alert System** - Real-time platform monitoring with 5 alert types
 
 ### Future Backlog
-- [ ] Full React Native App Development - Complete exam simulation flow, user auth
+- [ ] **Capacitor App** - Native app with dynamic white-label
 - [ ] Offline Content Access (Mobile) - Download and display materials offline
 - [ ] Full White-Label Customization - All student-facing areas
 - [ ] Custom Voice IDs for ElevenLabs - Institution-level voice config
 - [ ] Replace Mocked Predictive Analytics - Real database aggregations
+- [ ] Email notifications for critical alerts
+
+## 📱 Mobile App Strategy (NEW)
+
+### Arquitectura: Una App con White-Label Dinámico
+```
+📱 App "ProficientHub" (única en App Store / Play Store)
+                    ↓
+          Usuario hace LOGIN
+                    ↓
+    Backend identifica institution_id
+                    ↓
+    App carga branding dinámico:
+    - Logo de la institución
+    - Colores personalizados
+    - Contenido específico
+    - Clases Zoom propias
+```
+
+### Tecnología Elegida: **Capacitor**
+- ✅ Reutiliza código React existente
+- ✅ Una sola app = mantenimiento simple
+- ✅ Push notifications nativas
+- ✅ Acceso offline completo
+- ✅ White-label sin republicar
+
+### Modelo de Pricing - App Móvil
+
+| Tier | Descripción | Precio |
+|------|-------------|--------|
+| **Standard** | White-label en app compartida "ProficientHub" | Incluido |
+| **Premium** | App dedicada en stores con nombre/logo propio | $2,000 setup + $200/mes |
+| **Enterprise** | App dedicada + backend dedicado + SLA | $5,000 setup + $500/mes |
+
+**Upsell Premium App**:
+- Nombre propio en App Store / Play Store
+- Ícono personalizado
+- Splash screen con marca
+- URL de descarga propia
+- Certificados y keys propios
+- Build automatizado con cada release
 
 ## Exam Types (Updated)
 - TOEFL
