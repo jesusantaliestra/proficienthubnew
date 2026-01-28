@@ -132,6 +132,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* Pricing Configuration - Superadmin only */}
+      <Route 
+        path="/superadmin/pricing" 
+        element={
+          <ProtectedRoute allowedTypes={['admin']}>
+            <PricingConfig />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Income Calculator - Dedicated page */}
       <Route 
         path="/income-calculator" 
