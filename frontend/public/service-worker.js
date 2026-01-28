@@ -1,249 +1,280 @@
-// Service Worker for ProficientHub - Offline Support
-const CACHE_NAME = 'proficienthub-v1';
-const DYNAMIC_CACHE = 'proficienthub-dynamic-v1';
+/* Service Worker for Offline Content - ProficientHub v2 */
+const CACHE_NAME = 'proficienthub-v2';
+const STATIC_CACHE = 'static-v2';
+const CONTENT_CACHE = 'content-v2';
 
-// Resources to cache on install
+// Static assets to cache on install
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
   '/manifest.json'
 ];
 
-// API endpoints that can be cached for offline
-const CACHEABLE_API_PATHS = [
+// API routes to cache for offline
+const CACHEABLE_API_ROUTES = [
   '/api/exams/types',
-  '/api/pricing/plans',
-  '/api/voice/available-voices'
+  '/api/pricing/public',
+  '/api/institution/branding'
 ];
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing Service Worker');
+  console.log('Service Worker v2: Installing...');
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches.open(STATIC_CACHE)
       .then((cache) => {
-        console.log('[SW] Caching static assets');
+        console.log('Service Worker: Caching static assets');
         return cache.addAll(STATIC_ASSETS);
       })
-      .then(() => self.skipWaiting())
+      .catch((error) => {
+        console.log('Service Worker: Cache failed', error);
+      })
   );
+  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
+// Activate event - clean old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating Service Worker');
+  console.log('Service Worker v2: Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME && name !== DYNAMIC_CACHE)
-          .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
-            return caches.delete(name);
-          })
+        cacheNames.map((cache) => {
+          if (!cache.includes('v2')) {
+            console.log('Service Worker: Clearing old cache', cache);
+            return caches.delete(cache);
+          }
+        })
       );
-    }).then(() => self.clients.claim())
+    })
   );
+  self.clients.claim();
 });
 
 // Fetch event - serve from cache or network
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
-
+  
   // Skip non-GET requests
-  if (request.method !== 'GET') {
-    return;
-  }
-
+  if (request.method !== 'GET') return;
+  
   // Skip chrome-extension and other non-http requests
-  if (!url.protocol.startsWith('http')) {
-    return;
-  }
-
-  // API requests - Network first, then cache
+  if (!url.protocol.startsWith('http')) return;
+  
+  // API requests - network first, cache fallback
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(networkFirstStrategy(request));
     return;
   }
-
-  // Static assets - Cache first, then network
-  event.respondWith(cacheFirstStrategy(request));
+  
+  // Static assets - cache first
+  if (request.destination === 'style' || 
+      request.destination === 'script' || 
+      request.destination === 'image') {
+    event.respondWith(cacheFirstStrategy(request));
+    return;
+  }
+  
+  // HTML pages - network first
+  event.respondWith(networkFirstStrategy(request));
 });
 
-// Cache first strategy - good for static assets
-async function cacheFirstStrategy(request) {
-  const cachedResponse = await caches.match(request);
-  
-  if (cachedResponse) {
-    // Return cached version and update cache in background
-    updateCache(request);
-    return cachedResponse;
-  }
-
-  try {
-    const networkResponse = await fetch(request);
-    
-    if (networkResponse.ok) {
-      const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, networkResponse.clone());
-    }
-    
-    return networkResponse;
-  } catch (error) {
-    // Return offline page if available
-    const offlineResponse = await caches.match('/offline.html');
-    return offlineResponse || new Response('Offline - Please check your connection', {
-      status: 503,
-      headers: { 'Content-Type': 'text/plain' }
-    });
-  }
-}
-
-// Network first strategy - good for API calls
+// Network first strategy
 async function networkFirstStrategy(request) {
-  const url = new URL(request.url);
-  const isCacheable = CACHEABLE_API_PATHS.some(path => url.pathname.includes(path));
-
   try {
     const networkResponse = await fetch(request);
     
-    // Cache successful API responses
-    if (networkResponse.ok && isCacheable) {
-      const cache = await caches.open(DYNAMIC_CACHE);
+    // Cache successful responses
+    if (networkResponse.ok) {
+      const cache = await caches.open(CACHE_NAME);
       cache.put(request, networkResponse.clone());
     }
     
     return networkResponse;
   } catch (error) {
-    console.log('[SW] Network failed, trying cache for:', request.url);
-    
+    // Network failed, try cache
     const cachedResponse = await caches.match(request);
-    
     if (cachedResponse) {
       return cachedResponse;
     }
     
-    // Return error response for API calls
-    return new Response(JSON.stringify({ 
-      error: 'Offline', 
-      message: 'This feature is not available offline',
-      offline: true 
-    }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    // Return offline fallback for navigation
+    if (request.mode === 'navigate') {
+      return new Response(
+        '<!DOCTYPE html><html><head><title>Offline</title></head><body><h1>You are offline</h1><p>Please check your connection.</p></body></html>',
+        { headers: { 'Content-Type': 'text/html' }, status: 503 }
+      );
+    }
+    
+    throw error;
   }
 }
 
-// Update cache in background
-async function updateCache(request) {
+// Cache first strategy
+async function cacheFirstStrategy(request) {
+  const cachedResponse = await caches.match(request);
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+  
   try {
     const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
-      const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, networkResponse);
-    }
+    const cache = await caches.open(STATIC_CACHE);
+    cache.put(request, networkResponse.clone());
+    return networkResponse;
   } catch (error) {
-    // Silently fail - we already have cached version
+    return new Response('Not found', { status: 404 });
   }
 }
 
-// Handle messages from the main app
+// Handle messages from client
 self.addEventListener('message', (event) => {
-  if (event.data.type === 'CACHE_EXAM_DATA') {
-    // Cache exam data for offline use
-    cacheExamData(event.data.examType);
-  }
+  const { type, data } = event.data || {};
   
-  if (event.data.type === 'CACHE_LIBRARY_ITEM') {
-    // Cache library item for offline use
-    cacheLibraryItem(event.data.itemUrl);
-  }
-  
-  if (event.data.type === 'CLEAR_CACHE') {
-    clearAllCaches();
+  switch (type) {
+    case 'CACHE_CONTENT':
+      cacheContent(data.urls).then(() => {
+        event.ports[0]?.postMessage({ success: true });
+      });
+      break;
+      
+    case 'CACHE_OFFLINE_MATERIALS':
+      cacheOfflineMaterials(data.manifest).then((result) => {
+        event.ports[0]?.postMessage(result);
+      });
+      break;
+      
+    case 'GET_CACHE_STATUS':
+      getCacheStatus().then(status => {
+        event.ports[0]?.postMessage(status);
+      });
+      break;
+      
+    case 'CLEAR_CACHE':
+      clearCache().then(() => {
+        event.ports[0]?.postMessage({ success: true });
+      });
+      break;
   }
 });
 
-// Cache exam data for offline practice
-async function cacheExamData(examType) {
-  try {
-    const cache = await caches.open(DYNAMIC_CACHE);
-    const endpoints = [
-      `/api/exams/${examType}/practice?section=reading`,
-      `/api/exams/${examType}/practice?section=writing`,
-      `/api/exams/${examType}/speaking-prompts`,
-      `/api/exams/${examType}/writing-tasks`
-    ];
-    
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetch(endpoint);
-        if (response.ok) {
-          await cache.put(endpoint, response);
-        }
-      } catch (e) {
-        console.log('[SW] Could not cache:', endpoint);
+// Cache specific content URLs
+async function cacheContent(urls) {
+  const cache = await caches.open(CONTENT_CACHE);
+  const results = [];
+  
+  for (const url of urls) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        await cache.put(url, response);
+        results.push({ url, success: true });
+      } else {
+        results.push({ url, success: false, error: response.statusText });
       }
+    } catch (error) {
+      results.push({ url, success: false, error: error.message });
     }
-    
-    // Notify the app that caching is complete
-    self.clients.matchAll().then(clients => {
-      clients.forEach(client => {
-        client.postMessage({ type: 'EXAM_CACHED', examType });
-      });
-    });
-  } catch (error) {
-    console.error('[SW] Error caching exam data:', error);
   }
+  
+  // Notify all clients
+  const clients = await self.clients.matchAll();
+  clients.forEach(client => {
+    client.postMessage({ type: 'CACHE_PROGRESS', results });
+  });
+  
+  return results;
 }
 
-// Cache library item (PDF, audio, video)
-async function cacheLibraryItem(itemUrl) {
-  try {
-    const cache = await caches.open(DYNAMIC_CACHE);
-    const response = await fetch(itemUrl);
-    
-    if (response.ok) {
-      await cache.put(itemUrl, response);
-      
-      self.clients.matchAll().then(clients => {
-        clients.forEach(client => {
-          client.postMessage({ type: 'LIBRARY_ITEM_CACHED', itemUrl });
+// Cache offline materials from manifest
+async function cacheOfflineMaterials(manifest) {
+  const cache = await caches.open(CONTENT_CACHE);
+  let cached = 0;
+  let failed = 0;
+  
+  // Cache exam questions
+  if (manifest.exams) {
+    for (const exam of manifest.exams) {
+      try {
+        const url = `/api/exams/${exam.type}/full/${exam.number}`;
+        const response = await fetch(url, {
+          headers: { 'Authorization': `Bearer ${manifest.token}` }
         });
-      });
+        if (response.ok) {
+          await cache.put(url, response);
+          cached++;
+        } else {
+          failed++;
+        }
+      } catch {
+        failed++;
+      }
     }
-  } catch (error) {
-    console.error('[SW] Error caching library item:', error);
   }
+  
+  // Cache library materials
+  if (manifest.materials) {
+    for (const material of manifest.materials) {
+      try {
+        const response = await fetch(material.url);
+        if (response.ok) {
+          await cache.put(material.url, response);
+          cached++;
+        } else {
+          failed++;
+        }
+      } catch {
+        failed++;
+      }
+    }
+  }
+  
+  return { cached, failed, total: (manifest.exams?.length || 0) + (manifest.materials?.length || 0) };
+}
+
+// Get cache status
+async function getCacheStatus() {
+  const cacheNames = await caches.keys();
+  const status = { caches: {}, totalSize: 0 };
+  
+  for (const name of cacheNames) {
+    const cache = await caches.open(name);
+    const keys = await cache.keys();
+    status.caches[name] = {
+      items: keys.length,
+      urls: keys.map(k => k.url).slice(0, 10) // First 10 URLs
+    };
+  }
+  
+  return status;
 }
 
 // Clear all caches
-async function clearAllCaches() {
+async function clearCache() {
   const cacheNames = await caches.keys();
   await Promise.all(cacheNames.map(name => caches.delete(name)));
-  
-  self.clients.matchAll().then(clients => {
-    clients.forEach(client => {
-      client.postMessage({ type: 'CACHE_CLEARED' });
-    });
-  });
+  console.log('All caches cleared');
 }
 
-// Background sync for offline submissions
+// Background sync
 self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-exam-submissions') {
-    event.waitUntil(syncExamSubmissions());
+  if (event.tag === 'sync-exam-progress') {
+    event.waitUntil(syncExamProgress());
+  }
+  if (event.tag === 'sync-offline-results') {
+    event.waitUntil(syncOfflineResults());
   }
 });
 
-async function syncExamSubmissions() {
-  // This would sync any exam submissions made while offline
-  // Implementation depends on IndexedDB storage of pending submissions
-  console.log('[SW] Syncing exam submissions...');
+async function syncExamProgress() {
+  console.log('Syncing exam progress...');
+  // Implementation: Get from IndexedDB and send to server
 }
 
-console.log('[SW] Service Worker loaded');
+async function syncOfflineResults() {
+  console.log('Syncing offline results...');
+  // Implementation: Get from IndexedDB and send to server
+}
+
+console.log('Service Worker v2: Loaded');
