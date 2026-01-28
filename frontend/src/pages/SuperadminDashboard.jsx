@@ -164,6 +164,7 @@ const SuperadminDashboard = () => {
     fetchInstitutions();
     fetchActivities();
     fetchRevenueReport();
+    fetchAlerts();
   };
 
   if (loading) {
