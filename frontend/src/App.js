@@ -121,6 +121,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* Superadmin Dashboard - Platform Overview */}
+      <Route 
+        path="/superadmin" 
+        element={
+          <ProtectedRoute allowedTypes={['admin']}>
+            <SuperadminDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Income Calculator - Dedicated page */}
       <Route 
         path="/income-calculator" 
