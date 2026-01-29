@@ -7,6 +7,7 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone, timedelta
+from motor.motor_asyncio import AsyncIOMotorClient
 import uuid
 import base64
 import zlib
@@ -14,15 +15,10 @@ import xml.etree.ElementTree as ET
 from urllib.parse import urlencode, quote
 import hashlib
 import secrets
-
-router = APIRouter(prefix="/sso", tags=["SSO"])
-
-import sys
-sys.path.append('/app/backend')
-from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import jwt
-import bcrypt
+
+router = APIRouter(prefix="/sso", tags=["SSO"])
 
 client = AsyncIOMotorClient(os.environ.get('MONGO_URL'))
 db = client[os.environ.get('DB_NAME', 'proficienthub')]
