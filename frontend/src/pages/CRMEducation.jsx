@@ -27,6 +27,9 @@ export default function CRMEducation() {
   const [showNewLead, setShowNewLead] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStage, setSelectedStage] = useState(null);
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [draggedLead, setDraggedLead] = useState(null);
+  const [dragOverStage, setDragOverStage] = useState(null);
 
   const [newLeadForm, setNewLeadForm] = useState({
     institution_name: '',
