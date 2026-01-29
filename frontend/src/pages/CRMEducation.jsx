@@ -787,6 +787,277 @@ export default function CRMEducation() {
                 </Card>
               </div>
             )}
+
+            {/* Settings View - Notification Configuration */}
+            {activeView === 'settings' && (
+              <div className="space-y-6">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Notification Settings</h2>
+                    <p className="text-slate-400 text-sm">Configure automatic notifications when leads change stages</p>
+                  </div>
+                  <Button 
+                    onClick={() => setShowNotificationConfig(true)}
+                    className="bg-indigo-600 hover:bg-indigo-700"
+                    data-testid="add-notification-btn"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Notification Rule
+                  </Button>
+                </div>
+
+                {/* Add New Notification Form */}
+                {showNotificationConfig && (
+                  <Card className="bg-slate-900 border-slate-700">
+                    <CardHeader>
+                      <CardTitle className="text-white">Create Notification Rule</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-slate-300 text-sm mb-1 block">Rule Name *</label>
+                          <Input
+                            placeholder="e.g., Hot Lead Alert"
+                            value={newNotification.name}
+                            onChange={(e) => setNewNotification({ ...newNotification, name: e.target.value })}
+                            className="bg-slate-800 border-slate-700 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-300 text-sm mb-1 block">Trigger Stage *</label>
+                          <select
+                            value={newNotification.trigger_stage}
+                            onChange={(e) => setNewNotification({ ...newNotification, trigger_stage: e.target.value })}
+                            className="w-full bg-slate-800 border border-slate-700 text-white rounded-md px-3 py-2"
+                          >
+                            {pipelineStages.map(stage => (
+                              <option key={stage.id} value={stage.id}>{stage.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-slate-300 text-sm block">When to Notify</label>
+                          <div className="flex gap-4">
+                            <label className="flex items-center gap-2 text-slate-300 text-sm cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={newNotification.notify_on_enter}
+                                onChange={(e) => setNewNotification({ ...newNotification, notify_on_enter: e.target.checked })}
+                                className="rounded bg-slate-800 border-slate-700"
+                              />
+                              On Enter
+                            </label>
+                            <label className="flex items-center gap-2 text-slate-300 text-sm cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={newNotification.notify_on_exit}
+                                onChange={(e) => setNewNotification({ ...newNotification, notify_on_exit: e.target.checked })}
+                                className="rounded bg-slate-800 border-slate-700"
+                              />
+                              On Exit
+                            </label>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-slate-300 text-sm block">Notification Channels</label>
+                          <div className="flex gap-4">
+                            {['in_app', 'email'].map(channel => (
+                              <label key={channel} className="flex items-center gap-2 text-slate-300 text-sm cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={newNotification.notification_channels.includes(channel)}
+                                  onChange={(e) => {
+                                    const channels = e.target.checked
+                                      ? [...newNotification.notification_channels, channel]
+                                      : newNotification.notification_channels.filter(c => c !== channel);
+                                    setNewNotification({ ...newNotification, notification_channels: channels });
+                                  }}
+                                  className="rounded bg-slate-800 border-slate-700"
+                                />
+                                {channel === 'in_app' ? 'In-App' : 'Email'}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-slate-300 text-sm block">Recipients</label>
+                        <div className="flex gap-4">
+                          {['owner', 'team'].map(recipient => (
+                            <label key={recipient} className="flex items-center gap-2 text-slate-300 text-sm cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={newNotification.recipients.includes(recipient)}
+                                onChange={(e) => {
+                                  const recipients = e.target.checked
+                                    ? [...newNotification.recipients, recipient]
+                                    : newNotification.recipients.filter(r => r !== recipient);
+                                  setNewNotification({ ...newNotification, recipients: recipients });
+                                }}
+                                className="rounded bg-slate-800 border-slate-700"
+                              />
+                              {recipient === 'owner' ? 'Lead Owner' : 'Entire Team'}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <label className="flex items-center gap-2 text-slate-300 text-sm cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={newNotification.include_lead_details}
+                          onChange={(e) => setNewNotification({ ...newNotification, include_lead_details: e.target.checked })}
+                          className="rounded bg-slate-800 border-slate-700"
+                        />
+                        Include lead details in notification
+                      </label>
+
+                      <div className="flex justify-end gap-3 pt-4">
+                        <Button variant="ghost" onClick={() => setShowNotificationConfig(false)} className="text-slate-400">
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={createNotificationSetting}
+                          disabled={!newNotification.name}
+                          className="bg-indigo-600 hover:bg-indigo-700"
+                        >
+                          Create Rule
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Existing Notification Rules */}
+                <div className="space-y-3">
+                  {notificationSettings.length === 0 ? (
+                    <Card className="bg-slate-900/50 border-slate-800 border-dashed">
+                      <CardContent className="p-8 text-center">
+                        <AlertCircle className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                        <h3 className="text-white font-medium mb-1">No notification rules configured</h3>
+                        <p className="text-slate-500 text-sm mb-4">Create rules to get notified when leads move between stages</p>
+                        <Button 
+                          onClick={() => setShowNotificationConfig(true)}
+                          variant="outline"
+                          className="border-slate-700 text-slate-300"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Create First Rule
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    notificationSettings.map(setting => {
+                      const stage = pipelineStages.find(s => s.id === setting.trigger_stage);
+                      return (
+                        <Card 
+                          key={setting.id} 
+                          className={`bg-slate-900 border-slate-800 ${!setting.is_active ? 'opacity-60' : ''}`}
+                          data-testid={`notification-rule-${setting.id}`}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div 
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: stage?.color || '#6366f1' }}
+                                />
+                                <div>
+                                  <h4 className="text-white font-medium">{setting.name}</h4>
+                                  <div className="flex items-center gap-2 text-slate-400 text-sm mt-1">
+                                    <span 
+                                      className="px-2 py-0.5 rounded text-xs"
+                                      style={{ backgroundColor: `${stage?.color}20`, color: stage?.color }}
+                                    >
+                                      {stage?.name}
+                                    </span>
+                                    <span>•</span>
+                                    <span>
+                                      {setting.notify_on_enter && 'On Enter'}
+                                      {setting.notify_on_enter && setting.notify_on_exit && ' & '}
+                                      {setting.notify_on_exit && 'On Exit'}
+                                    </span>
+                                    <span>•</span>
+                                    <span className="flex items-center gap-1">
+                                      {setting.notification_channels.includes('in_app') && (
+                                        <span className="text-xs bg-slate-800 px-1.5 py-0.5 rounded">App</span>
+                                      )}
+                                      {setting.notification_channels.includes('email') && (
+                                        <span className="text-xs bg-slate-800 px-1.5 py-0.5 rounded">Email</span>
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleNotificationSetting(setting.id, setting.is_active)}
+                                  className={setting.is_active ? 'text-green-400' : 'text-slate-500'}
+                                >
+                                  {setting.is_active ? (
+                                    <CheckCircle className="w-5 h-5" />
+                                  ) : (
+                                    <AlertCircle className="w-5 h-5" />
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteNotificationSetting(setting.id)}
+                                  className="text-red-400 hover:text-red-300"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Quick Setup Presets */}
+                <Card className="bg-slate-900 border-slate-800">
+                  <CardHeader>
+                    <CardTitle className="text-white text-lg">Quick Setup Presets</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-slate-400 text-sm mb-4">Click to instantly create common notification rules</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {[
+                        { name: 'Hot Lead Alert', stage: 'qualified', desc: 'Notify when lead qualifies' },
+                        { name: 'Demo Booked', stage: 'demo_scheduled', desc: 'Notify when demo is scheduled' },
+                        { name: 'New Customer!', stage: 'active', desc: 'Celebrate when lead converts' }
+                      ].map(preset => (
+                        <button
+                          key={preset.stage}
+                          onClick={() => {
+                            setNewNotification({
+                              ...newNotification,
+                              name: preset.name,
+                              trigger_stage: preset.stage
+                            });
+                            setShowNotificationConfig(true);
+                          }}
+                          className="p-4 bg-slate-800 hover:bg-slate-700 rounded-lg text-left transition-colors"
+                        >
+                          <p className="text-white font-medium">{preset.name}</p>
+                          <p className="text-slate-500 text-sm">{preset.desc}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </>
         )}
 
