@@ -2,9 +2,37 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 9.4  
+**Version:** 9.5  
 **Date:** January 29, 2026  
-**Status:** Production Ready - Enterprise Suite + CRM Notifications + ERP MRR Complete
+**Status:** Production Ready - Enterprise Suite Complete
+
+---
+
+## 🧪 Session 14.4 - January 29, 2026
+
+### Branding & Pricing Fixes (COMPLETE)
+- **Removed "Made with Emergent" badge** from landing page
+- **Fixed pricing margins**: Speaking Tests are now cheaper than Mock Exams
+  - Speaking: $2.20/test at 1000 tier
+  - Mock Exams: $2.70/exam at 1000 tier
+- **Updated page title**: "ProficientHub | AI-Powered English Exam Prep"
+
+### Real-Time Notification Bell (Enhancement - COMPLETE)
+- **Bell icon in header** with unread count badge
+- **Dropdown notification panel**:
+  - List of recent notifications
+  - Click to mark individual as read
+  - "Mark all read" button
+  - Link to CRM Notification Settings
+- **Polling**: Auto-refresh every 30 seconds for new notifications
+- **API Integration**: /api/crm-edu/notifications endpoints
+
+### Testing Results (Iteration 16)
+| Feature | Status |
+|---------|--------|
+| Emergent badge removal | ✅ VERIFIED REMOVED |
+| Pricing swap | ✅ CORRECT (Speaking < Mock) |
+| Notification bell | ✅ FULLY FUNCTIONAL |
 
 ---
 
