@@ -4232,18 +4232,18 @@ async def get_whitelabel_config(current_user: dict = Depends(get_current_user)):
 async def get_whitelabel_by_domain(domain: str):
     """Get white-label config by custom domain or subdomain (public endpoint)"""
     # Try custom domain first
-    config = await db.whitelabel_configs.find_one({"custom_domain": domain, "is_active": True})
+    config = await db.whitelabel_configs.find_one({"custom_domain": domain, "is_active": True}, {"_id": 0})
     
     if not config:
         # Try subdomain
         subdomain = domain.split('.')[0] if '.' in domain else domain
-        config = await db.whitelabel_configs.find_one({"subdomain": subdomain, "is_active": True})
+        config = await db.whitelabel_configs.find_one({"subdomain": subdomain, "is_active": True}, {"_id": 0})
     
     if not config:
         return {"config": None, "is_default": True}
     
     # Get institution info
-    institution = await db.users.find_one({"id": config["institution_id"]})
+    institution = await db.users.find_one({"id": config["institution_id"]}, {"_id": 0})
     
     return {
         "config": {
