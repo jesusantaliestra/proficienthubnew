@@ -490,7 +490,7 @@ export default function Landing() {
                 
                 {/* Exam Types Selection */}
                 <div className="mt-6 bg-gray-50 rounded-xl p-4">
-                  <Label className="text-gray-700 font-semibold block mb-3">Which exam types? (doesn't affect price)</Label>
+                  <Label className="text-gray-700 font-semibold block mb-3">Which exam types? (does not affect price)</Label>
                   <div className="flex flex-wrap gap-2">
                     {availableExamTypes.map((examType) => (
                       <button
