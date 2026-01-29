@@ -418,10 +418,16 @@ export default function CRMEducation() {
                 <div className="flex gap-4 min-w-max">
                   {pipelineStages.filter(s => s.id !== 'churned' && s.id !== 'lost').map(stage => {
                     const stageLeads = getLeadsByStage(stage.id);
+                    const isDragOver = dragOverStage === stage.id;
                     return (
                       <div 
                         key={stage.id}
-                        className="w-72 flex-shrink-0"
+                        className={`w-72 flex-shrink-0 transition-all duration-200 ${
+                          isDragOver ? 'scale-[1.02]' : ''
+                        }`}
+                        onDragOver={(e) => handleDragOver(e, stage.id)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, stage.id)}
                       >
                         <div 
                           className="flex items-center justify-between mb-3 px-2"
@@ -437,43 +443,67 @@ export default function CRMEducation() {
                           <span className="text-slate-500 text-sm">{stageLeads.length}</span>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className={`space-y-2 min-h-[200px] p-2 rounded-lg transition-colors ${
+                          isDragOver ? 'bg-indigo-600/10 border-2 border-dashed border-indigo-500' : 'border-2 border-transparent'
+                        }`}>
                           {stageLeads.length === 0 ? (
                             <div className="bg-slate-900/50 border border-dashed border-slate-700 rounded-lg p-4 text-center">
-                              <p className="text-slate-500 text-sm">No leads</p>
+                              <p className="text-slate-500 text-sm">Drop leads here</p>
                             </div>
                           ) : (
                             stageLeads.map(lead => (
                               <Card 
                                 key={lead.id}
-                                className="bg-slate-900 border-slate-800 hover:border-slate-700 transition-colors cursor-pointer"
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, lead)}
+                                onDragEnd={handleDragEnd}
+                                onClick={() => setSelectedLead(lead)}
+                                className={`bg-slate-900 border-slate-800 hover:border-indigo-500/50 transition-all cursor-grab active:cursor-grabbing ${
+                                  draggedLead?.id === lead.id ? 'opacity-50 scale-95' : ''
+                                }`}
+                                data-testid={`lead-card-${lead.id}`}
                               >
                                 <CardContent className="p-3">
                                   <div className="flex items-start justify-between mb-2">
-                                    <h4 className="text-white font-medium text-sm line-clamp-1">
-                                      {lead.institution_name}
-                                    </h4>
+                                    <div className="flex items-center gap-2">
+                                      <GripVertical className="w-3 h-3 text-slate-600" />
+                                      <h4 className="text-white font-medium text-sm line-clamp-1">
+                                        {lead.institution_name}
+                                      </h4>
+                                    </div>
                                     <span className={`text-xs px-1.5 py-0.5 rounded ${getScoreColor(lead.lead_score)}`}>
-                                      {lead.lead_score}
+                                      {lead.lead_score || '-'}
                                     </span>
                                   </div>
-                                  <p className="text-slate-400 text-xs mb-2">{lead.contact_name}</p>
-                                  <div className="flex items-center gap-2 text-slate-500 text-xs">
+                                  <p className="text-slate-400 text-xs mb-2 pl-5">{lead.contact_name}</p>
+                                  <div className="flex items-center gap-2 text-slate-500 text-xs pl-5">
                                     <Building className="w-3 h-3" />
                                     <span>{lead.estimated_students || 0} students</span>
+                                    {lead.country && (
+                                      <>
+                                        <Globe className="w-3 h-3 ml-2" />
+                                        <span>{lead.country}</span>
+                                      </>
+                                    )}
                                   </div>
                                   {lead.exam_types_interested?.length > 0 && (
-                                    <div className="flex flex-wrap gap-1 mt-2">
+                                    <div className="flex flex-wrap gap-1 mt-2 pl-5">
                                       {lead.exam_types_interested.slice(0, 3).map(exam => (
                                         <span 
                                           key={exam}
-                                          className="text-xs bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded"
+                                          className="text-xs bg-indigo-600/20 text-indigo-300 px-1.5 py-0.5 rounded"
                                         >
-                                          {exam}
+                                          {exam.toUpperCase()}
                                         </span>
                                       ))}
+                                      {lead.exam_types_interested.length > 3 && (
+                                        <span className="text-xs text-slate-500">+{lead.exam_types_interested.length - 3}</span>
+                                      )}
                                     </div>
                                   )}
+                                </CardContent>
+                              </Card>
+                            ))
                                 </CardContent>
                               </Card>
                             ))
