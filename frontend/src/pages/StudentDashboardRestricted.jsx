@@ -10,7 +10,7 @@ import {
   GraduationCap, BookOpen, Brain, Mic, BarChart3, Clock, Target, Award,
   ChevronRight, Play, CheckCircle, TrendingUp, Calendar, LogOut, Settings,
   MessageSquare, Headphones, PenTool, BookMarked, Video, Star, Zap, Trophy,
-  Flame, Gift, Users, Lock
+  Flame, Gift, Users, Lock, Crown
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import axios from 'axios';
