@@ -838,13 +838,13 @@ export default function Landing() {
                   </thead>
                   <tbody className="text-sm">
                     {[
-                      { tests: 100, price: 350, perTest: 3.50 },
-                      { tests: 500, price: 1500, perTest: 3.00 },
-                      { tests: 1000, price: 2700, perTest: 2.70, popular: true },
-                      { tests: 5000, price: 11500, perTest: 2.30 },
-                      { tests: 10000, price: 20000, perTest: 2.00 },
-                      { tests: 50000, price: 85000, perTest: 1.70 },
-                      { tests: 100000, price: 150000, perTest: 1.50 }
+                      { tests: 100, price: 280, perTest: 2.80 },
+                      { tests: 500, price: 1250, perTest: 2.50 },
+                      { tests: 1000, price: 2200, perTest: 2.20, popular: true },
+                      { tests: 5000, price: 9500, perTest: 1.90 },
+                      { tests: 10000, price: 17000, perTest: 1.70 },
+                      { tests: 50000, price: 75000, perTest: 1.50 },
+                      { tests: 100000, price: 130000, perTest: 1.30 }
                     ].map((pkg) => (
                       <tr key={pkg.tests} className={`border-b ${pkg.popular ? 'bg-purple-50' : ''}`}>
                         <td className="py-2 font-semibold">
@@ -880,13 +880,13 @@ export default function Landing() {
                   </thead>
                   <tbody className="text-sm">
                     {[
-                      { tests: 100, price: 280, perTest: 2.80 },
-                      { tests: 500, price: 1250, perTest: 2.50 },
-                      { tests: 1000, price: 2200, perTest: 2.20, popular: true },
-                      { tests: 5000, price: 9500, perTest: 1.90 },
-                      { tests: 10000, price: 17000, perTest: 1.70 },
-                      { tests: 50000, price: 75000, perTest: 1.50 },
-                      { tests: 100000, price: 130000, perTest: 1.30 }
+                      { tests: 100, price: 350, perTest: 3.50 },
+                      { tests: 500, price: 1500, perTest: 3.00 },
+                      { tests: 1000, price: 2700, perTest: 2.70, popular: true },
+                      { tests: 5000, price: 11500, perTest: 2.30 },
+                      { tests: 10000, price: 20000, perTest: 2.00 },
+                      { tests: 50000, price: 85000, perTest: 1.70 },
+                      { tests: 100000, price: 150000, perTest: 1.50 }
                     ].map((pkg) => (
                       <tr key={pkg.tests} className={`border-b ${pkg.popular ? 'bg-green-50' : ''}`}>
                         <td className="py-2 font-semibold">
