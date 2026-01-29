@@ -41,6 +41,11 @@ export default function CommunityHub() {
   const [groups, setGroups] = useState([]);
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const [newGroup, setNewGroup] = useState({ name: '', description: '', exam_type: 'IELTS', max_members: 20, is_private: false });
+  
+  // Community Gamification State
+  const [gamificationEnabled, setGamificationEnabled] = useState(false);
+  const [communityProfile, setCommunityProfile] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([]);
 
   const axiosConfig = {
     headers: { Authorization: `Bearer ${token}` }
@@ -50,7 +55,28 @@ export default function CommunityHub() {
     fetchCategories();
     fetchPosts();
     fetchGroups();
+    fetchGamificationData();
   }, [selectedCategory, sortBy]);
+
+  const fetchGamificationData = async () => {
+    try {
+      const [profileRes, leaderboardRes] = await Promise.all([
+        axios.get(`${API_URL}/community/gamification/profile`, axiosConfig),
+        axios.get(`${API_URL}/community/gamification/leaderboard?limit=5`, axiosConfig)
+      ]);
+      
+      if (profileRes.data.enabled) {
+        setGamificationEnabled(true);
+        setCommunityProfile(profileRes.data.profile);
+      }
+      
+      if (leaderboardRes.data.enabled && leaderboardRes.data.leaderboard) {
+        setLeaderboard(leaderboardRes.data.leaderboard);
+      }
+    } catch (error) {
+      console.error('Failed to fetch gamification data:', error);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
