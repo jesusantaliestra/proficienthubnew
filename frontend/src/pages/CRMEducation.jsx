@@ -504,9 +504,6 @@ export default function CRMEducation() {
                                 </CardContent>
                               </Card>
                             ))
-                                </CardContent>
-                              </Card>
-                            ))
                           )}
                         </div>
                       </div>
