@@ -4211,7 +4211,7 @@ async def get_whitelabel_config(current_user: dict = Depends(get_current_user)):
     """Get white-label configuration for current institution"""
     institution_id = current_user["id"] if current_user["user_type"] == "institution" else current_user.get("institution_id")
     
-    config = await db.whitelabel_configs.find_one({"institution_id": institution_id})
+    config = await db.whitelabel_configs.find_one({"institution_id": institution_id}, {"_id": 0})
     
     if not config:
         # Return default config
