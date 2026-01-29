@@ -2,9 +2,40 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 9.3  
+**Version:** 9.4  
 **Date:** January 29, 2026  
-**Status:** Production Ready - Enterprise Suite + CRM Enhancements Complete
+**Status:** Production Ready - Enterprise Suite + CRM Notifications + ERP MRR Complete
+
+---
+
+## 🧪 Session 14.3 - January 29, 2026
+
+### Configurable Notifications System (P2 - COMPLETE)
+- **Notification Settings API**: CRUD endpoints for stage-based notification rules
+- **Configurable Options**:
+  - Trigger stage selection
+  - On Enter / On Exit triggers
+  - Notification channels: In-App, Email
+  - Recipients: Lead Owner, Entire Team
+  - Include lead details option
+- **Quick Setup Presets**: Hot Lead Alert, Demo Booked, New Customer
+- **Automatic Trigger**: Notifications created when leads change stages
+
+### ERP MRR Improvements (P2 - COMPLETE)
+- **Real MRR Calculation**: From subscription plan_price and billing_interval
+- **Metrics Display**:
+  - Monthly Revenue: $5,727.67
+  - ARR: $68,732.00
+  - Avg MRR/Customer: $954.61
+- **MRR by Plan**: Breakdown by subscription tier
+
+### Testing Results (Iteration 15)
+| Component | Backend Tests | Frontend Tests | Status |
+|-----------|--------------|----------------|--------|
+| CRM Notifications | 7 endpoints ✅ | All features ✅ | PASS |
+| ERP MRR | 4 endpoints ✅ | Data verified ✅ | PASS |
+
+**Bug Fixed**: NoneType error in calculate_edu_lead_score when contact_role is None
 
 ---
 
