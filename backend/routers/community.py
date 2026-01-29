@@ -274,6 +274,12 @@ async def mark_solution(
         {"$set": {"is_solved": True}}
     )
     
+    # Award solution points to reply author
+    reply = await db.forum_replies.find_one({"id": reply_id})
+    if reply:
+        institution_id = current_user.get("institution_id") or current_user["id"]
+        await award_community_points(reply["author_id"], institution_id, "solution")
+    
     return {"message": "Solution marked"}
 
 # ==================== STUDY GROUPS ====================
