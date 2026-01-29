@@ -1,0 +1,103 @@
+{
+  "summary": "White-Label Backend and Frontend testing completed. All 20 backend tests passed. Frontend White-Label settings page works correctly with preset themes, domain configuration, and branding options. Fixed 2 bugs: MongoDB ObjectId serialization error in GET /api/whitelabel/config and missing /api prefix in frontend API calls.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "GET /api/whitelabel/themes - Returns 6 preset themes (Classic, Ocean Blue, Forest Green, Sunset, Royal Purple, Midnight)",
+    "GET /api/whitelabel/themes - Each theme has id, name, preview_url, colors",
+    "GET /api/whitelabel/themes - Midnight theme has dark mode colors (background, surface, text)",
+    "GET /api/whitelabel/config - Returns config for authenticated institution",
+    "POST /api/whitelabel/config - Creates white-label config",
+    "PUT /api/whitelabel/config - Updates white-label config",
+    "POST /api/whitelabel/apply-theme/{theme_id} - Applies Ocean theme colors",
+    "POST /api/whitelabel/apply-theme/invalid - Returns 404 for invalid theme",
+    "POST /api/whitelabel/apply-theme - All 6 themes can be applied",
+    "GET /api/whitelabel/portal/{identifier} - Returns portal config by subdomain",
+    "GET /api/whitelabel/portal/invalid - Returns 404 for invalid identifier",
+    "GET /api/whitelabel/css/{identifier} - Returns CSS stylesheet",
+    "GET /api/whitelabel/css/invalid - Returns default CSS for invalid identifier",
+    "GET /api/whitelabel/email-templates - Returns email templates",
+    "GET /api/whitelabel/email-templates - Templates have required fields",
+    "GET /api/whitelabel/email-templates - Requires authentication",
+    "POST /api/whitelabel/verify-domain - Domain verification (MOCKED)",
+    "GET /api/whitelabel/dns-instructions - DNS instructions",
+    "GET /api/whitelabel/analytics - Returns analytics data",
+    "Frontend - /institution/whitelabel page loads correctly",
+    "Frontend - Domain tab shows Custom Domain and Subdomain sections",
+    "Frontend - Branding tab shows 6 preset themes",
+    "Frontend - Clicking preset theme applies it successfully",
+    "Frontend - Brand Colors section with color pickers",
+    "Frontend - Display Options with toggles"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_whitelabel.py",
+    "/app/test_reports/pytest/whitelabel_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "FIXED: MongoDB ObjectId serialization error in GET /api/whitelabel/config (server.py line 4214) - added {\"_id\": 0} projection",
+    "FIXED: Frontend API calls missing /api prefix in WhiteLabelSettings.jsx",
+    "FIXED: apply-theme endpoint using upsert=True without creating proper config document - now creates full config with id, subdomain, platform_name",
+    "GOOD: Preset themes implementation with 6 themes including dark mode (Midnight)",
+    "GOOD: CSS generation with custom properties",
+    "GOOD: Email templates with default templates",
+    "NOTE: Domain verification is MOCKED (simulates DNS verification)"
+  ],
+  "updated_files": [
+    "/app/backend/server.py - Fixed MongoDB ObjectId serialization in whitelabel config endpoints",
+    "/app/backend/routers/whitelabel.py - Fixed apply-theme endpoint to create proper config",
+    "/app/frontend/src/pages/WhiteLabelSettings.jsx - Fixed API calls to include /api prefix"
+  ],
+  "success_rate": {
+    "backend": "100% (20/20 tests passed)",
+    "frontend": "100% (all features working)"
+  },
+  "test_credentials": {
+    "institution": "demo_academy@test.com / Demo123!"
+  },
+  "seed_data_creation": "White-label config created for Demo Language Academy with Forest Green theme applied",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "White-Label feature is fully functional. Backend has 2 implementations - one in server.py and one in routers/whitelabel.py. The routers/whitelabel.py has the apply-theme endpoint. All API calls need /api prefix. Domain verification is MOCKED.",
+  "mocked_apis": {
+    "POST /api/whitelabel/verify-domain": "Simulates DNS verification - always returns success"
+  },
+  "features_verified": {
+    "white_label_backend": {
+      "status": "FULLY FUNCTIONAL",
+      "endpoints_tested": [
+        "GET /api/whitelabel/themes",
+        "GET /api/whitelabel/config",
+        "POST /api/whitelabel/config",
+        "PUT /api/whitelabel/config",
+        "POST /api/whitelabel/apply-theme/{theme_id}",
+        "GET /api/whitelabel/portal/{identifier}",
+        "GET /api/whitelabel/css/{identifier}",
+        "GET /api/whitelabel/email-templates",
+        "POST /api/whitelabel/verify-domain",
+        "GET /api/whitelabel/dns-instructions",
+        "GET /api/whitelabel/analytics"
+      ]
+    },
+    "white_label_frontend": {
+      "status": "FULLY FUNCTIONAL",
+      "route": "/institution/whitelabel",
+      "tabs_tested": ["Domain", "Branding"],
+      "features_tested": [
+        "Page loads correctly",
+        "Domain tab with Custom Domain and Subdomain sections",
+        "Branding tab with 6 preset themes",
+        "Theme application works",
+        "Color pickers work",
+        "Display options toggles"
+      ]
+    }
+  }
+}
