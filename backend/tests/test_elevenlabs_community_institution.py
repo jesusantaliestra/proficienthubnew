@@ -8,6 +8,7 @@ Iteration 25 - Tests for:
 import pytest
 import requests
 import os
+import uuid
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
@@ -16,28 +17,31 @@ INSTITUTION_EMAIL = "demo_academy@test.com"
 INSTITUTION_PASSWORD = "Demo123!"
 
 
-class TestSetup:
-    """Setup fixtures for tests"""
-    
-    @pytest.fixture(scope="class")
-    def institution_token(self):
-        """Get institution auth token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": INSTITUTION_EMAIL,
-            "password": INSTITUTION_PASSWORD
-        })
-        if response.status_code == 200:
-            data = response.json()
-            return data.get("token")
-        pytest.skip(f"Institution login failed: {response.status_code} - {response.text}")
-    
-    @pytest.fixture(scope="class")
-    def auth_headers(self, institution_token):
-        """Get auth headers"""
-        return {"Authorization": f"Bearer {institution_token}"}
+def get_auth_token():
+    """Get institution auth token"""
+    response = requests.post(f"{BASE_URL}/api/auth/login", json={
+        "email": INSTITUTION_EMAIL,
+        "password": INSTITUTION_PASSWORD
+    })
+    if response.status_code == 200:
+        data = response.json()
+        # API returns access_token, not token
+        return data.get("access_token") or data.get("token")
+    return None
 
 
-class TestElevenLabsConfig(TestSetup):
+@pytest.fixture(scope="module")
+def auth_headers():
+    """Get auth headers for all tests"""
+    token = get_auth_token()
+    if not token:
+        pytest.skip("Institution login failed")
+    return {"Authorization": f"Bearer {token}"}
+
+
+# ==================== ELEVENLABS CONFIG TESTS ====================
+
+class TestElevenLabsConfig:
     """Test ElevenLabs configuration endpoints"""
     
     def test_get_elevenlabs_config(self, auth_headers):
@@ -98,7 +102,9 @@ class TestElevenLabsConfig(TestSetup):
         print(f"✓ ElevenLabs config update verified - enabled={config['enabled']}, limit={config['monthly_character_limit']}")
 
 
-class TestElevenLabsVoices(TestSetup):
+# ==================== ELEVENLABS VOICES TESTS ====================
+
+class TestElevenLabsVoices:
     """Test ElevenLabs voices endpoints"""
     
     def test_get_recommended_voices(self):
@@ -129,7 +135,9 @@ class TestElevenLabsVoices(TestSetup):
         print(f"✓ Got 5 recommended voices: {voice_names}")
 
 
-class TestElevenLabsUsage(TestSetup):
+# ==================== ELEVENLABS USAGE TESTS ====================
+
+class TestElevenLabsUsage:
     """Test ElevenLabs usage endpoint"""
     
     def test_get_usage_statistics(self, auth_headers):
@@ -157,7 +165,9 @@ class TestElevenLabsUsage(TestSetup):
         print(f"✓ Usage stats: {data['characters_used']}/{data['monthly_limit']} chars ({data['percentage_used']}%), {data['generations_count']} generations")
 
 
-class TestCommunityInstitutionFiltering(TestSetup):
+# ==================== COMMUNITY INSTITUTION FILTERING TESTS ====================
+
+class TestCommunityInstitutionFiltering:
     """Test Community posts and groups are filtered by institution_id"""
     
     def test_forum_posts_filtered_by_institution(self, auth_headers):
@@ -204,7 +214,6 @@ class TestCommunityInstitutionFiltering(TestSetup):
     
     def test_create_post_has_institution_id(self, auth_headers):
         """POST /api/community/forum/posts - Created post has institution_id"""
-        import uuid
         test_title = f"TEST_ElevenLabs_Post_{uuid.uuid4().hex[:8]}"
         
         response = requests.post(
@@ -238,7 +247,6 @@ class TestCommunityInstitutionFiltering(TestSetup):
     
     def test_create_group_has_institution_id(self, auth_headers):
         """POST /api/community/groups - Created group has institution_id"""
-        import uuid
         test_name = f"TEST_ElevenLabs_Group_{uuid.uuid4().hex[:8]}"
         
         response = requests.post(
@@ -272,7 +280,9 @@ class TestCommunityInstitutionFiltering(TestSetup):
         print(f"✓ Created group has institution_id: {group_data['institution_id']}")
 
 
-class TestGamificationPerInstitution(TestSetup):
+# ==================== GAMIFICATION PER INSTITUTION TESTS ====================
+
+class TestGamificationPerInstitution:
     """Test gamification profiles are per institution"""
     
     def test_gamification_profile_has_institution_id(self, auth_headers):
@@ -315,12 +325,13 @@ class TestGamificationPerInstitution(TestSetup):
             print(f"✓ Gamification leaderboard works - {len(data['leaderboard'])} entries")
 
 
+# ==================== MOBILE BUILD FILE TEST ====================
+
 class TestMobileBuildFile:
     """Test MOBILE_BUILD.md file exists"""
     
     def test_mobile_build_file_exists(self):
         """Verify MOBILE_BUILD.md file exists with Capacitor instructions"""
-        import os
         file_path = "/app/MOBILE_BUILD.md"
         
         assert os.path.exists(file_path), f"MOBILE_BUILD.md should exist at {file_path}"
