@@ -667,9 +667,205 @@ export default function CRMEducation() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Education-Specific Metrics */}
+                <Card className="bg-slate-900 border-slate-800 md:col-span-2 lg:col-span-4">
+                  <CardHeader>
+                    <CardTitle className="text-white text-lg flex items-center gap-2">
+                      <GraduationCap className="w-5 h-5 text-indigo-400" />
+                      Conversion by Exam Type
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                      {examTypes.map(exam => {
+                        const metrics = getEducationMetrics();
+                        const examData = metrics.examConversions[exam] || { total: 0, converted: 0, rate: 0 };
+                        return (
+                          <div key={exam} className="bg-slate-800 rounded-lg p-3 text-center">
+                            <p className="text-indigo-400 font-bold text-sm mb-1">{exam.toUpperCase()}</p>
+                            <p className="text-2xl font-bold text-white">{examData.rate}%</p>
+                            <p className="text-slate-500 text-xs">{examData.converted}/{examData.total} leads</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
           </>
+        )}
+
+        {/* Lead Detail Modal */}
+        {selectedLead && (
+          <div 
+            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedLead(null)}
+          >
+            <div 
+              className="bg-slate-900 rounded-xl border border-slate-700 w-full max-w-2xl max-h-[80vh] overflow-y-auto"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-slate-900 border-b border-slate-800 p-4 flex items-start justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white">{selectedLead.institution_name}</h2>
+                  <p className="text-slate-400 text-sm">{selectedLead.contact_name} · {selectedLead.contact_role}</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedLead(null)}>
+                  <X className="w-5 h-5 text-slate-400" />
+                </Button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-4 space-y-6">
+                {/* Contact Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <Mail className="w-4 h-4 text-slate-500" />
+                    <span className="text-sm">{selectedLead.contact_email}</span>
+                  </div>
+                  {selectedLead.contact_phone && (
+                    <div className="flex items-center gap-3 text-slate-300">
+                      <Phone className="w-4 h-4 text-slate-500" />
+                      <span className="text-sm">{selectedLead.contact_phone}</span>
+                    </div>
+                  )}
+                  {selectedLead.country && (
+                    <div className="flex items-center gap-3 text-slate-300">
+                      <MapPin className="w-4 h-4 text-slate-500" />
+                      <span className="text-sm">{selectedLead.country}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <Users className="w-4 h-4 text-slate-500" />
+                    <span className="text-sm">{selectedLead.estimated_students || 0} students</span>
+                  </div>
+                </div>
+
+                {/* Stage Selector */}
+                <div>
+                  <label className="text-slate-400 text-sm mb-2 block">Pipeline Stage</label>
+                  <div className="flex flex-wrap gap-2">
+                    {pipelineStages.filter(s => s.id !== 'churned' && s.id !== 'lost').map(stage => (
+                      <button
+                        key={stage.id}
+                        onClick={() => {
+                          if (stage.id !== selectedLead.stage) {
+                            updateLeadStage(selectedLead.id, stage.id);
+                            setSelectedLead({ ...selectedLead, stage: stage.id });
+                          }
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                          selectedLead.stage === stage.id
+                            ? 'ring-2 ring-offset-2 ring-offset-slate-900'
+                            : 'opacity-60 hover:opacity-100'
+                        }`}
+                        style={{ 
+                          backgroundColor: `${stage.color}20`,
+                          color: stage.color,
+                          ringColor: stage.color
+                        }}
+                      >
+                        {stage.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Exam Types */}
+                {selectedLead.exam_types_interested?.length > 0 && (
+                  <div>
+                    <label className="text-slate-400 text-sm mb-2 block">Exam Types Interested</label>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedLead.exam_types_interested.map(exam => (
+                        <span 
+                          key={exam}
+                          className="px-3 py-1.5 bg-indigo-600/20 text-indigo-300 rounded-lg text-sm font-medium"
+                        >
+                          {exam.toUpperCase()}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Lead Score & Value */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-slate-800 rounded-lg p-4 text-center">
+                    <p className="text-slate-400 text-xs mb-1">Lead Score</p>
+                    <p className={`text-2xl font-bold ${getScoreColor(selectedLead.lead_score).split(' ')[0]}`}>
+                      {selectedLead.lead_score || '-'}
+                    </p>
+                  </div>
+                  <div className="bg-slate-800 rounded-lg p-4 text-center">
+                    <p className="text-slate-400 text-xs mb-1">Est. Value</p>
+                    <p className="text-2xl font-bold text-green-400">
+                      ${(selectedLead.estimated_value || 0).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="bg-slate-800 rounded-lg p-4 text-center">
+                    <p className="text-slate-400 text-xs mb-1">Source</p>
+                    <p className="text-lg font-medium text-white capitalize">
+                      {selectedLead.source?.replace('_', ' ') || '-'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                {selectedLead.notes && (
+                  <div>
+                    <label className="text-slate-400 text-sm mb-2 block">Notes</label>
+                    <p className="text-slate-300 text-sm bg-slate-800 rounded-lg p-3">
+                      {selectedLead.notes}
+                    </p>
+                  </div>
+                )}
+
+                {/* Activity Timeline */}
+                {selectedLead.activities?.length > 0 && (
+                  <div>
+                    <label className="text-slate-400 text-sm mb-2 block flex items-center gap-2">
+                      <Activity className="w-4 h-4" />
+                      Recent Activity
+                    </label>
+                    <div className="space-y-2">
+                      {selectedLead.activities.slice(0, 5).map((activity, idx) => (
+                        <div key={idx} className="flex gap-3 text-sm">
+                          <div className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-slate-300">{activity.content}</p>
+                            <p className="text-slate-500 text-xs">
+                              {new Date(activity.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="sticky bottom-0 bg-slate-900 border-t border-slate-800 p-4 flex justify-between">
+                <Button variant="ghost" className="text-red-400 hover:text-red-300 hover:bg-red-500/10">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Lead
+                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="border-slate-700 text-slate-300">
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Add Note
+                  </Button>
+                  <Button className="bg-indigo-600 hover:bg-indigo-700">
+                    <Phone className="w-4 h-4 mr-2" />
+                    Schedule Call
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
