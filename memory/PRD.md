@@ -2,9 +2,28 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 9.2  
+**Version:** 9.3  
 **Date:** January 29, 2026  
-**Status:** Production Ready - Enterprise Suite Fully Tested
+**Status:** Production Ready - Enterprise Suite + CRM Enhancements Complete
+
+---
+
+## 🧪 Session 14.2 - January 29, 2026
+
+### CRM Education Enhancements (P2 - COMPLETE)
+- **Drag-and-Drop Pipeline**: HTML5 native draggable with visual feedback
+- **Lead Detail Modal**: Opens on card click with full lead information
+- **Stage Change from Modal**: Click stage to move lead with toast notification
+- **Education-Specific Analytics**: Conversion rates by exam type (IELTS, TOEFL, PTE, OET, Cambridge, CELPIP, TOEIC)
+- **Demo Data Seeded**: 18 leads, 21 invoices, 6 subscriptions
+
+### Testing Results (Iteration 14)
+| Component | Backend Tests | Frontend Tests | Status |
+|-----------|--------------|----------------|--------|
+| CRM Education | 17 endpoints ✅ | All features ✅ | PASS |
+| ERP Dashboard | 4 endpoints ✅ | Data display ✅ | PASS |
+
+**Test Results**: 17/17 backend tests passed (100%), all frontend features verified
 
 ---
 
