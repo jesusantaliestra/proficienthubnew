@@ -641,3 +641,173 @@ async def get_revenue_forecast(
         "pipeline_breakdown": pipeline_details,
         "assumptions": "Based on historical conversion rates per stage"
     }
+
+
+# ==================== NOTIFICATION SETTINGS ====================
+
+class NotificationSettingCreate(BaseModel):
+    name: str
+    trigger_stage: str  # Stage that triggers notification
+    notify_on_enter: bool = True  # Notify when lead enters this stage
+    notify_on_exit: bool = False  # Notify when lead exits this stage
+    notification_channels: List[str] = ["in_app"]  # in_app, email, sms
+    recipients: List[str] = []  # user_ids or "owner", "team"
+    email_template: Optional[str] = None
+    include_lead_details: bool = True
+    is_active: bool = True
+
+class NotificationSettingsUpdate(BaseModel):
+    name: Optional[str] = None
+    notify_on_enter: Optional[bool] = None
+    notify_on_exit: Optional[bool] = None
+    notification_channels: Optional[List[str]] = None
+    recipients: Optional[List[str]] = None
+    email_template: Optional[str] = None
+    include_lead_details: Optional[bool] = None
+    is_active: Optional[bool] = None
+
+@router.post("/notification-settings")
+async def create_notification_setting(
+    setting: NotificationSettingCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a stage notification setting"""
+    if current_user["user_type"] not in ["institution", "admin"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    setting_id = str(uuid.uuid4())
+    
+    setting_doc = {
+        "id": setting_id,
+        "institution_id": current_user["id"],
+        "name": setting.name,
+        "trigger_stage": setting.trigger_stage,
+        "notify_on_enter": setting.notify_on_enter,
+        "notify_on_exit": setting.notify_on_exit,
+        "notification_channels": setting.notification_channels,
+        "recipients": setting.recipients,
+        "email_template": setting.email_template,
+        "include_lead_details": setting.include_lead_details,
+        "is_active": setting.is_active,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.crm_notification_settings.insert_one(setting_doc)
+    
+    return {"id": setting_id, "message": "Notification setting created"}
+
+@router.get("/notification-settings")
+async def list_notification_settings(
+    current_user: dict = Depends(get_current_user)
+):
+    """List all notification settings"""
+    settings = await db.crm_notification_settings.find(
+        {"institution_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return {"settings": settings, "stages": EDU_PIPELINE_STAGES}
+
+@router.get("/notification-settings/{setting_id}")
+async def get_notification_setting(
+    setting_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get a specific notification setting"""
+    setting = await db.crm_notification_settings.find_one(
+        {"id": setting_id, "institution_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    if not setting:
+        raise HTTPException(status_code=404, detail="Setting not found")
+    
+    return setting
+
+@router.patch("/notification-settings/{setting_id}")
+async def update_notification_setting(
+    setting_id: str,
+    updates: NotificationSettingsUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update a notification setting"""
+    update_dict = {k: v for k, v in updates.dict().items() if v is not None}
+    update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.crm_notification_settings.update_one(
+        {"id": setting_id, "institution_id": current_user["id"]},
+        {"$set": update_dict}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Setting not found")
+    
+    return {"message": "Setting updated"}
+
+@router.delete("/notification-settings/{setting_id}")
+async def delete_notification_setting(
+    setting_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete a notification setting"""
+    result = await db.crm_notification_settings.delete_one(
+        {"id": setting_id, "institution_id": current_user["id"]}
+    )
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Setting not found")
+    
+    return {"message": "Setting deleted"}
+
+@router.get("/notifications")
+async def get_user_notifications(
+    unread_only: bool = False,
+    limit: int = 50,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get notifications for current user"""
+    query = {"user_id": current_user["id"]}
+    
+    if unread_only:
+        query["read"] = False
+    
+    notifications = await db.notifications.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    unread_count = await db.notifications.count_documents({
+        "user_id": current_user["id"],
+        "read": False
+    })
+    
+    return {
+        "notifications": notifications,
+        "unread_count": unread_count
+    }
+
+@router.patch("/notifications/{notification_id}/read")
+async def mark_notification_read(
+    notification_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Mark a notification as read"""
+    await db.notifications.update_one(
+        {"id": notification_id, "user_id": current_user["id"]},
+        {"$set": {"read": True, "read_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Notification marked as read"}
+
+@router.post("/notifications/mark-all-read")
+async def mark_all_notifications_read(
+    current_user: dict = Depends(get_current_user)
+):
+    """Mark all notifications as read"""
+    await db.notifications.update_many(
+        {"user_id": current_user["id"], "read": False},
+        {"$set": {"read": True, "read_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "All notifications marked as read"}
