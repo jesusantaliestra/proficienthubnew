@@ -614,10 +614,10 @@ export default function StudentDashboardRestricted() {
                               <div className="w-full bg-slate-700 rounded-full h-2">
                                 <div 
                                   className="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all"
-                                  style={{ width: `${badge.progress}%` }}
+                                  style={{ width: `${Math.round(badge.progress)}%` }}
                                 />
                               </div>
-                              <p className="text-xs text-slate-500 mt-1">{badge.progress}% complete</p>
+                              <p className="text-xs text-slate-500 mt-1">{Math.round(badge.progress)}% complete</p>
                             </div>
                           </div>
                         </CardContent>
@@ -727,7 +727,7 @@ export default function StudentDashboardRestricted() {
                           <p className="text-sm text-slate-400">{entry.exams_completed || 0} exams completed</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-amber-400">{entry.points} pts</p>
+                          <p className="font-bold text-amber-400">{entry.points || 0} pts</p>
                           <p className="text-sm text-slate-500">Avg: {entry.avg_score || 0}%</p>
                         </div>
                       </div>
