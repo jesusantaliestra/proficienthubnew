@@ -235,6 +235,46 @@ function AppRoutes() {
       {/* Dashboard redirect */}
       <Route path="/dashboard" element={<Navigate to="/student/dashboard" replace />} />
       
+      {/* Enterprise Routes - API Keys */}
+      <Route 
+        path="/institution/api-keys" 
+        element={
+          <ProtectedRoute allowedTypes={['institution', 'admin']}>
+            <APIKeysManager />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Enterprise Routes - Integrations Hub */}
+      <Route 
+        path="/institution/integrations" 
+        element={
+          <ProtectedRoute allowedTypes={['institution', 'admin']}>
+            <IntegrationsHub />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Enterprise Routes - ERP Dashboard */}
+      <Route 
+        path="/institution/erp" 
+        element={
+          <ProtectedRoute allowedTypes={['institution', 'admin']}>
+            <ERPDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Enterprise Routes - CRM Education */}
+      <Route 
+        path="/institution/crm" 
+        element={
+          <ProtectedRoute allowedTypes={['institution', 'admin']}>
+            <CRMEducation />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Catch all - redirect to landing */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
