@@ -71,8 +71,8 @@ export default function Landing() {
     speakingTests: 50,
     mockExams: 50,
     writingSellPrice: 5.0,
-    speakingSellPrice: 7.0,
-    mockExamSellPrice: 10.0
+    speakingSellPrice: 6.0,
+    mockExamSellPrice: 8.0
   });
   const [monetizationResult, setMonetizationResult] = useState(null);
 
