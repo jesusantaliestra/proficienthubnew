@@ -52,6 +52,17 @@ export const AuthProvider = ({ children }) => {
     return userData;
   };
 
+  // Login with token (used for SSO callback)
+  const loginWithToken = async (ssoToken) => {
+    localStorage.setItem('token', ssoToken);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${ssoToken}`;
+    setToken(ssoToken);
+    // Fetch user data with the new token
+    const response = await axios.get(`${API_URL}/auth/me`);
+    setUser(response.data);
+    return response.data;
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
@@ -60,7 +71,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, register, loginWithToken, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
