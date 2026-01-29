@@ -8658,9 +8658,57 @@ try:
     app.include_router(analytics_router, prefix="/api", tags=["Analytics"])
     app.include_router(email_router, prefix="/api", tags=["Email"])
     
-    logger.info("Modular routers loaded successfully (7 active)")
+    logger.info("Core modular routers loaded successfully (7 active)")
 except ImportError as e:
-    logger.warning(f"Could not load modular routers: {e}")
+    logger.warning(f"Could not load core modular routers: {e}")
+
+# Import and include Public API routers
+try:
+    from routers.public_api.api_keys import router as api_keys_router
+    from routers.public_api.v1.institutions import router as api_institutions_router
+    from routers.public_api.v1.students import router as api_students_router
+    from routers.public_api.v1.exams import router as api_exams_router
+    from routers.public_api.v1.analytics import router as api_analytics_router
+    from routers.public_api.v1.billing import router as api_billing_router
+    from routers.public_api.v1.webhooks import router as api_webhooks_router
+    
+    app.include_router(api_keys_router, prefix="/api", tags=["API Keys"])
+    app.include_router(api_institutions_router, prefix="/api/v1", tags=["Public API - Institutions"])
+    app.include_router(api_students_router, prefix="/api/v1", tags=["Public API - Students"])
+    app.include_router(api_exams_router, prefix="/api/v1", tags=["Public API - Exams"])
+    app.include_router(api_analytics_router, prefix="/api/v1", tags=["Public API - Analytics"])
+    app.include_router(api_billing_router, prefix="/api/v1", tags=["Public API - Billing"])
+    app.include_router(api_webhooks_router, prefix="/api/v1", tags=["Public API - Webhooks"])
+    
+    logger.info("Public API v1 routers loaded successfully (7 endpoints)")
+except ImportError as e:
+    logger.warning(f"Could not load Public API routers: {e}")
+
+# Import and include ERP Premium routers
+try:
+    from routers.erp.invoicing import router as erp_invoicing_router
+    from routers.erp.accounting import router as erp_accounting_router
+    from routers.erp.subscriptions import router as erp_subscriptions_router
+    
+    app.include_router(erp_invoicing_router, prefix="/api", tags=["ERP - Invoicing"])
+    app.include_router(erp_accounting_router, prefix="/api", tags=["ERP - Accounting"])
+    app.include_router(erp_subscriptions_router, prefix="/api", tags=["ERP - Subscriptions"])
+    
+    logger.info("ERP Premium routers loaded successfully (3 modules)")
+except ImportError as e:
+    logger.warning(f"Could not load ERP routers: {e}")
+
+# Import and include External Integrations routers
+try:
+    from routers.integrations.external_connectors import router as integrations_router
+    from routers.integrations.crm_education import router as crm_edu_router
+    
+    app.include_router(integrations_router, prefix="/api", tags=["External Integrations"])
+    app.include_router(crm_edu_router, prefix="/api", tags=["CRM - Education"])
+    
+    logger.info("External Integrations routers loaded successfully (2 modules)")
+except ImportError as e:
+    logger.warning(f"Could not load Integration routers: {e}")
 
 app.add_middleware(
     CORSMiddleware,
