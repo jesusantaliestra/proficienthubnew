@@ -298,7 +298,7 @@ const WhiteLabelSettings = () => {
                       key={theme.id}
                       onClick={async () => {
                         try {
-                          await axios.post(`${API_URL}/api/whitelabel/apply-theme/${theme.id}`);
+                          await axios.post(`${API_URL}/whitelabel/apply-theme/${theme.id}`);
                           toast.success(`Theme "${theme.name}" applied!`);
                           fetchConfig();
                         } catch (error) {
