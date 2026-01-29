@@ -379,8 +379,11 @@ class TestPricingEndpoints:
         )
         assert response.status_code == 200
         data = response.json()
-        assert "total_price" in data or "price_per_license" in data
-        print(f"✓ Pricing calculator: {data}")
+        # Response has nested structure with pricing details
+        assert "pricing" in data
+        assert "total_order_price" in data["pricing"]
+        assert "price_per_license" in data["pricing"]
+        print(f"✓ Pricing calculator: {data['summary']}")
 
 
 if __name__ == "__main__":
