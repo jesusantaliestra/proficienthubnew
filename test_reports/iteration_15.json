@@ -1,0 +1,104 @@
+{
+  "summary": "Completed comprehensive testing of CRM Notification Settings and ERP MRR calculations. All 14 backend API tests passed (100%). Frontend UI verified working correctly for both features.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/crm-edu/leads",
+        "issue": "Fixed NoneType error in calculate_edu_lead_score when contact_role is None",
+        "priority": "FIXED"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "POST /api/crm-edu/notification-settings - creates notification rule",
+    "GET /api/crm-edu/notification-settings - lists all rules with stages",
+    "PATCH /api/crm-edu/notification-settings/{id} - toggles active/inactive",
+    "DELETE /api/crm-edu/notification-settings/{id} - deletes rule",
+    "Quick preset Hot Lead Alert - creates rule for 'qualified' stage",
+    "Quick preset Demo Booked - creates rule for 'demo_scheduled' stage",
+    "Quick preset New Customer - creates rule for 'active' stage with team recipients",
+    "Notification created on lead stage change to 'qualified'",
+    "GET /api/erp/subscriptions/metrics/mrr - returns MRR metrics",
+    "MRR by Plan breakdown is accurate (sum equals total MRR)",
+    "Avg MRR/Customer calculation is correct",
+    "GET /api/erp/invoices/stats/summary - returns invoice stats",
+    "GET /api/erp/subscriptions - lists subscriptions",
+    "GET /api/erp/accounting/chart-of-accounts - returns chart of accounts"
+  ],
+  "frontend_verified": [
+    "CRM Education Notifications tab - accessible at /institution/crm",
+    "Add Notification Rule button - opens form",
+    "Create Notification Rule form - Rule Name, Trigger Stage, When to Notify, Notification Channels, Recipients, Include lead details",
+    "Quick Setup Presets - Hot Lead Alert, Demo Booked, New Customer! buttons",
+    "Existing notification rules displayed with stage, trigger type, and channel badges",
+    "Toggle active/inactive button on notification rules",
+    "Delete button on notification rules",
+    "ERP Dashboard Overview - Monthly Revenue ($5,727.67), ARR ($68,732.00), Outstanding, Avg MRR/Customer ($954.61)",
+    "ERP Dashboard - Invoice Status Distribution (10 PAID invoices, $12,069.20)",
+    "ERP Dashboard - MRR by Plan breakdown (Starter, Professional, Enterprise, Annual plans)",
+    "ERP Subscriptions tab - Current MRR, Current ARR, Active Subscriptions (6)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_crm_notifications_erp_mrr.py",
+    "/app/test_reports/pytest/crm_notifications_erp_mrr_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_crm_notifications_erp_mrr.py",
+    "/app/backend/routers/integrations/crm_education.py"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 tests passed)",
+    "frontend": "100% (All CRM Notification Settings and ERP MRR features verified)"
+  },
+  "test_credentials": {
+    "institution": "demo_academy@test.com / Demo123!"
+  },
+  "seed_data_creation": "Used existing seeded data: 19 CRM leads, 6 active subscriptions with MRR values, 10 paid invoices",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "CRM Notification Settings fully tested: 1) CRUD operations for notification rules work. 2) Notifications are created when lead stage changes (tested with 'qualified' stage). 3) Quick presets (Hot Lead Alert, Demo Booked, New Customer) work. 4) ERP MRR metrics show real calculated values from subscription data: MRR=$5,727.67, ARR=$68,732.00, 6 active subscriptions. 5) MRR by Plan breakdown shows accurate values for Starter, Professional, Enterprise, and Annual plans.",
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": [
+      "Email sending (queued in crm_email_queue but not actually sent)",
+      "ElevenLabs voice integration - MOCKED",
+      "External CRM connections (Salesforce, HubSpot, etc.) - SIMULATED"
+    ]
+  },
+  "features_verified": {
+    "crm_notification_settings": {
+      "create_rule": "POST /api/crm-edu/notification-settings - creates rule with name, trigger_stage, notify_on_enter/exit, channels, recipients",
+      "list_rules": "GET /api/crm-edu/notification-settings - returns settings array and pipeline stages",
+      "update_rule": "PATCH /api/crm-edu/notification-settings/{id} - toggles is_active",
+      "delete_rule": "DELETE /api/crm-edu/notification-settings/{id} - removes rule",
+      "notification_trigger": "Notifications created in db.notifications when lead moves to stage with active rule",
+      "quick_presets": "Hot Lead Alert (qualified), Demo Booked (demo_scheduled), New Customer (active)"
+    },
+    "erp_mrr_metrics": {
+      "current_mrr": "$5,727.67 - calculated from subscription plan_price and billing_interval",
+      "current_arr": "$68,732.00 - MRR × 12",
+      "active_subscriptions": "6",
+      "avg_mrr_per_subscription": "$954.61 - MRR / active_subscriptions",
+      "mrr_by_plan": {
+        "Starter": "$598.00 (2 subs)",
+        "Professional": "$799.00 (1 subs)",
+        "Enterprise": "$1,999.00 (1 subs)",
+        "Professional Annual": "$665.83 (1 subs)",
+        "Enterprise Annual": "$1,665.83 (1 subs)"
+      }
+    }
+  },
+  "bug_fix_applied": {
+    "file": "/app/backend/routers/integrations/crm_education.py",
+    "issue": "calculate_edu_lead_score function crashed when contact_role was None",
+    "fix": "Changed `lead.get('contact_role', '').lower()` to `(lead.get('contact_role') or '').lower()` to handle None values"
+  }
+}
