@@ -676,11 +676,30 @@ async def apply_preset_theme(
     theme_colors = themes[theme_id]
     theme_colors["updated_at"] = datetime.now(timezone.utc).isoformat()
     
-    result = await db.whitelabel_configs.update_one(
-        {"institution_id": current_user["id"]},
-        {"$set": theme_colors},
-        upsert=True
-    )
+    # Check if config exists
+    existing = await db.whitelabel_configs.find_one({"institution_id": current_user["id"]})
+    
+    if existing:
+        # Update existing config
+        await db.whitelabel_configs.update_one(
+            {"institution_id": current_user["id"]},
+            {"$set": theme_colors}
+        )
+    else:
+        # Create new config with required fields
+        config_id = str(uuid.uuid4())
+        inst_name = current_user.get("institution_name", current_user.get("name", ""))
+        subdomain = re.sub(r'[^a-z0-9]', '', inst_name.lower())[:30] if inst_name else f"inst-{config_id[:8]}"
+        
+        new_config = {
+            "id": config_id,
+            "institution_id": current_user["id"],
+            "subdomain": subdomain,
+            "platform_name": inst_name or "ProficientHub",
+            **theme_colors,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.whitelabel_configs.insert_one(new_config)
     
     return {"message": f"Theme '{theme_id}' applied successfully", "colors": themes[theme_id]}
 
