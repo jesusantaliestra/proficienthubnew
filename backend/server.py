@@ -8729,6 +8729,7 @@ try:
     from routers.student import router as student_router
     from routers.video_classes import router as video_classes_router
     from routers.sso import router as sso_router
+    from routers.whitelabel import router as whitelabel_router
     
     app.include_router(admin_router, prefix="/api", tags=["Admin"])
     app.include_router(marketplace_router, prefix="/api", tags=["Marketplace"])
@@ -8737,8 +8738,9 @@ try:
     app.include_router(student_router, prefix="/api", tags=["Student"])
     app.include_router(video_classes_router, prefix="/api", tags=["Video Classes"])
     app.include_router(sso_router, prefix="/api", tags=["SSO"])
+    app.include_router(whitelabel_router, prefix="/api", tags=["White-Label"])
     
-    logger.info("New feature routers loaded successfully (7 modules: Admin, Marketplace, A/B Testing, Gamification, Student, Video Classes, SSO)")
+    logger.info("New feature routers loaded successfully (8 modules: Admin, Marketplace, A/B Testing, Gamification, Student, Video Classes, SSO, White-Label)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
