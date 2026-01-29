@@ -1813,6 +1813,14 @@ export default function InstitutionSettings() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="community">
+            <Card className="border-2 border-gray-100">
+              <CardContent className="p-6">
+                <CommunityGamificationSection onSave={handleSave} />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </div>
       </Tabs>
     </div>
