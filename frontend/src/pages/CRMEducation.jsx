@@ -219,6 +219,101 @@ export default function CRMEducation() {
     );
   });
 
+  // Notification Settings State
+  const [notificationSettings, setNotificationSettings] = useState([]);
+  const [showNotificationConfig, setShowNotificationConfig] = useState(false);
+  const [newNotification, setNewNotification] = useState({
+    name: '',
+    trigger_stage: 'qualified',
+    notify_on_enter: true,
+    notify_on_exit: false,
+    notification_channels: ['in_app'],
+    recipients: ['owner'],
+    include_lead_details: true,
+    is_active: true
+  });
+
+  const fetchNotificationSettings = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/crm-edu/notification-settings`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      setNotificationSettings(data.settings || []);
+    } catch (error) {
+      console.error('Error fetching notification settings:', error);
+    }
+  };
+
+  const createNotificationSetting = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/crm-edu/notification-settings`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newNotification)
+      });
+      
+      if (response.ok) {
+        toast.success('Notification setting created');
+        setShowNotificationConfig(false);
+        setNewNotification({
+          name: '',
+          trigger_stage: 'qualified',
+          notify_on_enter: true,
+          notify_on_exit: false,
+          notification_channels: ['in_app'],
+          recipients: ['owner'],
+          include_lead_details: true,
+          is_active: true
+        });
+        fetchNotificationSettings();
+      } else {
+        toast.error('Failed to create notification setting');
+      }
+    } catch (error) {
+      toast.error('Error creating notification setting');
+    }
+  };
+
+  const toggleNotificationSetting = async (settingId, isActive) => {
+    try {
+      await fetch(`${API_URL}/api/crm-edu/notification-settings/${settingId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ is_active: !isActive })
+      });
+      fetchNotificationSettings();
+      toast.success(isActive ? 'Notification disabled' : 'Notification enabled');
+    } catch (error) {
+      toast.error('Error updating notification setting');
+    }
+  };
+
+  const deleteNotificationSetting = async (settingId) => {
+    try {
+      await fetch(`${API_URL}/api/crm-edu/notification-settings/${settingId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      fetchNotificationSettings();
+      toast.success('Notification setting deleted');
+    } catch (error) {
+      toast.error('Error deleting notification setting');
+    }
+  };
+
+  useEffect(() => {
+    if (activeView === 'settings') {
+      fetchNotificationSettings();
+    }
+  }, [activeView]);
+
   return (
     <div className="min-h-screen bg-slate-950 p-6">
       <div className="max-w-full mx-auto">
