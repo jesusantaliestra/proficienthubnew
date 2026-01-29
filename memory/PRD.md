@@ -664,14 +664,14 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - **Student (first login)**: student1@demo.com / 62Wuaor4R4Qp (requires password change)
 
 ## URLs
-- Landing: https://proficient-hub.preview.emergentagent.com
-- Login: https://proficient-hub.preview.emergentagent.com/login
-- Admin: https://proficient-hub.preview.emergentagent.com/admin
-- **Superadmin**: https://proficient-hub.preview.emergentagent.com/superadmin
-- Student Portal: https://proficient-hub.preview.emergentagent.com/student-portal
-- White-Label Portal: https://proficient-hub.preview.emergentagent.com/student-portal/demo-language-academy
-- AI Tutor: https://proficient-hub.preview.emergentagent.com/tutor/ielts
-- Exam: https://proficient-hub.preview.emergentagent.com/exam/ielts
+- Landing: https://smartlearn-portal-1.preview.emergentagent.com
+- Login: https://smartlearn-portal-1.preview.emergentagent.com/login
+- Admin: https://smartlearn-portal-1.preview.emergentagent.com/admin
+- **Superadmin**: https://smartlearn-portal-1.preview.emergentagent.com/superadmin
+- Student Portal: https://smartlearn-portal-1.preview.emergentagent.com/student-portal
+- White-Label Portal: https://smartlearn-portal-1.preview.emergentagent.com/student-portal/demo-language-academy
+- AI Tutor: https://smartlearn-portal-1.preview.emergentagent.com/tutor/ielts
+- Exam: https://smartlearn-portal-1.preview.emergentagent.com/exam/ielts
 
 ## Remaining Backlog
 
