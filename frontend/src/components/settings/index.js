@@ -4,6 +4,7 @@
 export { AvatarConfigSection } from './AvatarConfigSection';
 export { ZoomConfigSection } from './ZoomConfigSection';
 export { GamificationConfigSection } from './GamificationConfigSection';
+export { CommunityGamificationSection } from './CommunityGamificationSection';
 
 // Additional sections can be added here as they are refactored:
 // export { EmailConfigSection } from './EmailConfigSection';
