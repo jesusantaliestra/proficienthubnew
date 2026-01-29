@@ -3644,6 +3644,9 @@ async def create_marketplace_listing(listing: MarketplaceListingCreate, current_
     
     await db.marketplace_listings.insert_one(listing_doc)
     
+    # Remove MongoDB _id before returning
+    listing_doc.pop("_id", None)
+    
     return {"id": listing_id, "message": "Listing created successfully", "listing": listing_doc}
 
 @api_router.get("/marketplace/listings")
