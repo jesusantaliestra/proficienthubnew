@@ -356,12 +356,13 @@ class TestMarketplace:
         listing_data = {
             "title": f"TEST_Listing_{uuid.uuid4().hex[:8]}",
             "description": "Test listing for automated testing",
-            "category": "exam_packs",
-            "exam_type": "IELTS",
-            "content_type": "exam_pack",
+            "category": "exam_prep",
             "price": 49.99,
-            "currency": "USD",
-            "tags": ["test", "ielts"]
+            "price_type": "per_student",
+            "exam_types": ["IELTS"],
+            "language": "en",
+            "availability": "available",
+            "delivery_method": "online"
         }
         response = requests.post(
             f"{BASE_URL}/api/marketplace/listings",
