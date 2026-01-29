@@ -291,6 +291,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* Enterprise Routes - A/B Testing Dashboard */}
+      <Route 
+        path="/institution/ab-testing" 
+        element={
+          <ProtectedRoute allowedTypes={['institution', 'admin']}>
+            <ABTestingDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Catch all - redirect to landing */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
