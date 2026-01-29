@@ -14,7 +14,8 @@ import {
   Users, GraduationCap, BarChart3, TrendingUp, TrendingDown, AlertTriangle,
   Plus, Search, LogOut, Settings, BookOpen, Brain, ChevronRight, Award,
   Clock, Target, Activity, UserPlus, Download, Filter, FolderOpen, 
-  FileText, Video, Headphones, Layers, Trash2, Globe, Store, ShoppingCart, Star, Package, Play, Radio, Calendar, Palette, Zap, Cog, Library
+  FileText, Video, Headphones, Layers, Trash2, Globe, Store, ShoppingCart, Star, Package, Play, Radio, Calendar, Palette, Zap, Cog, Library,
+  Key, Link2, Building2, Users2
 } from 'lucide-react';
 import CRMSupreme from '../components/CRMSupreme';
 import InstitutionSettings from '../components/InstitutionSettings';
