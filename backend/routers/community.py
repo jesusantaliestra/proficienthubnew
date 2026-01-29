@@ -491,3 +491,258 @@ async def get_community_stats(current_user: dict = Depends(get_current_user)):
         "total_groups": total_groups,
         "active_contributors_this_week": len(active_users)
     }
+
+
+# ==================== COMMUNITY GAMIFICATION ====================
+
+class CommunityGamificationConfig(BaseModel):
+    community_gamification_enabled: bool = False
+    points_per_post: int = 10
+    points_per_reply: int = 5
+    points_per_solution: int = 50  # When reply is marked as solution
+    points_per_like_received: int = 2
+    points_per_group_created: int = 25
+    points_per_group_joined: int = 5
+    show_contributor_leaderboard: bool = True
+    show_reputation_badges: bool = True
+    weekly_top_contributor_reward: int = 100  # Bonus XP for top contributor
+
+# Community Badges
+COMMUNITY_BADGES = [
+    {"id": "first_post", "name": "First Steps", "description": "Created your first forum post", "icon": "MessageSquare", "requirement": 1, "type": "posts"},
+    {"id": "helpful_10", "name": "Helpful Member", "description": "Had 10 replies marked as solutions", "icon": "CheckCircle", "requirement": 10, "type": "solutions"},
+    {"id": "popular_post", "name": "Trending", "description": "Got 50 likes on a single post", "icon": "TrendingUp", "requirement": 50, "type": "single_post_likes"},
+    {"id": "community_star", "name": "Community Star", "description": "Earned 500 community reputation", "icon": "Star", "requirement": 500, "type": "reputation"},
+    {"id": "group_leader", "name": "Group Leader", "description": "Created a study group with 10+ members", "icon": "Users", "requirement": 10, "type": "group_size"},
+    {"id": "mentor", "name": "Mentor", "description": "Had 50 replies marked as solutions", "icon": "Award", "requirement": 50, "type": "solutions"},
+    {"id": "influencer", "name": "Influencer", "description": "Earned 2000 community reputation", "icon": "Crown", "requirement": 2000, "type": "reputation"},
+]
+
+@router.get("/gamification/config")
+async def get_community_gamification_config(current_user: dict = Depends(get_current_user)):
+    """Get community gamification configuration for institution"""
+    institution_id = current_user.get("institution_id") or current_user["id"]
+    
+    config = await db.community_gamification_config.find_one(
+        {"institution_id": institution_id},
+        {"_id": 0}
+    )
+    
+    if not config:
+        # Return default config
+        config = {
+            "institution_id": institution_id,
+            "community_gamification_enabled": False,
+            "points_per_post": 10,
+            "points_per_reply": 5,
+            "points_per_solution": 50,
+            "points_per_like_received": 2,
+            "points_per_group_created": 25,
+            "points_per_group_joined": 5,
+            "show_contributor_leaderboard": True,
+            "show_reputation_badges": True,
+            "weekly_top_contributor_reward": 100
+        }
+    
+    return {"config": config, "badges": COMMUNITY_BADGES}
+
+@router.put("/gamification/config")
+async def update_community_gamification_config(
+    config: CommunityGamificationConfig,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update community gamification configuration (institution admins only)"""
+    if current_user["user_type"] != "institution":
+        raise HTTPException(status_code=403, detail="Only institutions can configure community gamification")
+    
+    config_doc = {
+        "institution_id": current_user["id"],
+        **config.dict(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.community_gamification_config.update_one(
+        {"institution_id": current_user["id"]},
+        {"$set": config_doc},
+        upsert=True
+    )
+    
+    return {"message": "Community gamification settings updated"}
+
+@router.get("/gamification/profile")
+async def get_community_profile(current_user: dict = Depends(get_current_user)):
+    """Get user's community gamification profile"""
+    institution_id = current_user.get("institution_id") or current_user["id"]
+    
+    # Check if gamification is enabled
+    config = await db.community_gamification_config.find_one(
+        {"institution_id": institution_id},
+        {"_id": 0, "community_gamification_enabled": 1}
+    )
+    
+    if not config or not config.get("community_gamification_enabled"):
+        return {"enabled": False}
+    
+    # Get or create profile
+    profile = await db.community_profiles.find_one(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    if not profile:
+        profile = {
+            "user_id": current_user["id"],
+            "institution_id": institution_id,
+            "reputation": 0,
+            "posts_count": 0,
+            "replies_count": 0,
+            "solutions_count": 0,
+            "likes_received": 0,
+            "groups_created": 0,
+            "groups_joined": 0,
+            "badges": [],
+            "rank": "Newcomer",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.community_profiles.insert_one(profile)
+        profile.pop("_id", None)
+    
+    # Calculate rank based on reputation
+    rep = profile.get("reputation", 0)
+    if rep >= 2000:
+        profile["rank"] = "Legend"
+    elif rep >= 1000:
+        profile["rank"] = "Expert"
+    elif rep >= 500:
+        profile["rank"] = "Pro"
+    elif rep >= 100:
+        profile["rank"] = "Regular"
+    else:
+        profile["rank"] = "Newcomer"
+    
+    return {"enabled": True, "profile": profile}
+
+@router.get("/gamification/leaderboard")
+async def get_community_leaderboard(
+    period: str = "all_time",  # all_time, weekly, monthly
+    limit: int = 10,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get community contributor leaderboard"""
+    institution_id = current_user.get("institution_id") or current_user["id"]
+    
+    # Check if gamification is enabled
+    config = await db.community_gamification_config.find_one(
+        {"institution_id": institution_id},
+        {"_id": 0}
+    )
+    
+    if not config or not config.get("community_gamification_enabled"):
+        return {"enabled": False, "leaderboard": []}
+    
+    if not config.get("show_contributor_leaderboard"):
+        return {"enabled": True, "leaderboard": [], "hidden": True}
+    
+    # Get top contributors
+    leaderboard = await db.community_profiles.find(
+        {"institution_id": institution_id},
+        {"_id": 0, "user_id": 1, "reputation": 1, "posts_count": 1, "solutions_count": 1, "rank": 1}
+    ).sort("reputation", -1).limit(limit).to_list(limit)
+    
+    # Add user names
+    for i, entry in enumerate(leaderboard):
+        user = await db.users.find_one(
+            {"id": entry["user_id"]},
+            {"_id": 0, "name": 1}
+        )
+        entry["name"] = user.get("name", "Anonymous") if user else "Anonymous"
+        entry["position"] = i + 1
+        entry["is_current_user"] = entry["user_id"] == current_user["id"]
+    
+    return {"enabled": True, "leaderboard": leaderboard}
+
+@router.get("/gamification/badges")
+async def get_available_badges():
+    """Get all available community badges"""
+    return {"badges": COMMUNITY_BADGES}
+
+async def award_community_points(user_id: str, institution_id: str, action: str, amount: int = None):
+    """Helper function to award community points"""
+    # Get config
+    config = await db.community_gamification_config.find_one(
+        {"institution_id": institution_id}
+    )
+    
+    if not config or not config.get("community_gamification_enabled"):
+        return
+    
+    # Determine points based on action
+    if amount is None:
+        points_map = {
+            "post": config.get("points_per_post", 10),
+            "reply": config.get("points_per_reply", 5),
+            "solution": config.get("points_per_solution", 50),
+            "like_received": config.get("points_per_like_received", 2),
+            "group_created": config.get("points_per_group_created", 25),
+            "group_joined": config.get("points_per_group_joined", 5),
+        }
+        amount = points_map.get(action, 0)
+    
+    if amount <= 0:
+        return
+    
+    # Update profile
+    update_fields = {"$inc": {"reputation": amount}}
+    
+    if action == "post":
+        update_fields["$inc"]["posts_count"] = 1
+    elif action == "reply":
+        update_fields["$inc"]["replies_count"] = 1
+    elif action == "solution":
+        update_fields["$inc"]["solutions_count"] = 1
+    elif action == "like_received":
+        update_fields["$inc"]["likes_received"] = 1
+    elif action == "group_created":
+        update_fields["$inc"]["groups_created"] = 1
+    elif action == "group_joined":
+        update_fields["$inc"]["groups_joined"] = 1
+    
+    await db.community_profiles.update_one(
+        {"user_id": user_id},
+        update_fields,
+        upsert=True
+    )
+    
+    # Check for badge awards
+    await check_community_badges(user_id, institution_id)
+
+async def check_community_badges(user_id: str, institution_id: str):
+    """Check and award community badges"""
+    profile = await db.community_profiles.find_one({"user_id": user_id})
+    if not profile:
+        return
+    
+    earned_badges = profile.get("badges", [])
+    new_badges = []
+    
+    for badge in COMMUNITY_BADGES:
+        if badge["id"] in earned_badges:
+            continue
+        
+        earned = False
+        if badge["type"] == "posts" and profile.get("posts_count", 0) >= badge["requirement"]:
+            earned = True
+        elif badge["type"] == "solutions" and profile.get("solutions_count", 0) >= badge["requirement"]:
+            earned = True
+        elif badge["type"] == "reputation" and profile.get("reputation", 0) >= badge["requirement"]:
+            earned = True
+        
+        if earned:
+            new_badges.append(badge["id"])
+    
+    if new_badges:
+        await db.community_profiles.update_one(
+            {"user_id": user_id},
+            {"$addToSet": {"badges": {"$each": new_badges}}}
+        )
+
