@@ -1730,7 +1730,7 @@ export default function InstitutionSettings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="ai-agents" className="flex items-center gap-1 text-xs">
             <Sparkles className="w-4 h-4" /> AI
           </TabsTrigger>
@@ -1751,6 +1751,9 @@ export default function InstitutionSettings() {
           </TabsTrigger>
           <TabsTrigger value="gamification" className="flex items-center gap-1 text-xs">
             <Trophy className="w-4 h-4" /> XP
+          </TabsTrigger>
+          <TabsTrigger value="community" className="flex items-center gap-1 text-xs">
+            <Users className="w-4 h-4" /> Community
           </TabsTrigger>
         </TabsList>
 
