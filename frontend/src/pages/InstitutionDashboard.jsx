@@ -111,6 +111,64 @@ export default function InstitutionDashboard() {
     scheduled_at: ''
   });
 
+  // Notification Bell State
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+
+  // Fetch notifications
+  const fetchNotifications = useCallback(async () => {
+    try {
+      setNotificationsLoading(true);
+      const response = await axios.get(`${API_URL}/crm-edu/notifications?limit=20`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(response.data.notifications || []);
+      setUnreadCount(response.data.unread_count || 0);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, [token]);
+
+  // Mark notification as read
+  const markNotificationRead = async (notificationId) => {
+    try {
+      await axios.patch(`${API_URL}/crm-edu/notifications/${notificationId}/read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(prev => 
+        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  // Mark all as read
+  const markAllNotificationsRead = async () => {
+    try {
+      await axios.post(`${API_URL}/crm-edu/notifications/mark-all-read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
+      toast.success('All notifications marked as read');
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  };
+
+  // Poll for new notifications every 30 seconds
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
   useEffect(() => {
     fetchData();
   }, []);
