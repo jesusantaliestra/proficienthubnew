@@ -8649,6 +8649,8 @@ try:
     from routers.pricing import router as pricing_router
     from routers.analytics import router as analytics_router
     from routers.email import router as email_router
+    from routers.ai_agents import router as ai_agents_router
+    from routers.library import router as library_router
     
     app.include_router(superadmin_router, prefix="/api", tags=["Superadmin"])
     app.include_router(zoom_router, prefix="/api", tags=["Zoom"])
@@ -8657,8 +8659,10 @@ try:
     app.include_router(pricing_router, prefix="/api", tags=["Pricing"])
     app.include_router(analytics_router, prefix="/api", tags=["Analytics"])
     app.include_router(email_router, prefix="/api", tags=["Email"])
+    app.include_router(ai_agents_router, prefix="/api", tags=["AI Agents"])
+    app.include_router(library_router, prefix="/api", tags=["Content Library"])
     
-    logger.info("Core modular routers loaded successfully (7 active)")
+    logger.info("Core modular routers loaded successfully (9 active)")
 except ImportError as e:
     logger.warning(f"Could not load core modular routers: {e}")
 
