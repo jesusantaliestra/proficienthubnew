@@ -65,7 +65,7 @@ const WhiteLabelSettings = () => {
 
   const fetchConfig = async () => {
     try {
-      const response = await axios.get(`${API_URL}/whitelabel/config`);
+      const response = await axios.get(`${API_URL}/api/whitelabel/config`);
       if (response.data.config && !response.data.config.is_default) {
         setConfig(prev => ({ ...prev, ...response.data.config }));
         setDnsStatus({
@@ -85,12 +85,12 @@ const WhiteLabelSettings = () => {
     try {
       // Try to update first
       try {
-        await axios.put(`${API_URL}/whitelabel/config`, config);
+        await axios.put(`${API_URL}/api/whitelabel/config`, config);
         toast.success('White-label settings saved!');
       } catch (error) {
         if (error.response?.status === 404) {
           // Config doesn't exist, create it
-          await axios.post(`${API_URL}/whitelabel/config`, {
+          await axios.post(`${API_URL}/api/whitelabel/config`, {
             institution_id: user.id,
             ...config
           });
@@ -109,7 +109,7 @@ const WhiteLabelSettings = () => {
 
   const handleVerifyDomain = async () => {
     try {
-      const response = await axios.post(`${API_URL}/whitelabel/verify-domain`);
+      const response = await axios.post(`${API_URL}/api/whitelabel/verify-domain`);
       toast.success('Domain verified!');
       setDnsStatus({
         verified: true,
@@ -298,7 +298,7 @@ const WhiteLabelSettings = () => {
                       key={theme.id}
                       onClick={async () => {
                         try {
-                          await axios.post(`${API_URL}/whitelabel/apply-theme/${theme.id}`);
+                          await axios.post(`${API_URL}/api/whitelabel/apply-theme/${theme.id}`);
                           toast.success(`Theme "${theme.name}" applied!`);
                           fetchConfig();
                         } catch (error) {
