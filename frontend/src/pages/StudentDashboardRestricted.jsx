@@ -80,25 +80,55 @@ export default function StudentDashboardRestricted() {
 
   const fetchData = async () => {
     try {
-      const [historyRes, profileRes, gamificationRes, classesRes] = await Promise.all([
-        axios.get(`${API_URL}/exams/history`),
-        axios.get(`${API_URL}/student/profile`),
-        axios.get(`${API_URL}/gamification/profile`).catch(() => ({ data: null })),
-        axios.get(`${API_URL}/student/upcoming-classes`).catch(() => ({ data: { classes: [] } }))
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      const [historyRes, profileRes, classesRes] = await Promise.all([
+        axios.get(`${API_URL}/exams/history`, { headers }),
+        axios.get(`${API_URL}/student/profile`, { headers }),
+        axios.get(`${API_URL}/student/upcoming-classes`, { headers }).catch(() => ({ data: { classes: [] } }))
       ]);
       
       setExamHistory(historyRes.data.attempts || []);
       setStudentData(profileRes.data);
-      setGamificationData(gamificationRes.data);
       setUpcomingClasses(classesRes.data.classes || []);
       
-      // Fetch leaderboard if gamification is enabled
-      if (gamificationRes.data?.gamification_enabled) {
-        const leaderboardRes = await axios.get(`${API_URL}/gamification/leaderboard`);
+      // Fetch gamification data from new endpoints
+      try {
+        const [badgesRes, streakRes, pointsRes, leaderboardRes] = await Promise.all([
+          axios.get(`${API_URL}/gamification/badges/my`, { headers }),
+          axios.get(`${API_URL}/gamification/streak`, { headers }),
+          axios.get(`${API_URL}/gamification/points`, { headers }),
+          axios.get(`${API_URL}/gamification/leaderboard?timeframe=weekly&limit=10`, { headers })
+        ]);
+        
+        setGamificationData({
+          gamification_enabled: true,
+          badges: badgesRes.data.earned || [],
+          badges_in_progress: badgesRes.data.in_progress || [],
+          total_badges: badgesRes.data.total_badges || 0,
+          xp: pointsRes.data.total_points || 0,
+          badge_points: pointsRes.data.badge_points || 0,
+          activity_points: pointsRes.data.activity_points || 0,
+          streak: streakRes.data.current_streak || 0,
+          longest_streak: streakRes.data.longest_streak || 0
+        });
+        
         setLeaderboard(leaderboardRes.data.leaderboard || []);
         
-        const challengesRes = await axios.get(`${API_URL}/gamification/challenges`);
-        setChallenges(challengesRes.data.challenges || []);
+        // Record activity for streak
+        await axios.post(`${API_URL}/gamification/streak/activity`, {}, { headers }).catch(() => {});
+        
+        // Check for new badges
+        const badgeCheckRes = await axios.post(`${API_URL}/gamification/badges/check`, {}, { headers }).catch(() => ({ data: { newly_earned: [] } }));
+        if (badgeCheckRes.data.newly_earned?.length > 0) {
+          badgeCheckRes.data.newly_earned.forEach(badge => {
+            toast.success(`🏆 New Badge: ${badge.name}!`, { description: badge.description });
+          });
+        }
+      } catch (gamErr) {
+        console.log('Gamification not available:', gamErr);
+        setGamificationData({ gamification_enabled: false });
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
