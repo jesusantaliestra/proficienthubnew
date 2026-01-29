@@ -281,12 +281,42 @@ export default function Auth() {
                       type="email"
                       placeholder="you@example.com"
                       value={formData.email}
-                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, email: e.target.value }));
+                        setSsoAvailable(null);
+                      }}
+                      onBlur={handleEmailBlur}
                       className="h-12 pl-14 rounded-xl border-2 border-gray-200 focus:border-[#58CC02] placeholder:text-gray-400"
                       required
                       data-testid="email-input"
                     />
                   </div>
+                  
+                  {/* SSO Available Banner */}
+                  {isLogin && checkingSSO && (
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Checking for SSO...
+                    </div>
+                  )}
+                  
+                  {isLogin && ssoAvailable?.sso_available && (
+                    <div className="mt-3 p-3 bg-indigo-50 border border-indigo-200 rounded-xl">
+                      <div className="flex items-center gap-2 text-indigo-700 mb-2">
+                        <Shield className="w-4 h-4" />
+                        <span className="font-semibold text-sm">SSO Available: {ssoAvailable.provider_name}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={handleSSOLogin}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-10"
+                        data-testid="sso-login-btn"
+                      >
+                        <Shield className="w-4 h-4 mr-2" />
+                        Login with {ssoAvailable.provider_name}
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
