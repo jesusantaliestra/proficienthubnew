@@ -624,6 +624,15 @@ export default function InstitutionDashboard() {
               <span>SSO Config</span>
               <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-2 py-0.5 rounded-full">NEW</span>
             </button>
+            <button 
+              onClick={() => navigate('/institution/ab-testing')} 
+              className="sidebar-item w-full" 
+              data-testid="nav-ab-testing"
+            >
+              <Zap className="w-5 h-5" />
+              <span>A/B Testing</span>
+              <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-0.5 rounded-full">NEW</span>
+            </button>
           </div>
           
           <button className="sidebar-item w-full" data-testid="nav-settings">
