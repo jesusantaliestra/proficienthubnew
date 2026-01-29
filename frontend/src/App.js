@@ -302,6 +302,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* Community Hub - Forums and Study Groups */}
+      <Route 
+        path="/community" 
+        element={
+          <ProtectedRoute allowedTypes={['institution', 'admin', 'student', 'teacher']}>
+            <CommunityHub />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Catch all - redirect to landing */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
