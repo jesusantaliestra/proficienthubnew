@@ -60,9 +60,24 @@ class SAMLConfigUpdate(BaseModel):
     allowed_domains: Optional[List[str]] = None
     is_active: Optional[bool] = None
 
-# ==================== SSO CONFIGURATION MANAGEMENT ====================
+# ==================== AUTH UTILITY ====================
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from server import get_current_user
+security = HTTPBearer()
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+        user = await db.users.find_one({"id": payload["user_id"]}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+# ==================== SSO CONFIGURATION MANAGEMENT ====================
 
 @router.post("/saml/config")
 async def create_saml_config(
