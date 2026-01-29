@@ -235,6 +235,10 @@ async def reply_to_post(
         {"$inc": {"reply_count": 1}}
     )
     
+    # Award community points if gamification enabled
+    institution_id = current_user.get("institution_id") or current_user["id"]
+    await award_community_points(current_user["id"], institution_id, "reply")
+    
     return {"id": reply_id, "message": "Reply posted"}
 
 @router.post("/forum/posts/{post_id}/solve/{reply_id}")
