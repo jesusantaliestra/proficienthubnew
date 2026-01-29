@@ -280,6 +280,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* Enterprise Routes - SSO Configuration */}
+      <Route 
+        path="/institution/sso" 
+        element={
+          <ProtectedRoute allowedTypes={['institution', 'admin']}>
+            <SSOConfig />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Catch all - redirect to landing */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
