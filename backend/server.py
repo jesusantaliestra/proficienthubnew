@@ -8714,6 +8714,22 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load Integration routers: {e}")
 
+# Import and include new feature routers (Refactored + Backlog)
+try:
+    from routers.admin import router as admin_router
+    from routers.marketplace import router as marketplace_router
+    from routers.ab_testing import router as ab_testing_router
+    from routers.gamification import router as gamification_router
+    
+    app.include_router(admin_router, prefix="/api", tags=["Admin"])
+    app.include_router(marketplace_router, prefix="/api", tags=["Marketplace"])
+    app.include_router(ab_testing_router, prefix="/api", tags=["A/B Testing"])
+    app.include_router(gamification_router, prefix="/api", tags=["Gamification"])
+    
+    logger.info("New feature routers loaded successfully (4 modules: Admin, Marketplace, A/B Testing, Gamification)")
+except ImportError as e:
+    logger.warning(f"Could not load new feature routers: {e}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
