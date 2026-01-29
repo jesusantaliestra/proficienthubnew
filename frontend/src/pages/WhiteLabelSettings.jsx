@@ -10,20 +10,137 @@ import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Switch } from '../components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import {
   Palette, Globe, Mail, Image, Type, Layout, ExternalLink, 
-  CheckCircle, AlertCircle, Copy, ArrowLeft, Save, Eye
+  CheckCircle, AlertCircle, Copy, ArrowLeft, Save, Eye, Monitor, Smartphone, Tablet,
+  X, BookOpen, Trophy, BarChart3, Bell, Settings, LogOut, Search, GraduationCap
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Live Preview Component
+const LivePreview = ({ config, deviceType = 'desktop' }) => {
+  const deviceWidths = {
+    desktop: '100%',
+    tablet: '768px',
+    mobile: '375px'
+  };
+
+  return (
+    <div 
+      className="bg-gray-100 rounded-xl overflow-hidden transition-all duration-300"
+      style={{ 
+        width: deviceWidths[deviceType],
+        margin: deviceType !== 'desktop' ? '0 auto' : undefined
+      }}
+    >
+      {/* Preview Navbar */}
+      <div 
+        className="px-4 py-3 flex items-center justify-between"
+        style={{ backgroundColor: config.primary_color }}
+      >
+        <div className="flex items-center gap-3">
+          {config.logo_url ? (
+            <img src={config.logo_url} alt="Logo" className="h-8 w-auto" />
+          ) : (
+            <div className="flex items-center gap-2">
+              <GraduationCap className="w-6 h-6 text-white" />
+              <span className="font-bold text-white text-lg">{config.platform_name || 'Your Academy'}</span>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+            <Bell className="w-4 h-4 text-white" />
+          </div>
+          <div className="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center text-white text-sm font-bold">
+            JD
+          </div>
+        </div>
+      </div>
+
+      {/* Preview Content */}
+      <div 
+        className="p-4"
+        style={{ 
+          backgroundColor: config.background_color,
+          fontFamily: config.font_family,
+          color: config.text_color
+        }}
+      >
+        {/* Welcome Section */}
+        <div 
+          className="p-4 rounded-xl mb-4"
+          style={{ 
+            backgroundColor: config.primary_color + '15',
+            borderRadius: config.border_radius
+          }}
+        >
+          <h2 className="font-bold text-lg mb-1" style={{ color: config.text_color }}>
+            Welcome back, John!
+          </h2>
+          <p className="text-sm" style={{ color: config.text_color + '99' }}>
+            Continue your learning journey at {config.platform_name || 'Your Academy'}
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {[
+            { label: 'Exams', value: '12', icon: BookOpen },
+            { label: 'Points', value: '2,450', icon: Trophy },
+            { label: 'Streak', value: '7 days', icon: BarChart3 }
+          ].map((stat, i) => (
+            <div 
+              key={i}
+              className="p-3 text-center"
+              style={{ 
+                backgroundColor: '#ffffff',
+                borderRadius: config.border_radius,
+                boxShadow: config.card_style === 'elevated' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+                border: config.card_style === 'bordered' ? '1px solid #e5e7eb' : 'none'
+              }}
+            >
+              <stat.icon className="w-5 h-5 mx-auto mb-1" style={{ color: config.primary_color }} />
+              <div className="font-bold" style={{ color: config.text_color }}>{stat.value}</div>
+              <div className="text-xs" style={{ color: config.text_color + '80' }}>{stat.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA Button */}
+        <button
+          className="w-full py-3 font-semibold text-white transition-all"
+          style={{ 
+            backgroundColor: config.primary_color,
+            borderRadius: config.button_style === 'pill' ? '9999px' : 
+                         config.button_style === 'sharp' ? '4px' : config.border_radius
+          }}
+        >
+          Start Practice Exam
+        </button>
+
+        {/* Footer */}
+        {config.show_powered_by && (
+          <p className="text-center text-xs mt-4" style={{ color: config.text_color + '60' }}>
+            Powered by ProficientHub
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const WhiteLabelSettings = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [previewDevice, setPreviewDevice] = useState('desktop');
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [config, setConfig] = useState({
     custom_domain: '',
     subdomain: '',
