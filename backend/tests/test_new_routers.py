@@ -389,13 +389,13 @@ class TestMarketplace:
         listing_data = {
             "title": f"TEST_Create_Listing_{uuid.uuid4().hex[:8]}",
             "description": "Test listing creation",
-            "category": "study_materials",
-            "exam_type": "TOEFL",
-            "content_type": "material",
+            "category": "materials",
             "price": 29.99,
-            "currency": "USD",
-            "preview_content": "Sample preview content",
-            "tags": ["test", "toefl", "study"]
+            "price_type": "flat_fee",
+            "exam_types": ["TOEFL"],
+            "language": "en",
+            "availability": "available",
+            "delivery_method": "online"
         }
         response = requests.post(
             f"{BASE_URL}/api/marketplace/listings",
