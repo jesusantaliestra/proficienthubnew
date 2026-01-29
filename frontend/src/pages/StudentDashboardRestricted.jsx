@@ -546,25 +546,111 @@ export default function StudentDashboardRestricted() {
           {/* Achievements Tab */}
           {activeTab === 'achievements' && gamificationData?.gamification_enabled && (
             <div className="space-y-6 animate-fade-in" data-testid="achievements-section">
-              <h2 className="text-2xl font-bold text-white">Achievements & Badges</h2>
-              
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {BADGES.map((badge) => {
-                  const earned = gamificationData?.badges?.includes(badge.id);
-                  return (
-                    <Card key={badge.id} className={`border-2 ${earned ? 'bg-gradient-to-br from-amber-900/30 to-orange-900/30 border-amber-500/50' : 'bg-slate-900/50 border-slate-800 opacity-60'}`}>
-                      <CardContent className="p-6 text-center">
-                        <span className={`text-5xl block mb-3 ${!earned && 'grayscale'}`}>{badge.icon}</span>
-                        <h4 className="font-bold text-white mb-1">{badge.name}</h4>
-                        <p className="text-sm text-slate-400 mb-3">{badge.description}</p>
-                        <Badge className={earned ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-700 text-slate-400'}>
-                          +{badge.xp} XP
-                        </Badge>
-                        {earned && <p className="text-xs text-green-400 mt-2">✓ Earned</p>}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white">Achievements & Badges</h2>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-amber-400 font-bold text-lg">{gamificationData?.xp || 0} XP</p>
+                    <p className="text-slate-500 text-xs">Total Points</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-white font-bold text-lg">{gamificationData?.total_badges || 0}/15</p>
+                    <p className="text-slate-500 text-xs">Badges Earned</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Earned Badges */}
+              {gamificationData?.badges?.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-amber-400" />
+                    Earned Badges
+                  </h3>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {gamificationData.badges.map((badge) => (
+                      <Card key={badge.id} className="bg-gradient-to-br from-amber-900/30 to-orange-900/30 border-2 border-amber-500/50">
+                        <CardContent className="p-6 text-center">
+                          <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-amber-500/20 flex items-center justify-center">
+                            <Award className="w-8 h-8 text-amber-400" />
+                          </div>
+                          <h4 className="font-bold text-white mb-1">{badge.name}</h4>
+                          <p className="text-sm text-slate-400 mb-3">{badge.description}</p>
+                          <div className="flex items-center justify-center gap-2">
+                            <Badge className="bg-amber-500/20 text-amber-400 border-0">+{badge.points} XP</Badge>
+                            <Badge className={`border-0 ${
+                              badge.rarity === 'legendary' ? 'bg-purple-500/20 text-purple-400' :
+                              badge.rarity === 'rare' ? 'bg-blue-500/20 text-blue-400' :
+                              badge.rarity === 'uncommon' ? 'bg-green-500/20 text-green-400' :
+                              'bg-slate-500/20 text-slate-400'
+                            }`}>{badge.rarity}</Badge>
+                          </div>
+                          <p className="text-xs text-green-400 mt-2">✓ Earned {badge.earned_at ? new Date(badge.earned_at).toLocaleDateString() : ''}</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* In Progress Badges */}
+              {gamificationData?.badges_in_progress?.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <Target className="w-5 h-5 text-blue-400" />
+                    Almost There!
+                  </h3>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {gamificationData.badges_in_progress.map((badge) => (
+                      <Card key={badge.id} className="bg-slate-900/50 border-slate-800 border-2">
+                        <CardContent className="p-6">
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                              <Award className="w-6 h-6 text-blue-400" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-white mb-1">{badge.name}</h4>
+                              <p className="text-sm text-slate-400 mb-2">{badge.description}</p>
+                              <div className="w-full bg-slate-700 rounded-full h-2">
+                                <div 
+                                  className="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all"
+                                  style={{ width: `${badge.progress}%` }}
+                                />
+                              </div>
+                              <p className="text-xs text-slate-500 mt-1">{badge.progress}% complete</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* All Available Badges */}
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Gift className="w-5 h-5 text-slate-400" />
+                  All Available Badges
+                </h3>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {BADGES.map((badge) => {
+                    const earned = gamificationData?.badges?.some(b => b.id === badge.id);
+                    return (
+                      <Card key={badge.id} className={`border-2 ${earned ? 'bg-gradient-to-br from-amber-900/30 to-orange-900/30 border-amber-500/50' : 'bg-slate-900/50 border-slate-800 opacity-60'}`}>
+                        <CardContent className="p-6 text-center">
+                          <span className={`text-5xl block mb-3 ${!earned && 'grayscale'}`}>{badge.icon}</span>
+                          <h4 className="font-bold text-white mb-1">{badge.name}</h4>
+                          <p className="text-sm text-slate-400 mb-3">{badge.description}</p>
+                          <Badge className={earned ? 'bg-amber-500/20 text-amber-400 border-0' : 'bg-slate-700 text-slate-400 border-0'}>
+                            +{badge.xp} XP
+                          </Badge>
+                          {earned && <p className="text-xs text-green-400 mt-2">✓ Earned</p>}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
@@ -572,31 +658,87 @@ export default function StudentDashboardRestricted() {
           {/* Leaderboard Tab */}
           {activeTab === 'leaderboard' && gamificationData?.gamification_enabled && (
             <div className="space-y-6 animate-fade-in" data-testid="leaderboard-section">
-              <h2 className="text-2xl font-bold text-white">Institution Leaderboard</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white">Institution Leaderboard</h2>
+                <div className="flex gap-2">
+                  {['daily', 'weekly', 'monthly', 'all_time'].map(tf => (
+                    <button
+                      key={tf}
+                      className="px-3 py-1 rounded-lg text-sm font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors"
+                    >
+                      {tf.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Top 3 Podium */}
+              {leaderboard.length >= 3 && (
+                <div className="flex items-end justify-center gap-4 mb-8">
+                  {/* 2nd Place */}
+                  <div className="text-center">
+                    <div className="w-20 h-20 mx-auto mb-2 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center border-4 border-slate-300">
+                      <span className="text-2xl font-bold text-white">2</span>
+                    </div>
+                    <p className="text-white font-medium">{leaderboard[1]?.name}</p>
+                    <p className="text-amber-400 font-bold">{leaderboard[1]?.points} pts</p>
+                    <div className="h-24 w-20 bg-slate-700 rounded-t-lg mt-2"></div>
+                  </div>
+                  {/* 1st Place */}
+                  <div className="text-center">
+                    <div className="w-24 h-24 mx-auto mb-2 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center border-4 border-amber-300 relative">
+                      <span className="text-3xl font-bold text-white">1</span>
+                      <Crown className="w-8 h-8 text-amber-300 absolute -top-4" />
+                    </div>
+                    <p className="text-white font-bold text-lg">{leaderboard[0]?.name}</p>
+                    <p className="text-amber-400 font-bold text-xl">{leaderboard[0]?.points} pts</p>
+                    <div className="h-32 w-24 bg-amber-600/30 rounded-t-lg mt-2 border-t-4 border-amber-400"></div>
+                  </div>
+                  {/* 3rd Place */}
+                  <div className="text-center">
+                    <div className="w-20 h-20 mx-auto mb-2 rounded-full bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center border-4 border-orange-400">
+                      <span className="text-2xl font-bold text-white">3</span>
+                    </div>
+                    <p className="text-white font-medium">{leaderboard[2]?.name}</p>
+                    <p className="text-amber-400 font-bold">{leaderboard[2]?.points} pts</p>
+                    <div className="h-16 w-20 bg-orange-700/30 rounded-t-lg mt-2"></div>
+                  </div>
+                </div>
+              )}
               
               <Card className="bg-slate-900/50 border-slate-800">
                 <CardContent className="p-0">
                   <div className="divide-y divide-slate-800">
                     {leaderboard.map((entry, index) => (
-                      <div key={entry.id} className={`flex items-center gap-4 p-4 ${entry.id === user?.id ? 'bg-blue-500/10' : ''}`}>
+                      <div key={entry.user_id || index} className={`flex items-center gap-4 p-4 ${entry.is_current_user ? 'bg-blue-500/10 border-l-4 border-blue-500' : ''}`}>
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
                           index === 0 ? 'bg-amber-500 text-amber-900' :
                           index === 1 ? 'bg-slate-400 text-slate-900' :
                           index === 2 ? 'bg-orange-600 text-orange-100' :
                           'bg-slate-700 text-slate-300'
                         }`}>
-                          {index + 1}
+                          {entry.rank || index + 1}
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold text-white">{entry.name}</p>
-                          <p className="text-sm text-slate-400">Level {entry.level}</p>
+                          <p className="font-semibold text-white flex items-center gap-2">
+                            {entry.name}
+                            {entry.is_current_user && <Badge className="bg-blue-500/20 text-blue-400 border-0 text-xs">You</Badge>}
+                          </p>
+                          <p className="text-sm text-slate-400">{entry.exams_completed || 0} exams completed</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-amber-400">{entry.xp} XP</p>
-                          <p className="text-sm text-slate-500">{entry.streak} 🔥</p>
+                          <p className="font-bold text-amber-400">{entry.points} pts</p>
+                          <p className="text-sm text-slate-500">Avg: {entry.avg_score || 0}%</p>
                         </div>
                       </div>
                     ))}
+                    {leaderboard.length === 0 && (
+                      <div className="p-8 text-center">
+                        <Users className="w-12 h-12 text-slate-600 mx-auto mb-2" />
+                        <p className="text-slate-400">No leaderboard data yet</p>
+                        <p className="text-slate-500 text-sm">Complete exams to appear on the leaderboard!</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
