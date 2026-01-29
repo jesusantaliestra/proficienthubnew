@@ -6,8 +6,11 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { GraduationCap, Mail, Lock, User, Building, ArrowLeft, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { GraduationCap, Mail, Lock, User, Building, ArrowLeft, Eye, EyeOff, CheckCircle, Shield, Loader2 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
+import axios from 'axios';
+
+const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export default function Auth() {
   const navigate = useNavigate();
