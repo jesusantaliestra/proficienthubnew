@@ -142,7 +142,7 @@ def calculate_edu_lead_score(lead: dict) -> int:
         score += EDU_SCORING_FACTORS["decision_maker"]["teacher_instructor"]
     
     # Budget timeline
-    timeline = lead.get("budget_timeline", "")
+    timeline = lead.get("budget_timeline") or ""
     if timeline in EDU_SCORING_FACTORS["budget_timeline"]:
         score += EDU_SCORING_FACTORS["budget_timeline"][timeline]
     
