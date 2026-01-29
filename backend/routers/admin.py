@@ -19,9 +19,8 @@ import os
 client = AsyncIOMotorClient(os.environ.get('MONGO_URL'))
 db = client[os.environ.get('DB_NAME', 'proficienthub')]
 
-# Auth dependency placeholder - will be imported from main app
-async def get_current_user():
-    pass
+# Auth dependency - import from main server
+from server import get_current_user
 
 async def get_admin_user(current_user: dict = Depends(get_current_user)):
     if current_user.get("user_type") not in ["admin", "institution"]:
