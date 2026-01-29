@@ -354,7 +354,8 @@ export default function CRMEducation() {
           {[
             { id: 'pipeline', label: 'Pipeline', icon: Target },
             { id: 'list', label: 'List View', icon: Users },
-            { id: 'analytics', label: 'Analytics', icon: BarChart3 }
+            { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+            { id: 'settings', label: 'Notifications', icon: AlertCircle }
           ].map(view => (
             <button
               key={view.id}
