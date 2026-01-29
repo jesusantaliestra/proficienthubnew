@@ -265,9 +265,49 @@ const WhiteLabelSettings = () => {
             </div>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Eye className="w-4 h-4" /> Preview
-            </Button>
+            <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2" data-testid="preview-btn">
+                  <Eye className="w-4 h-4" /> Preview
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-white border-2 border-gray-200 rounded-2xl max-w-5xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-gray-900 font-bold text-xl">Live Preview</DialogTitle>
+                </DialogHeader>
+                
+                {/* Device Selector */}
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  {[
+                    { id: 'desktop', icon: Monitor, label: 'Desktop' },
+                    { id: 'tablet', icon: Tablet, label: 'Tablet' },
+                    { id: 'mobile', icon: Smartphone, label: 'Mobile' }
+                  ].map((device) => (
+                    <button
+                      key={device.id}
+                      onClick={() => setPreviewDevice(device.id)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                        previewDevice === device.id 
+                          ? 'bg-gray-900 text-white' 
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      <device.icon className="w-4 h-4" />
+                      <span className="text-sm font-medium">{device.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Preview Frame */}
+                <div className="bg-gray-200 rounded-xl p-6 min-h-[500px] flex items-start justify-center">
+                  <LivePreview config={config} deviceType={previewDevice} />
+                </div>
+
+                <p className="text-center text-sm text-gray-500 mt-4">
+                  This is a live preview of how your portal will look with the current settings.
+                </p>
+              </DialogContent>
+            </Dialog>
             <Button onClick={handleSave} disabled={saving} className="btn-duo flex items-center gap-2">
               <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save Changes'}
             </Button>
