@@ -233,11 +233,61 @@ export default function CommunityHub() {
                 </div>
               </div>
             </div>
+            
+            {/* Gamification Profile Badge */}
+            {gamificationEnabled && communityProfile && (
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
+                  <Trophy className="w-5 h-5 text-yellow-500" />
+                  <div className="text-right">
+                    <p className="text-xs text-gray-500">Your Reputation</p>
+                    <p className="font-bold text-indigo-600">{communityProfile.reputation || 0} pts</p>
+                  </div>
+                </div>
+                <Badge className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-3 py-1">
+                  {communityProfile.rank || 'Newcomer'}
+                </Badge>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Gamification Leaderboard Card */}
+        {gamificationEnabled && leaderboard.length > 0 && (
+          <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-2xl mb-6">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Trophy className="w-6 h-6 text-yellow-500" />
+                  <h3 className="font-bold text-gray-900">Top Contributors</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  {leaderboard.slice(0, 5).map((entry, i) => (
+                    <div 
+                      key={entry.user_id} 
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
+                        entry.is_current_user 
+                          ? 'bg-indigo-100 border-2 border-indigo-300' 
+                          : 'bg-white border border-gray-200'
+                      }`}
+                    >
+                      <span className={`text-sm font-bold ${
+                        i === 0 ? 'text-yellow-500' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-orange-400' : 'text-gray-500'
+                      }`}>
+                        #{entry.position}
+                      </span>
+                      <span className="text-sm font-medium text-gray-700">{entry.name?.split(' ')[0]}</span>
+                      <Badge variant="outline" className="text-xs">{entry.reputation}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-white border rounded-xl p-1">
             <TabsTrigger value="forum" className="flex items-center gap-2 data-[state=active]:bg-indigo-600 data-[state=active]:text-white rounded-lg">
