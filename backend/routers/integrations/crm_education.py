@@ -133,7 +133,7 @@ def calculate_edu_lead_score(lead: dict) -> int:
         score += EDU_SCORING_FACTORS["exam_types"]["single"]
     
     # Decision maker role
-    role = lead.get("contact_role", "").lower()
+    role = (lead.get("contact_role") or "").lower()
     if "owner" in role or "director" in role or "principal" in role:
         score += EDU_SCORING_FACTORS["decision_maker"]["owner_director"]
     elif "head" in role or "manager" in role:
