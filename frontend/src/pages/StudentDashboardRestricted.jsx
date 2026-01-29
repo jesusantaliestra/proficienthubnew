@@ -246,6 +246,17 @@ export default function StudentDashboardRestricted() {
               <span>{item.label}</span>
             </button>
           ))}
+          
+          {/* Community Hub Link */}
+          <button
+            onClick={() => navigate('/community')}
+            className="sidebar-item w-full mt-4 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border border-indigo-500/30"
+            data-testid="nav-community"
+          >
+            <MessageSquare className="w-5 h-5 text-indigo-400" />
+            <span className="text-indigo-300">Community</span>
+            <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-2 py-0.5 rounded-full">NEW</span>
+          </button>
         </nav>
         
         {/* Streak Display */}
