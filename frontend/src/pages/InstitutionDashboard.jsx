@@ -520,6 +520,44 @@ export default function InstitutionDashboard() {
             <Palette className="w-5 h-5" />
             <span>White-Label</span>
           </button>
+          
+          {/* Enterprise Features Section */}
+          <div className="pt-4 mt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-400 uppercase font-bold mb-2 px-2">Enterprise</p>
+            <button 
+              onClick={() => navigate('/institution/api-keys')} 
+              className="sidebar-item w-full" 
+              data-testid="nav-api-keys"
+            >
+              <Key className="w-5 h-5" />
+              <span>API Keys</span>
+            </button>
+            <button 
+              onClick={() => navigate('/institution/integrations')} 
+              className="sidebar-item w-full" 
+              data-testid="nav-integrations"
+            >
+              <Link2 className="w-5 h-5" />
+              <span>Integrations</span>
+            </button>
+            <button 
+              onClick={() => navigate('/institution/erp')} 
+              className="sidebar-item w-full" 
+              data-testid="nav-erp"
+            >
+              <Building2 className="w-5 h-5" />
+              <span>ERP / Billing</span>
+            </button>
+            <button 
+              onClick={() => navigate('/institution/crm')} 
+              className="sidebar-item w-full" 
+              data-testid="nav-crm"
+            >
+              <Users2 className="w-5 h-5" />
+              <span>CRM</span>
+            </button>
+          </div>
+          
           <button className="sidebar-item w-full" data-testid="nav-settings">
             <Settings className="w-5 h-5" />
             <span>Settings</span>
