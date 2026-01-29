@@ -608,19 +608,11 @@ const WhiteLabelSettings = () => {
                     </div>
                   </div>
 
-                  {/* Preview */}
-                  <div className="mt-4 p-4 rounded-xl border" style={{ backgroundColor: config.background_color }}>
-                    <h4 className="font-bold mb-2" style={{ color: config.text_color }}>{config.platform_name}</h4>
-                    <div className="flex gap-2">
-                      <button className="px-4 py-2 rounded-lg text-white text-sm font-semibold" style={{ backgroundColor: config.primary_color }}>
-                        Primary
-                      </button>
-                      <button className="px-4 py-2 rounded-lg text-white text-sm font-semibold" style={{ backgroundColor: config.secondary_color }}>
-                        Secondary
-                      </button>
-                      <button className="px-4 py-2 rounded-lg text-white text-sm font-semibold" style={{ backgroundColor: config.accent_color }}>
-                        Accent
-                      </button>
+                  {/* Live Mini Preview */}
+                  <div className="mt-4">
+                    <Label className="text-gray-700 font-semibold mb-2 block">Live Color Preview</Label>
+                    <div className="bg-gray-100 rounded-xl p-4">
+                      <LivePreview config={config} deviceType="mobile" />
                     </div>
                   </div>
                 </CardContent>
