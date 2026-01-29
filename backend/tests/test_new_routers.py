@@ -450,9 +450,11 @@ class TestMarketplace:
         )
         assert response.status_code == 200, f"Get listing failed: {response.text}"
         data = response.json()
-        assert "id" in data
-        assert "title" in data
-        assert "price" in data
+        # Existing endpoint returns listing inside 'listing' key
+        assert "listing" in data
+        assert "id" in data["listing"]
+        assert "title" in data["listing"]
+        assert "price" in data["listing"]
     
     def test_update_listing(self, auth_headers, created_listing_id):
         """Test updating a listing"""
