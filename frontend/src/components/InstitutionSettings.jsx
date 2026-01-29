@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { CommunityGamificationSection } from './settings/CommunityGamificationSection';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
