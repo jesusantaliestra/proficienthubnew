@@ -477,7 +477,9 @@ class TestMarketplace:
             f"{BASE_URL}/api/marketplace/listings/{created_listing_id}"
         )
         assert get_response.status_code == 200
-        assert get_response.json()["price"] == 39.99
+        # Existing endpoint returns listing inside 'listing' key
+        listing_data = get_response.json().get("listing", get_response.json())
+        assert listing_data["price"] == 39.99
     
     def test_create_order(self, auth_headers, created_listing_id):
         """Test creating a marketplace order"""
