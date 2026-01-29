@@ -120,6 +120,9 @@ function AppRoutes() {
       <Route path="/change-password" element={<ChangePassword />} />
       <Route path="/student/change-password" element={<ChangePassword />} />
       
+      {/* SSO Callback - handles SSO login response */}
+      <Route path="/sso/callback" element={<SSOCallback />} />
+      
       {/* Admin Routes */}
       <Route 
         path="/admin" 
