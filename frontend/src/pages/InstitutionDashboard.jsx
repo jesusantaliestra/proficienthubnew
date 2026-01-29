@@ -643,6 +643,106 @@ export default function InstitutionDashboard() {
               <p className="text-gray-500 font-semibold">{user?.institution_name || 'Your Institution'}</p>
             </div>
             <div className="flex items-center gap-4">
+              {/* Notification Bell */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                  data-testid="notification-bell"
+                >
+                  <Bell className="w-5 h-5 text-gray-600" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notification Dropdown */}
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+                    <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                      <h3 className="font-bold text-gray-900">Notifications</h3>
+                      <div className="flex items-center gap-2">
+                        {unreadCount > 0 && (
+                          <button 
+                            onClick={markAllNotificationsRead}
+                            className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => setShowNotifications(false)}
+                          className="p-1 hover:bg-gray-200 rounded"
+                        >
+                          <X className="w-4 h-4 text-gray-500" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="max-h-96 overflow-y-auto">
+                      {notificationsLoading ? (
+                        <div className="p-8 text-center">
+                          <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                        </div>
+                      ) : notifications.length === 0 ? (
+                        <div className="p-8 text-center">
+                          <Bell className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                          <p className="text-gray-500 text-sm">No notifications yet</p>
+                          <p className="text-gray-400 text-xs mt-1">Configure notification rules in CRM settings</p>
+                        </div>
+                      ) : (
+                        notifications.map(notif => (
+                          <div 
+                            key={notif.id}
+                            onClick={() => !notif.read && markNotificationRead(notif.id)}
+                            className={`p-4 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors ${
+                              !notif.read ? 'bg-indigo-50/50' : ''
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                                !notif.read ? 'bg-indigo-500' : 'bg-transparent'
+                              }`} />
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm ${!notif.read ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+                                  {notif.title}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{notif.message}</p>
+                                {notif.lead_name && (
+                                  <p className="text-xs text-indigo-600 mt-1 font-medium">{notif.lead_name}</p>
+                                )}
+                                <p className="text-xs text-gray-400 mt-1">
+                                  {new Date(notif.created_at).toLocaleString()}
+                                </p>
+                              </div>
+                              {!notif.read && (
+                                <CheckCircle className="w-4 h-4 text-gray-300 hover:text-green-500 flex-shrink-0" />
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    
+                    {notifications.length > 0 && (
+                      <div className="p-3 border-t border-gray-100 bg-gray-50">
+                        <button 
+                          onClick={() => {
+                            setShowNotifications(false);
+                            setActiveTab('crm');
+                          }}
+                          className="w-full text-center text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                        >
+                          View CRM Notification Settings
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <Dialog open={addStudentOpen} onOpenChange={setAddStudentOpen}>
                 <DialogTrigger asChild>
                   <button className="btn-duo px-4 py-2.5 text-sm flex items-center gap-2" data-testid="add-student-btn">
