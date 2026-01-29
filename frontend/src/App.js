@@ -24,6 +24,12 @@ import WhiteLabelSettings from './pages/WhiteLabelSettings';
 import SuperadminDashboard from './pages/SuperadminDashboard';
 import PricingConfig from './pages/PricingConfig';
 
+// Enterprise Pages
+import APIKeysManager from './pages/APIKeysManager';
+import IntegrationsHub from './pages/IntegrationsHub';
+import ERPDashboard from './pages/ERPDashboard';
+import CRMEducation from './pages/CRMEducation';
+
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
   const { user, loading } = useAuth();
