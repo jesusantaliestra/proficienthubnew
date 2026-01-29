@@ -152,8 +152,101 @@ def calculate_edu_lead_score(lead: dict) -> int:
     
     return min(score, 100)  # Cap at 100
 
-async def trigger_automations(event: str, lead: dict, institution_id: str):
-    """Trigger automation rules based on event"""
+async def trigger_automations(event: str, lead: dict, institution_id: str, old_stage: str = None):
+    """Trigger automation rules and notification settings based on event"""
+    
+    # === HANDLE STAGE CHANGE NOTIFICATIONS ===
+    if event.startswith("stage_changed_to_"):
+        new_stage = event.replace("stage_changed_to_", "")
+        
+        # Get notification settings for this stage
+        notification_settings = await db.crm_notification_settings.find({
+            "institution_id": institution_id,
+            "trigger_stage": new_stage,
+            "notify_on_enter": True,
+            "is_active": True
+        }).to_list(100)
+        
+        # Also check for exit notifications from old stage
+        if old_stage:
+            exit_settings = await db.crm_notification_settings.find({
+                "institution_id": institution_id,
+                "trigger_stage": old_stage,
+                "notify_on_exit": True,
+                "is_active": True
+            }).to_list(100)
+            notification_settings.extend(exit_settings)
+        
+        # Process each notification setting
+        for setting in notification_settings:
+            # Determine recipients
+            recipients = []
+            for recipient in setting.get("recipients", []):
+                if recipient == "owner":
+                    owner_id = lead.get("assigned_to") or institution_id
+                    recipients.append(owner_id)
+                elif recipient == "team":
+                    # Get all team members
+                    team_members = await db.users.find(
+                        {"institution_id": institution_id, "user_type": "staff"},
+                        {"id": 1, "_id": 0}
+                    ).to_list(50)
+                    recipients.extend([m["id"] for m in team_members])
+                else:
+                    recipients.append(recipient)
+            
+            # If no recipients specified, notify institution owner
+            if not recipients:
+                recipients = [institution_id]
+            
+            # Create notifications
+            for recipient_id in set(recipients):
+                notification_doc = {
+                    "id": str(uuid.uuid4()),
+                    "user_id": recipient_id,
+                    "type": "stage_change",
+                    "title": f"Lead moved to {new_stage.replace('_', ' ').title()}",
+                    "message": f"{lead.get('institution_name', 'A lead')} has moved to the {new_stage.replace('_', ' ')} stage.",
+                    "lead_id": lead["id"],
+                    "lead_name": lead.get("institution_name"),
+                    "old_stage": old_stage,
+                    "new_stage": new_stage,
+                    "read": False,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                
+                # Include lead details if configured
+                if setting.get("include_lead_details"):
+                    notification_doc["lead_details"] = {
+                        "contact_name": lead.get("contact_name"),
+                        "contact_email": lead.get("contact_email"),
+                        "estimated_students": lead.get("estimated_students"),
+                        "estimated_value": lead.get("estimated_value"),
+                        "exam_types": lead.get("exam_types_interested", [])
+                    }
+                
+                await db.notifications.insert_one(notification_doc)
+                
+                # Handle email notifications if configured
+                if "email" in setting.get("notification_channels", []):
+                    await db.crm_email_queue.insert_one({
+                        "id": str(uuid.uuid4()),
+                        "recipient_id": recipient_id,
+                        "lead_id": lead["id"],
+                        "template_id": setting.get("email_template") or "stage_change_notification",
+                        "subject": f"Lead Update: {lead.get('institution_name')} - {new_stage.replace('_', ' ').title()}",
+                        "context": {
+                            "lead_name": lead.get("institution_name"),
+                            "contact_name": lead.get("contact_name"),
+                            "old_stage": old_stage,
+                            "new_stage": new_stage,
+                            "estimated_value": lead.get("estimated_value")
+                        },
+                        "status": "pending",
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    })
+    
+    # === HANDLE AUTOMATION RULES (EXISTING LOGIC) ===
     rules = await db.crm_automations.find({
         "institution_id": institution_id,
         "trigger_event": event,
