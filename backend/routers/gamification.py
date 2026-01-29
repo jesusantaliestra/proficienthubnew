@@ -19,9 +19,8 @@ import os
 client = AsyncIOMotorClient(os.environ.get('MONGO_URL'))
 db = client[os.environ.get('DB_NAME', 'proficienthub')]
 
-# Auth dependency placeholder
-async def get_current_user():
-    pass
+# Auth dependency - import from main server
+from server import get_current_user
 
 # ==================== BADGE DEFINITIONS ====================
 
