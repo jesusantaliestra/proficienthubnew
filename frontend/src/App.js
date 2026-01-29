@@ -29,6 +29,8 @@ import APIKeysManager from './pages/APIKeysManager';
 import IntegrationsHub from './pages/IntegrationsHub';
 import ERPDashboard from './pages/ERPDashboard';
 import CRMEducation from './pages/CRMEducation';
+import SSOConfig from './pages/SSOConfig';
+import SSOCallback from './pages/SSOCallback';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
