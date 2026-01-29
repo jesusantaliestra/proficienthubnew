@@ -28,6 +28,40 @@ export default function Auth() {
     institutionName: ''
   });
 
+  // SSO state
+  const [checkingSSO, setCheckingSSO] = useState(false);
+  const [ssoAvailable, setSsoAvailable] = useState(null);
+
+  // Check if SSO is available for the email domain
+  const checkSSOAvailability = async (email) => {
+    if (!email || !email.includes('@')) return;
+    
+    try {
+      setCheckingSSO(true);
+      const response = await axios.get(`${API_URL}/sso/login-url?email=${encodeURIComponent(email)}`);
+      setSsoAvailable(response.data);
+    } catch (error) {
+      console.error('SSO check failed:', error);
+      setSsoAvailable(null);
+    } finally {
+      setCheckingSSO(false);
+    }
+  };
+
+  // Handle email blur to check SSO
+  const handleEmailBlur = () => {
+    if (isLogin && formData.email) {
+      checkSSOAvailability(formData.email);
+    }
+  };
+
+  // Handle SSO login
+  const handleSSOLogin = () => {
+    if (ssoAvailable?.login_url) {
+      window.location.href = `${process.env.REACT_APP_BACKEND_URL}${ssoAvailable.login_url}`;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
