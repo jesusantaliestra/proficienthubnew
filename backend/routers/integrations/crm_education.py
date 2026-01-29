@@ -490,8 +490,8 @@ async def update_edu_lead(
                 "created_at": datetime.now(timezone.utc).isoformat()
             })
             
-            # Trigger automations
-            await trigger_automations(f"stage_changed_to_{new_stage}", updated_lead, current_user["id"])
+            # Trigger automations with old_stage for exit notifications
+            await trigger_automations(f"stage_changed_to_{new_stage}", updated_lead, current_user["id"], old_stage)
     
     return {"message": "Lead updated"}
 
