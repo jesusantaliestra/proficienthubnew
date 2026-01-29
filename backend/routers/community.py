@@ -89,6 +89,10 @@ async def create_forum_post(
     
     await db.forum_posts.insert_one(post_doc)
     
+    # Award community points if gamification enabled
+    institution_id = current_user.get("institution_id") or current_user["id"]
+    await award_community_points(current_user["id"], institution_id, "post")
+    
     return {"id": post_id, "message": "Post created successfully"}
 
 @router.get("/forum/posts")
