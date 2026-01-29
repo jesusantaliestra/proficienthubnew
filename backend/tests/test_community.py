@@ -5,8 +5,13 @@ Tests Forum posts, replies, study groups, and community features
 import pytest
 import requests
 import os
+from pathlib import Path
+from dotenv import load_dotenv
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+# Load frontend .env for REACT_APP_BACKEND_URL
+load_dotenv(Path('/app/frontend/.env'))
+
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://proficient-hub-1.preview.emergentagent.com').rstrip('/')
 
 class TestCommunityForum:
     """Forum endpoint tests"""
