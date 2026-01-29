@@ -3872,6 +3872,9 @@ async def create_marketplace_order(order_data: dict, current_user: dict = Depend
     
     await db.marketplace_orders.insert_one(order_doc)
     
+    # Remove MongoDB _id before returning
+    order_doc.pop("_id", None)
+    
     # Update listing sales count
     await db.marketplace_listings.update_one(
         {"id": listing["id"]},
