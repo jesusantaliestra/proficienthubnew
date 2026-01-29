@@ -136,11 +136,68 @@ export default function CRMEducation() {
         body: JSON.stringify({ stage: newStage })
       });
       fetchData();
-      toast.success('Lead updated');
+      toast.success('Lead moved to ' + newStage.replace('_', ' '));
     } catch (error) {
       toast.error('Error updating lead');
     }
   };
+
+  // Drag and Drop handlers
+  const handleDragStart = (e, lead) => {
+    setDraggedLead(lead);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', lead.id);
+  };
+
+  const handleDragOver = (e, stageId) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverStage(stageId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverStage(null);
+  };
+
+  const handleDrop = async (e, stageId) => {
+    e.preventDefault();
+    setDragOverStage(null);
+    
+    if (draggedLead && draggedLead.stage !== stageId) {
+      // Optimistic update
+      setLeads(prevLeads => 
+        prevLeads.map(l => l.id === draggedLead.id ? { ...l, stage: stageId } : l)
+      );
+      await updateLeadStage(draggedLead.id, stageId);
+    }
+    setDraggedLead(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedLead(null);
+    setDragOverStage(null);
+  };
+
+  // Calculate education-specific metrics
+  const getEducationMetrics = useCallback(() => {
+    const totalStudents = leads.reduce((acc, l) => acc + (l.estimated_students || 0), 0);
+    const totalValue = leads.reduce((acc, l) => acc + (l.estimated_value || 0), 0);
+    const avgValuePerStudent = totalStudents > 0 ? totalValue / totalStudents : 0;
+    
+    // Conversion by exam type
+    const examConversions = {};
+    examTypes.forEach(exam => {
+      const examLeads = leads.filter(l => l.exam_types_interested?.includes(exam));
+      const converted = examLeads.filter(l => ['active', 'onboarding'].includes(l.stage));
+      examConversions[exam] = {
+        total: examLeads.length,
+        converted: converted.length,
+        rate: examLeads.length > 0 ? (converted.length / examLeads.length * 100).toFixed(1) : 0
+      };
+    });
+
+    return { totalStudents, totalValue, avgValuePerStudent, examConversions };
+  }, [leads]);
 
   const getLeadsByStage = (stageId) => {
     return leads.filter(lead => lead.stage === stageId);
