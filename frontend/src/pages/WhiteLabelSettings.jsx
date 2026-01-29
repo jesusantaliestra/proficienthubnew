@@ -276,6 +276,60 @@ const WhiteLabelSettings = () => {
 
           {/* Branding Tab */}
           <TabsContent value="branding" className="space-y-6">
+            {/* Preset Themes */}
+            <Card className="bg-white border-2 rounded-2xl">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="w-5 h-5 text-purple-500" />
+                  Quick Start: Preset Themes
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  {[
+                    { id: 'default', name: 'Classic', colors: ['#58CC02', '#1CB0F6', '#FF4B4B'] },
+                    { id: 'ocean', name: 'Ocean Blue', colors: ['#0EA5E9', '#0284C7', '#F59E0B'] },
+                    { id: 'forest', name: 'Forest Green', colors: ['#10B981', '#059669', '#8B5CF6'] },
+                    { id: 'sunset', name: 'Sunset', colors: ['#F97316', '#EA580C', '#06B6D4'] },
+                    { id: 'royal', name: 'Royal Purple', colors: ['#8B5CF6', '#7C3AED', '#EC4899'] },
+                    { id: 'midnight', name: 'Midnight', colors: ['#6366F1', '#4F46E5', '#22D3EE'], dark: true }
+                  ].map((theme) => (
+                    <button
+                      key={theme.id}
+                      onClick={async () => {
+                        try {
+                          await axios.post(`${API_URL}/api/whitelabel/apply-theme/${theme.id}`);
+                          toast.success(`Theme "${theme.name}" applied!`);
+                          fetchConfig();
+                        } catch (error) {
+                          toast.error('Failed to apply theme');
+                        }
+                      }}
+                      className={`p-4 rounded-xl border-2 border-gray-200 hover:border-purple-300 transition-all text-center ${
+                        theme.dark ? 'bg-gray-900' : 'bg-white'
+                      }`}
+                    >
+                      <div className="flex justify-center gap-1 mb-2">
+                        {theme.colors.map((color, i) => (
+                          <div
+                            key={i}
+                            className="w-6 h-6 rounded-full"
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                      <span className={`text-sm font-medium ${theme.dark ? 'text-white' : 'text-gray-700'}`}>
+                        {theme.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-3 text-center">
+                  Click a theme to apply it instantly. You can customize colors further below.
+                </p>
+              </CardContent>
+            </Card>
+
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Platform Identity */}
               <Card className="bg-white border-2 rounded-2xl">
