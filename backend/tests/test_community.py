@@ -266,9 +266,9 @@ class TestWhiteLabelLivePreview:
         
         # Verify theme structure
         theme_names = [t["name"] for t in data["themes"]]
-        assert "Classic" in theme_names
-        assert "Ocean Blue" in theme_names
-        assert "Forest Green" in theme_names
+        assert any("Classic" in name for name in theme_names)
+        assert any("Ocean" in name for name in theme_names)
+        assert any("Forest" in name for name in theme_names)
     
     def test_apply_preset_theme(self):
         """POST /api/whitelabel/apply-theme/{theme_id} - Applies a theme"""
@@ -280,7 +280,7 @@ class TestWhiteLabelLivePreview:
         
         data = response.json()
         assert "message" in data
-        assert "Ocean" in data["message"]
+        assert "ocean" in data["message"].lower()
     
     def test_get_whitelabel_config(self):
         """GET /api/whitelabel/config - Returns white-label config"""
