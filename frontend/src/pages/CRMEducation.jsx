@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -7,7 +7,8 @@ import {
   ArrowLeft, Users, Plus, Search, Filter, MoreVertical,
   Phone, Mail, Building, Calendar, Target, TrendingUp,
   CheckCircle, Clock, AlertCircle, ChevronRight, Star,
-  GraduationCap, DollarSign, BarChart3
+  GraduationCap, DollarSign, BarChart3, X, MapPin, Globe,
+  MessageSquare, Activity, Edit2, Trash2, GripVertical
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
