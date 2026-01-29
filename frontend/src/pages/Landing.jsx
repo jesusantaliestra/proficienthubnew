@@ -120,10 +120,10 @@ export default function Landing() {
 
   // Calculate monetization with Writing, Speaking, and Mock Exams
   const calculateMonetization = () => {
-    // Cost prices (what institution pays)
-    const writingCostPerTest = 1.10;  // Based on 1000 tier
-    const speakingCostPerTest = 2.70; // Based on 1000 tier
-    const mockExamCostPerTest = 2.20; // Based on 1000 tier
+    // Cost prices (what institution pays) - Based on 1000 tier
+    const writingCostPerTest = 1.10;  // Writing Tests
+    const speakingCostPerTest = 2.20; // Speaking Tests (cheaper)
+    const mockExamCostPerTest = 2.70; // Mock Exams (more expensive - full exam)
     
     // Calculate costs
     const writingCost = monetizationValues.writingTests * writingCostPerTest;
