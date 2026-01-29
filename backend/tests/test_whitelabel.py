@@ -65,7 +65,7 @@ class TestWhiteLabelConfigAuth:
             "password": "Demo123!"
         })
         if response.status_code == 200:
-            return response.json().get("token")
+            return response.json().get("access_token")
         pytest.skip("Institution login failed")
         
     @pytest.fixture
@@ -177,7 +177,7 @@ class TestWhiteLabelPublicEndpoints:
             "password": "Demo123!"
         })
         if response.status_code == 200:
-            token = response.json().get("token")
+            token = response.json().get("access_token")
             return {
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json"
@@ -245,7 +245,7 @@ class TestWhiteLabelEmailTemplates:
             "password": "Demo123!"
         })
         if response.status_code == 200:
-            token = response.json().get("token")
+            token = response.json().get("access_token")
             return {
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json"
@@ -294,7 +294,7 @@ class TestWhiteLabelDomainVerification:
             "password": "Demo123!"
         })
         if response.status_code == 200:
-            token = response.json().get("token")
+            token = response.json().get("access_token")
             return {
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json"
@@ -325,7 +325,7 @@ class TestWhiteLabelAnalytics:
             "password": "Demo123!"
         })
         if response.status_code == 200:
-            token = response.json().get("token")
+            token = response.json().get("access_token")
             return {
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json"
@@ -353,7 +353,7 @@ class TestWhiteLabelCleanup:
             "password": "Demo123!"
         })
         if response.status_code == 200:
-            token = response.json().get("token")
+            token = response.json().get("access_token")
             return {
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json"
