@@ -8726,13 +8726,17 @@ try:
     from routers.marketplace import router as marketplace_router
     from routers.ab_testing import router as ab_testing_router
     from routers.gamification import router as gamification_router
+    from routers.student import router as student_router
+    from routers.video_classes import router as video_classes_router
     
     app.include_router(admin_router, prefix="/api", tags=["Admin"])
     app.include_router(marketplace_router, prefix="/api", tags=["Marketplace"])
     app.include_router(ab_testing_router, prefix="/api", tags=["A/B Testing"])
     app.include_router(gamification_router, prefix="/api", tags=["Gamification"])
+    app.include_router(student_router, prefix="/api", tags=["Student"])
+    app.include_router(video_classes_router, prefix="/api", tags=["Video Classes"])
     
-    logger.info("New feature routers loaded successfully (4 modules: Admin, Marketplace, A/B Testing, Gamification)")
+    logger.info("New feature routers loaded successfully (6 modules: Admin, Marketplace, A/B Testing, Gamification, Student, Video Classes)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
