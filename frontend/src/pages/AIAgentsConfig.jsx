@@ -161,17 +161,17 @@ export default function AIAgentsConfig() {
 
         {/* Status Banner */}
         <div className={`mt-4 p-4 rounded-xl flex items-center justify-between ${
-          config.ai_tutor_enabled ? 'bg-green-50 border border-green-200' : 'bg-slate-100'
+          config.default_voice_enabled ? 'bg-green-50 border border-green-200' : 'bg-slate-100'
         }`}>
           <div className="flex items-center gap-3">
             <Switch 
-              checked={config.ai_tutor_enabled}
-              onCheckedChange={(checked) => setConfig(prev => ({ ...prev, ai_tutor_enabled: checked }))}
+              checked={config.default_voice_enabled}
+              onCheckedChange={(checked) => setConfig(prev => ({ ...prev, default_voice_enabled: checked }))}
             />
             <div>
-              <p className="font-medium">AI Tutor {config.ai_tutor_enabled ? 'Activado' : 'Desactivado'}</p>
+              <p className="font-medium">Voz AI {config.default_voice_enabled ? 'Activada' : 'Desactivada'}</p>
               <p className="text-sm text-slate-500">
-                {getEnabledAgentsCount()} agente(s) configurado(s)
+                {getEnabledAgentsCount()} agente(s) habilitado(s)
               </p>
             </div>
           </div>
