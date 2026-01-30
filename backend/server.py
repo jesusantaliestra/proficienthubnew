@@ -8768,7 +8768,19 @@ try:
     from routers.landing_agent import router as landing_agent_router
     app.include_router(landing_agent_router, prefix="/api", tags=["Landing Agent"])
     
-    logger.info("New feature routers loaded successfully (19 modules)")
+    # Demo Premium
+    from routers.demo_premium import router as demo_premium_router
+    app.include_router(demo_premium_router, prefix="/api", tags=["Demo Premium"])
+    
+    # Conversion Analytics
+    from routers.conversion_analytics import router as conversion_analytics_router
+    app.include_router(conversion_analytics_router, prefix="/api", tags=["Conversion Analytics"])
+    
+    # HeyGen Tutorials
+    from routers.heygen_tutorials import router as heygen_tutorials_router
+    app.include_router(heygen_tutorials_router, prefix="/api", tags=["HeyGen Tutorials"])
+    
+    logger.info("New feature routers loaded successfully (22 modules)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
