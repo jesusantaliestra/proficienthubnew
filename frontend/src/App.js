@@ -36,6 +36,7 @@ import ABTestingDashboard from './pages/ABTestingDashboard';
 import CommunityHub from './pages/CommunityHub';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import AlertsAutomation from './pages/AlertsAutomation';
+import AIAgentsConfig from './pages/AIAgentsConfig';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
@@ -341,6 +342,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedTypes={['institution', 'admin']}>
             <AlertsAutomation />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* AI Agents Configuration */}
+      <Route 
+        path="/institution/ai-agents" 
+        element={
+          <ProtectedRoute allowedTypes={['institution', 'admin']}>
+            <AIAgentsConfig />
           </ProtectedRoute>
         } 
       />
