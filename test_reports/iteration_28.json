@@ -1,0 +1,124 @@
+{
+  "summary": "Iteration 28 - Alerts Automation Feature Testing Complete. All 30 backend tests passed (100%). Frontend UI testing verified Alerts Automation page with all 4 tabs (Reglas, Canales, Historial, Planes), 4 pricing tiers, 6 channel cards, and rule CRUD operations. Spanish localization working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "GET /api/alerts-automation/pricing - Returns 4 pricing tiers (Free $0, Starter $29, Professional $79, Enterprise $199)",
+    "GET /api/alerts-automation/subscription - Returns default free tier for new institutions",
+    "PUT /api/alerts-automation/subscription - Upgrade to Starter tier works",
+    "PUT /api/alerts-automation/subscription - Upgrade to Professional tier works",
+    "PUT /api/alerts-automation/subscription - Upgrade to Enterprise tier works",
+    "PUT /api/alerts-automation/subscription - Invalid tier rejected (400)",
+    "GET /api/alerts-automation/channels - Returns available channels with tier restrictions",
+    "POST /api/alerts-automation/rules - Create alert rule works",
+    "GET /api/alerts-automation/rules - List alert rules works",
+    "PUT /api/alerts-automation/rules/{id} - Enable/disable rule works",
+    "DELETE /api/alerts-automation/rules/{id} - Delete rule works",
+    "DELETE /api/alerts-automation/rules/{id} - 404 for nonexistent rule",
+    "POST /api/alerts-automation/rules/{id}/trigger - Manual trigger works",
+    "POST /api/alerts-automation/rules/{id}/trigger - 404 for nonexistent rule",
+    "GET /api/alerts-automation/logs - Get alert history works",
+    "GET /api/alerts-automation/logs?limit=5 - Limit parameter works",
+    "GET /api/alerts-automation/analytics - Usage analytics works",
+    "GET /api/alerts-automation/check-stale-leads - Check stale leads works",
+    "GET /api/alerts-automation/templates - Get message templates works (Spanish templates)",
+    "Free tier cannot use SMS channel (403)",
+    "Free tier cannot use student_inactive alert type (403)",
+    "Professional tier can use SMS channel",
+    "Subscription endpoint requires authentication (401)",
+    "Rules endpoint requires authentication (401)",
+    "Channels endpoint requires authentication (401)",
+    "Logs endpoint requires authentication (401)",
+    "Analytics endpoint requires authentication (401)",
+    "Students cannot access subscription (403)",
+    "Students cannot create rules (403)",
+    "Students cannot access analytics (403)"
+  ],
+  "frontend_tests_passed": [
+    "Alerts Automation page loads at /institution/alerts",
+    "Header shows 'Alertas Automáticas' (Spanish)",
+    "Subtitle shows 'Configura alertas para leads estancados, estudiantes inactivos y más'",
+    "Current Plan banner shows 'Gratis' with 0/10 alerts",
+    "Upgrade button visible in plan banner",
+    "4 tabs present: Reglas, Canales, Historial, Planes",
+    "Pricing tab shows 4 tiers: Gratis, Starter, Professional, Enterprise",
+    "Pricing shows correct prices: $0, $29, $79, $199",
+    "Professional tier has 'Más Popular' badge",
+    "Current plan has 'Plan Actual' badge",
+    "Channels tab shows 6 channels: Email, SMS, WhatsApp, Webhook, Slack, Microsoft Teams",
+    "Email channel shows 'Sin configurar' with Configure button",
+    "Other channels show 'No disponible' with Upgrade button (tier restriction)",
+    "Nueva Regla button opens rule creation form",
+    "Rule form has fields: Nombre, Tipo de Alerta, Días para activar, Canal",
+    "Rule creation shows success toast 'Regla creada exitosamente'",
+    "Created rule appears in list with toggle switch and action buttons",
+    "Sidebar has 'Alertas' link with PRO badge (orange-red gradient)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_alerts_automation.py",
+    "/app/test_reports/pytest/alerts_automation_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "GOOD: All 13+ alerts automation endpoints working correctly",
+    "GOOD: Tier-based feature restrictions properly enforced (channels, alert types)",
+    "GOOD: Spanish localization complete for UI and message templates",
+    "GOOD: 4 pricing tiers correctly configured with different features",
+    "GOOD: Channel availability properly restricted by subscription tier",
+    "GOOD: Alert quota tracking working (alerts_used_this_month)",
+    "GOOD: Manual trigger increments usage counter",
+    "NOTE: SMS/WhatsApp/Twilio sending is MOCKED (webhook ready)",
+    "NOTE: ElevenLabs TTS is MOCKED awaiting API key"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_alerts_automation.py - Created comprehensive test suite for alerts automation feature"
+  ],
+  "success_rate": {
+    "backend": "100% (30/30 tests passed)",
+    "frontend": "100% (18/18 UI tests passed)"
+  },
+  "test_credentials": {
+    "institution": "test_alerts_ui_1769765537@test.com / TestPass123!"
+  },
+  "seed_data_creation": "Created test institutions and alert rules during testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Alerts Automation feature fully tested and working. All 13+ backend endpoints verified. Frontend UI at /institution/alerts working with all tabs and features. 4 pricing tiers (Free, Starter $29, Professional $79, Enterprise $199) with tier-based channel restrictions. SMS/WhatsApp sending is MOCKED. Sidebar has Alertas link with PRO badge.",
+  "features_verified": {
+    "alerts_automation": {
+      "status": "FULLY FUNCTIONAL",
+      "endpoints": [
+        "/api/alerts-automation/pricing",
+        "/api/alerts-automation/subscription",
+        "/api/alerts-automation/channels",
+        "/api/alerts-automation/rules",
+        "/api/alerts-automation/rules/{id}",
+        "/api/alerts-automation/rules/{id}/trigger",
+        "/api/alerts-automation/logs",
+        "/api/alerts-automation/analytics",
+        "/api/alerts-automation/check-stale-leads",
+        "/api/alerts-automation/templates"
+      ],
+      "ui_verified": true,
+      "ui_path": "/institution/alerts",
+      "pricing_tiers": {
+        "free": {"price": 0, "alerts": 10, "channels": ["email"]},
+        "starter": {"price": 29, "alerts": 100, "channels": ["email", "webhook"]},
+        "professional": {"price": 79, "alerts": 500, "channels": ["email", "webhook", "sms", "whatsapp"]},
+        "enterprise": {"price": 199, "alerts": "unlimited", "channels": ["email", "webhook", "sms", "whatsapp", "slack", "teams"]}
+      }
+    },
+    "mocked_integrations": {
+      "sms_twilio": "MOCKED - webhook ready",
+      "whatsapp": "MOCKED - webhook ready",
+      "elevenlabs_tts": "MOCKED - awaiting API key"
+    }
+  }
+}
