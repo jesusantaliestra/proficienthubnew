@@ -353,9 +353,21 @@ export default function DemoManagement() {
           </TabsContent>
 
           {/* Funnel Tab */}
+          {/* Conversion Funnel Tab */}
           <TabsContent value="funnel" className="space-y-6">
             {funnelData && (
               <>
+                {/* Link to Full Analytics Dashboard */}
+                <div className="flex justify-end">
+                  <Button
+                    onClick={() => navigate('/superadmin/conversion-analytics')}
+                    className="bg-gradient-to-r from-violet-600 to-indigo-600"
+                  >
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Ver Dashboard Completo
+                  </Button>
+                </div>
+
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* Funnel Chart */}
                   <Card className="bg-slate-900/50 border-slate-800">
