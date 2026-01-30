@@ -238,6 +238,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* Sequential Exam Dashboard - Shows unlocked exams */}
+      <Route 
+        path="/my-exams/:examType" 
+        element={
+          <ProtectedRoute allowedTypes={['student', 'individual']}>
+            <SequentialExamDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* AI Tutor - Multi-Agent System */}
       <Route 
         path="/tutor/:examType" 
