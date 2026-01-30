@@ -58,10 +58,6 @@ export default function AIAgentsConfig() {
     'Content-Type': 'application/json'
   };
 
-  useEffect(() => {
-    loadConfig();
-  }, []);
-
   const loadConfig = async () => {
     setLoading(true);
     try {
@@ -76,6 +72,11 @@ export default function AIAgentsConfig() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    loadConfig();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const saveConfig = async () => {
     setSaving(true);
