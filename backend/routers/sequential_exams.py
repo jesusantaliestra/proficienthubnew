@@ -1,7 +1,7 @@
 """Sequential Exams Router - Unique exam assignment per user"""
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 import uuid
 
@@ -13,11 +13,32 @@ router = APIRouter(prefix="/sequential-exams", tags=["Sequential Exams"])
 # Configuration
 EXAMS_PER_BANK = 100  # Each exam type has 100 unique exams
 
+# Exam sections by type
+EXAM_SECTIONS = {
+    "ielts_academic": ["listening", "reading", "writing", "speaking"],
+    "ielts_general": ["listening", "reading", "writing", "speaking"],
+    "oet": ["listening", "reading", "writing", "speaking"],
+    "toefl": ["reading", "listening", "speaking", "writing"],
+    "cambridge": ["reading", "writing", "listening", "speaking"],
+    "pte": ["speaking_writing", "reading", "listening"],
+    "default": ["section_1", "section_2", "section_3", "section_4"]
+}
+
 # Models
 class ExamPurchase(BaseModel):
     exam_type: str
     num_exams: int
     with_ai: bool = False
+
+class StartExamRequest(BaseModel):
+    exam_id: str
+    mode: str  # "full" or "sections"
+
+class CompleteSectionRequest(BaseModel):
+    section: str
+    score: float = 0
+    answers: Optional[Dict[str, Any]] = None
+    time_taken_seconds: int = 0
 
 class ExamAccessResponse(BaseModel):
     exam_type: str
@@ -41,6 +62,10 @@ def get_next_exam_sequence(current_sequence: int, num_new_exams: int) -> List[st
         next_num = ((current_sequence + i) % EXAMS_PER_BANK) + 1
         new_exams.append(generate_exam_id(next_num))
     return new_exams
+
+def get_sections_for_exam_type(exam_type: str) -> List[str]:
+    """Get sections for a given exam type"""
+    return EXAM_SECTIONS.get(exam_type, EXAM_SECTIONS["default"])
 
 @router.get("/my-access/{exam_type}")
 async def get_my_exam_access(
