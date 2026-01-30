@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 # Load frontend .env for REACT_APP_BACKEND_URL
 load_dotenv(Path('/app/frontend/.env'))
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://proficient-hub-1.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://proficienthub-1.preview.emergentagent.com').rstrip('/')
 
 class TestCommunityForum:
     """Forum endpoint tests"""
