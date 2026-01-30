@@ -21,6 +21,7 @@ import CRMSupreme from '../components/CRMSupreme';
 import InstitutionSettings from '../components/InstitutionSettings';
 import ContentLibrary from '../components/ContentLibrary';
 import PushNotificationsPanel from '../components/PushNotificationsPanel';
+import LanguageSelector from '../components/LanguageSelector';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import axios from 'axios';
 import { toast, Toaster } from 'sonner';
@@ -787,6 +788,8 @@ export default function InstitutionDashboard() {
                   </div>
                 )}
               </div>
+
+              <LanguageSelector variant="compact" />
 
               <Dialog open={addStudentOpen} onOpenChange={setAddStudentOpen}>
                 <DialogTrigger asChild>
