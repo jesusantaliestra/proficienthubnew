@@ -58,6 +58,23 @@
 - `common`: Buttons, loading states
 - `language`: Language selector strings
 
+### ✅ HeyGen Webhook Endpoint (P1 - COMPLETE)
+**Endpoint para recibir callbacks de HeyGen cuando los videos se completan**
+
+**Endpoint:** `POST /api/heygen/webhook`
+
+**Configura en HeyGen Dashboard:**
+```
+URL: https://tu-dominio.com/api/heygen/webhook
+Events: video.completed, video.failed
+```
+
+**Eventos soportados:**
+- `video.completed` / `avatar_video.success`: Actualiza video a "completed"
+- `video.failed` / `avatar_video.fail`: Actualiza video a "failed"
+
+**Nota:** Requiere plan de pago de HeyGen. La versión gratuita (10 créditos) puede tener limitaciones.
+
 ---
 
 ## 🧪 Session 14.21 - January 30, 2026 (Section-Based Exams + Language Selector UI)
