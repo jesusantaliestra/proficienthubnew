@@ -128,6 +128,50 @@ export default function StudentExamDashboard() {
     }
   };
 
+  const handlePurchase = async (planId) => {
+    setPurchasingPlan(planId);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_URL}/api/exam-plans/purchase`,
+        { 
+          plan_id: planId,
+          payment_method: 'stripe'
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success('¡Plan adquirido exitosamente!');
+      setShowUpsell(false);
+      loadDashboardData(); // Refresh credits
+    } catch (err) {
+      if (err.response?.data?.detail) {
+        toast.error(err.response.data.detail);
+      } else {
+        toast.error('Error al procesar la compra');
+      }
+    }
+    setPurchasingPlan(null);
+  };
+
+  const handleQuickBuy = async (type) => {
+    setPurchasingPlan(type);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API_URL}/api/exam-plans/quick-purchase`,
+        { type, quantity: 1 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('¡Crédito adicional añadido!');
+      setShowUpsell(false);
+      loadDashboardData();
+    } catch (err) {
+      toast.error('Error al procesar la compra rápida');
+    }
+    setPurchasingPlan(null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
