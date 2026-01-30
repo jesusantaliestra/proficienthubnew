@@ -395,6 +395,104 @@ export default function SequentialExamDashboard() {
           </Card>
         )}
       </main>
+
+      {/* Mode Selection Dialog */}
+      <Dialog open={showModeDialog} onOpenChange={setShowModeDialog}>
+        <DialogContent className="bg-slate-900 border-slate-800 max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <Play className="w-5 h-5 text-violet-400" />
+              Iniciar Examen {selectedExam}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-amber-200">
+                  <p className="font-medium mb-1">Importante</p>
+                  <p className="text-amber-300/80">
+                    Una vez que inicies el examen en cualquier modo, se considerará "usado". 
+                    Completa todas las secciones para obtener tu puntuación final.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Full Exam Mode */}
+            <div 
+              className="bg-slate-800/50 rounded-xl p-5 border border-slate-700 hover:border-violet-500/50 cursor-pointer transition-all group"
+              onClick={() => handleStartExamWithMode('full')}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-white group-hover:text-violet-300 transition-colors">
+                    Examen Completo
+                  </h3>
+                  <p className="text-slate-400 text-sm mt-1">
+                    Toma todas las secciones en una sola sesión, simulando las condiciones reales del examen.
+                  </p>
+                  <div className="flex items-center gap-2 mt-3">
+                    <Badge className="bg-violet-500/20 text-violet-300">
+                      <Clock className="w-3 h-3 mr-1" />
+                      ~3 horas
+                    </Badge>
+                    <Badge className="bg-slate-700 text-slate-300">
+                      {examModes?.sections?.length || 4} secciones
+                    </Badge>
+                  </div>
+                </div>
+                <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-violet-400 transition-colors" />
+              </div>
+            </div>
+
+            {/* Section by Section Mode */}
+            <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+                  <Layers className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-white">
+                    Por Secciones
+                  </h3>
+                  <p className="text-slate-400 text-sm mt-1">
+                    Completa cada sección por separado, a tu propio ritmo.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Section Buttons */}
+              <div className="grid grid-cols-2 gap-2 mt-4">
+                {examModes?.sections?.map((section) => (
+                  <Button
+                    key={section.id}
+                    variant="outline"
+                    className="border-emerald-500/30 hover:bg-emerald-500/10 hover:border-emerald-500/50 text-emerald-300 justify-start"
+                    onClick={() => handleStartExamWithMode('section', section.id)}
+                    disabled={startingExam}
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    {section.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <Button 
+              variant="ghost" 
+              className="w-full text-slate-400"
+              onClick={() => setShowModeDialog(false)}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
