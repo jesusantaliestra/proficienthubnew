@@ -80,16 +80,21 @@ export default function AIAgentsConfig() {
   const saveConfig = async () => {
     setSaving(true);
     try {
+      // Transform agents for backend format
+      const agentsPayload = {};
+      config.agents.forEach(agent => {
+        agentsPayload[agent.id] = {
+          enabled: agent.enabled,
+          voice_id: agent.custom_voice_id || null
+        };
+      });
+
       const res = await fetch(`${API_URL}/api/ai-agents/config`, {
-        method: 'PUT',
+        method: 'POST', // Backend uses POST not PUT
         headers,
         body: JSON.stringify({
-          ai_tutor_enabled: config.ai_tutor_enabled,
-          agents: config.agents,
-          default_avatar_tier: config.default_avatar_tier,
-          elevenlabs_voice_id: config.elevenlabs_voice_id,
-          heygen_avatar_id: config.heygen_avatar_id,
-          custom_knowledge_base: config.custom_knowledge_base
+          agents: agentsPayload,
+          default_voice_enabled: config.default_voice_enabled
         })
       });
 
@@ -100,6 +105,7 @@ export default function AIAgentsConfig() {
         toast.error(err.detail || 'Error al guardar');
       }
     } catch (err) {
+      console.error('Save error:', err);
       toast.error('Error de conexión');
     }
     setSaving(false);
