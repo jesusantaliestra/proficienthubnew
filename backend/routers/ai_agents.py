@@ -127,18 +127,23 @@ class AgentConfig(BaseModel):
     custom_name: Optional[str] = None
     custom_personality: Optional[str] = None
     avatar_tier: AvatarTier = AvatarTier.BASIC
-    llm_provider: LLMProvider = LLMProvider.OPENAI_GPT4
+    # LLM is set at platform level by ProficientHub, not by academies
     voice_id: Optional[str] = None  # ElevenLabs voice ID
     heygen_avatar_id: Optional[str] = None  # For premium tier
 
 class AIConfigUpdate(BaseModel):
     ai_tutor_enabled: bool = True
     agents: List[AgentConfig]
-    default_llm: LLMProvider = LLMProvider.OPENAI_GPT4
+    # LLM selection removed - only ProficientHub admin can set this
     default_avatar_tier: AvatarTier = AvatarTier.BASIC
     elevenlabs_voice_id: Optional[str] = None
     heygen_avatar_id: Optional[str] = None
     custom_knowledge_base: Optional[str] = None  # Academy-specific content
+
+# Platform-level LLM config (only ProficientHub admin)
+class PlatformLLMConfig(BaseModel):
+    default_llm: LLMProvider = LLMProvider.OPENAI_GPT4
+    fallback_llm: LLMProvider = LLMProvider.GEMINI_FLASH
 
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant", "system"]
