@@ -257,11 +257,12 @@ class TestABTesting:
         response = requests.post(f"{BASE_URL}/api/ab-testing/experiments", headers=headers, json={
             "name": "Test Experiment",
             "description": "Testing button color",
+            "experiment_type": "ui",
+            "target_metric": "conversion",
             "variants": [
-                {"name": "Control", "weight": 50},
-                {"name": "Variant A", "weight": 50}
-            ],
-            "target_metric": "click_rate"
+                {"name": "Control", "weight": 50, "config": {}},
+                {"name": "Variant A", "weight": 50, "config": {}}
+            ]
         })
         assert response.status_code == 200
         data = response.json()
