@@ -2,9 +2,86 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 10.6  
+**Version:** 11.0  
 **Date:** January 30, 2026  
-**Status:** Production Ready - 26 Modular Routers + Monetizable Alerts + Interactive Charts
+**Status:** Production Ready - 28 Modular Routers + Consumable Mocks + PDF Reports
+
+---
+
+## 🧪 Session 14.15 - January 30, 2026 (Major Feature)
+
+### Consumable Mock Exam System (COMPLETE)
+**Router: exam_plans.py**
+Full system for academies to sell mock exam packages to students.
+
+**How it Works:**
+1. Academy creates plans (e.g., "5 OET Mocks + 2 Speaking - $99")
+2. Student purchases plan (payment goes to academy's Stripe)
+3. Each full mock consumes 1 credit
+4. Section practice is FREE (no credit consumed)
+5. Premium PDF feedback after each exam
+6. Upsell prompts when credits run low
+
+**Endpoints (15+):**
+- `POST/GET/PUT/DELETE /api/exam-plans/plans` - Plan CRUD
+- `POST /api/exam-plans/purchase` - Student purchases plan
+- `GET /api/exam-plans/my-credits` - Get remaining credits (mocks/speaking/writing)
+- `POST /api/exam-plans/start-mock` - Start exam (consumes credit if full mock)
+- `POST /api/exam-plans/submit-mock` - Submit and get feedback
+- `GET /api/exam-plans/attempt/{id}/pdf` - Download premium PDF report
+- `GET /api/exam-plans/my-history` - Exam history with scores
+- `GET /api/exam-plans/upsell-options` - Upsell when credits low
+
+**Credit System:**
+| Action | Credits |
+|--------|---------|
+| Full Mock Exam | -1 mock credit |
+| Section Practice | FREE |
+| Speaking Session | -1 speaking credit |
+| Writing Evaluation | -1 writing credit |
+
+**PDF Report Features:**
+- Institution branding
+- Overall score + section breakdown
+- Detailed feedback
+- Strengths & areas to improve
+- Next steps recommendations
+- Downloadable and printable
+
+### Integrated Student Dashboard (COMPLETE)
+**File: StudentExamDashboard.jsx**
+Single unified dashboard - Academy + ProficientHub mocks as ONE premium experience.
+
+**Features:**
+- Credits display (Mocks, Speaking, Writing remaining)
+- Start Full Mock button with credit cost
+- Section Practice (FREE)
+- AI Tutor integration
+- Study materials access
+- Exam history with PDF downloads
+- Progress chart
+- Upsell modal when credits exhausted
+
+**UI Route:** `/student/exam-dashboard`
+
+### Institution Analytics Router (COMPLETE)
+**Router: institution_analytics.py**
+Student performance analytics and risk prediction.
+
+**Endpoints:**
+- `GET /api/institution/analytics/overview` - KPIs dashboard
+- `GET /api/institution/analytics/students` - All students with predictions
+- `GET /api/institution/analytics/at-risk` - Students at risk of failing
+- `GET /api/institution/analytics/cohorts` - Cohort analysis
+- `GET /api/institution/analytics/student/{id}` - Individual student details
+
+### Testing Results (Iteration 29)
+| Feature | Tests Passed | Status |
+|---------|-------------|--------|
+| Exam Plans Backend | 36/36 | ✅ PASS |
+| StudentExamDashboard Frontend | 16/16 | ✅ PASS |
+| Credit Consumption | ✅ | VERIFIED |
+| PDF Generation | ✅ | WORKING |
 
 ---
 
