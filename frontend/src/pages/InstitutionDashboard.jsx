@@ -642,6 +642,15 @@ export default function InstitutionDashboard() {
               <span>Analytics Pro</span>
               <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full">NEW</span>
             </button>
+            <button 
+              onClick={() => navigate('/institution/alerts')} 
+              className="sidebar-item w-full" 
+              data-testid="nav-alerts-automation"
+            >
+              <Bell className="w-5 h-5" />
+              <span>Alertas</span>
+              <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-0.5 rounded-full">PRO</span>
+            </button>
           </div>
           
           <button className="sidebar-item w-full" data-testid="nav-settings">
