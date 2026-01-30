@@ -15,6 +15,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import axios from 'axios';
 import { toast, Toaster } from 'sonner';
+import LanguageSelector from '../components/LanguageSelector';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -315,6 +316,7 @@ export default function StudentDashboardRestricted() {
                 </div>
               </div>
             )}
+            <LanguageSelector variant="compact" />
           </div>
         </header>
         
