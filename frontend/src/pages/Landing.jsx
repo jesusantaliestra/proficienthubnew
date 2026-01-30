@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Slider } from '../components/ui/slider';
@@ -21,6 +22,7 @@ const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [calculatorValues, setCalculatorValues] = useState({
     students: 50,
     teachers: 3,
