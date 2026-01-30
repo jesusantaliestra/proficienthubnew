@@ -286,20 +286,20 @@ export default function Landing() {
             </div>
             
             <div className="hidden lg:flex items-center gap-10">
-              <a href="#features" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">Features</a>
-              <a href="#exams" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">Exams</a>
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">Pricing</a>
-              <a href="#trial" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">Free Trial</a>
-              <a href="#calculator" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">ROI Calculator</a>
+              <a href="#features" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">{t('nav.features')}</a>
+              <a href="#exams" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">{t('nav.exams')}</a>
+              <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">{t('nav.pricing')}</a>
+              <a href="#trial" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">{t('landing.request_demo')}</a>
+              <a href="#calculator" className="text-gray-600 hover:text-gray-900 font-semibold transition-colors">{t('landing.roi_calculator')}</a>
             </div>
             
             <div className="flex items-center gap-3">
               <LanguageSelector variant="compact" />
               <Button variant="ghost" className="text-gray-600 font-semibold hover:bg-gray-100" onClick={() => navigate('/login')} data-testid="nav-login-btn">
-                Log In
+                {t('nav.login')}
               </Button>
               <button className="bg-gradient-to-r from-[#58CC02] to-[#46a302] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-green-200 hover:shadow-xl hover:shadow-green-300 transition-all transform hover:-translate-y-0.5" onClick={() => document.getElementById('trial').scrollIntoView({ behavior: 'smooth' })} data-testid="nav-get-started-btn">
-                Request Demo
+                {t('landing.request_demo')}
               </button>
             </div>
           </div>
