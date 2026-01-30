@@ -2,9 +2,69 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 11.0  
+**Version:** 11.1  
 **Date:** January 30, 2026  
-**Status:** Production Ready - 28 Modular Routers + Consumable Mocks + PDF Reports
+**Status:** Production Ready - Multi-Agent AI System + Consumable Mocks
+
+---
+
+## 🧪 Session 14.16 - January 30, 2026 (AI Agents)
+
+### Multi-Agent AI Tutor System (COMPLETE)
+**Router: ai_agents.py (updated)**
+Configurable 3-agent AI tutoring system with LLM abstraction.
+
+**3 AI Agents:**
+| Agent | Purpose | Default Name |
+|-------|---------|--------------|
+| Mock Coach | Exam strategy & techniques | "Mock Coach" |
+| Exam Tutor | Content-specific tutoring | "Exam Tutor" |
+| Study Planner | Schedule & progress tracking | "Study Planner" |
+
+**Academy Configuration:**
+- Enable/disable each agent independently
+- Custom naming for each agent
+- Select LLM per agent (GPT-4, Claude Opus, Gemini)
+- Avatar tier: Basic (Rive) or Premium (HeyGen)
+- Voice with ElevenLabs
+- Only for students with AI Tutor in their plan
+
+**LLM Abstraction Layer:**
+```python
+LLMProvider:
+  - openai_gpt4
+  - openai_gpt4o
+  - claude_opus
+  - claude_sonnet
+  - gemini_pro
+  - gemini_flash
+```
+Easy switching per academy in settings.
+
+**Avatar Tiers:**
+- **None**: Text only
+- **Basic**: Rive 2D animated
+- **Premium**: HeyGen realistic video
+
+**Data Sources:**
+- Official exam content (ProficientHub)
+- Academy-specific materials
+- Student profile & history
+
+**Endpoints:**
+- `GET /api/ai-agents/config` - Get AI configuration
+- `PUT /api/ai-agents/config` - Update AI config (institution)
+- `GET /api/ai-agents/agents/available` - Get agents for student
+- `POST /api/ai-agents/chat` - Chat with agent
+- `GET /api/ai-agents/chat/sessions` - Chat history
+- `POST /api/ai-agents/exam-feedback` - Instant AI exam feedback
+
+### Instant AI Exam Feedback
+- Identical to official exam format
+- Uses academy's configured LLM
+- Section-by-section breakdown
+- Actionable recommendations
+- Saved to attempt record
 
 ---
 
