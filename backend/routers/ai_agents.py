@@ -454,6 +454,121 @@ async def get_session_history(session_id: str, current_user: dict = Depends(get_
     
     return session
 
+# ==================== REAL-TIME EXAM HELP (Mock Exam Coach) ====================
+
+class ExamHelpRequest(BaseModel):
+    attempt_id: str
+    question_id: str
+    question_text: str
+    student_question: str
+    current_answer: Optional[str] = None
+
+@router.post("/exam-help")
+async def get_exam_help(
+    request: ExamHelpRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get real-time help from Mock Exam Coach during an exam"""
+    if current_user["user_type"] != "student":
+        raise HTTPException(status_code=403, detail="Only students can request help")
+    
+    # Verify AI access
+    has_access = await verify_ai_access(current_user)
+    if not has_access:
+        raise HTTPException(status_code=402, detail="AI Tutor access required")
+    
+    institution_id = current_user.get("institution_id")
+    
+    # Verify the attempt exists and belongs to the student
+    attempt = await db.mock_attempts.find_one({
+        "id": request.attempt_id,
+        "student_id": current_user["id"],
+        "status": "in_progress"
+    })
+    
+    if not attempt:
+        raise HTTPException(status_code=404, detail="Exam attempt not found or already completed")
+    
+    # Get institution's AI config to check if mock_coach is enabled
+    config = await db.ai_agent_configs.find_one({"institution_id": institution_id})
+    
+    mock_coach_enabled = False
+    coach_name = "Mock Coach"
+    
+    if config:
+        for agent in config.get("agents", []):
+            if agent.get("agent_type") == "mock_coach" and agent.get("is_enabled"):
+                mock_coach_enabled = True
+                coach_name = agent.get("custom_name") or "Mock Coach"
+                break
+    
+    if not mock_coach_enabled:
+        raise HTTPException(status_code=403, detail="Mock Exam Coach is not enabled for your academy")
+    
+    exam_type = attempt.get("exam_type", "")
+    
+    # Build help prompt - guides without giving direct answers
+    help_prompt = f"""You are {coach_name}, helping a student during their {exam_type.upper()} mock exam.
+
+The student is stuck on this question and needs guidance:
+
+QUESTION:
+{request.question_text}
+
+STUDENT'S CURRENT ANSWER (if any):
+{request.current_answer or "No answer yet"}
+
+STUDENT'S QUESTION:
+{request.student_question}
+
+IMPORTANT RULES:
+1. NEVER give the direct answer
+2. Guide the student to find the answer themselves
+3. Provide hints, strategies, and thinking frameworks
+4. Point out relevant parts of the question they might have missed
+5. Suggest elimination strategies for multiple choice
+6. Remind them of time management if relevant
+7. Be encouraging and supportive
+
+Respond in a helpful, coaching manner. Help them learn, don't solve it for them."""
+
+    # Get platform LLM config
+    platform_config = await db.platform_config.find_one({"type": "llm"})
+    llm_provider = platform_config.get("default_llm", "openai_gpt4") if platform_config else "openai_gpt4"
+    
+    messages = [
+        {"role": "system", "content": help_prompt},
+        {"role": "user", "content": request.student_question}
+    ]
+    
+    # Get AI response
+    response_text = await call_llm(llm_provider, messages)
+    
+    # Log the help request (for analytics and to prevent abuse)
+    help_log = {
+        "id": str(uuid.uuid4()),
+        "attempt_id": request.attempt_id,
+        "student_id": current_user["id"],
+        "question_id": request.question_id,
+        "student_question": request.student_question,
+        "coach_response": response_text,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.exam_help_logs.insert_one(help_log)
+    
+    # Update attempt with help count
+    await db.mock_attempts.update_one(
+        {"id": request.attempt_id},
+        {"$inc": {"help_requests": 1}}
+    )
+    
+    return {
+        "coach_name": coach_name,
+        "response": response_text,
+        "help_count": (attempt.get("help_requests", 0) + 1),
+        "note": "Remember, the coach helps you think - the answer is yours to find!"
+    }
+
 # ==================== INSTANT EXAM FEEDBACK ====================
 
 @router.post("/exam-feedback")
