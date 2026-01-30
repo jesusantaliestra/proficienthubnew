@@ -237,7 +237,8 @@ class TestExamWithPurchasedAccess:
     
     def test_full_section_exam_flow(self):
         """Test complete section-by-section exam flow"""
-        exam_type = "test_section_flow"
+        # Use ielts_academic which has proper sections: listening, reading, writing, speaking
+        exam_type = "ielts_academic"
         
         # Step 1: Purchase exams
         purchase_response = requests.post(
