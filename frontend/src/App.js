@@ -34,6 +34,7 @@ import SSOCallback from './pages/SSOCallback';
 import ABTestingDashboard from './pages/ABTestingDashboard';
 import CommunityHub from './pages/CommunityHub';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import AlertsAutomation from './pages/AlertsAutomation';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
