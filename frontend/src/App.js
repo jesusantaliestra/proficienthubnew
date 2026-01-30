@@ -313,6 +313,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* Analytics Dashboard - Advanced Metrics */}
+      <Route 
+        path="/institution/analytics" 
+        element={
+          <ProtectedRoute allowedTypes={['institution', 'admin']}>
+            <AnalyticsDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Catch all - redirect to landing */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
