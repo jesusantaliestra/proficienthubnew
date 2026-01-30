@@ -71,6 +71,36 @@ export default function AnalyticsDashboard() {
     }).format(value);
   };
 
+  // Chart colors
+  const COLORS = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'];
+  const CHART_COLORS = {
+    primary: '#6366f1',
+    secondary: '#8b5cf6',
+    success: '#22c55e',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    info: '#3b82f6'
+  };
+
+  // Custom tooltip for charts
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 rounded-lg shadow-lg border">
+          <p className="font-medium text-gray-800">{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{ color: entry.color }} className="text-sm">
+              {entry.name}: {typeof entry.value === 'number' && entry.name.toLowerCase().includes('revenue') 
+                ? formatCurrency(entry.value) 
+                : entry.value}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   const KPICard = ({ title, value, change, trend, icon: Icon, subtitle }) => (
     <Card className="hover:shadow-lg transition-shadow">
       <CardContent className="p-6">
