@@ -160,6 +160,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* Landing Agent Admin */}
+      <Route 
+        path="/superadmin/landing-agent" 
+        element={
+          <ProtectedRoute allowedTypes={['admin']}>
+            <LandingAgentAdmin />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Income Calculator - Dedicated page */}
       <Route 
         path="/income-calculator" 
