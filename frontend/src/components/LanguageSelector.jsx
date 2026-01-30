@@ -4,7 +4,7 @@ import { Globe, ChevronDown, Search, Check } from 'lucide-react';
 import { SUPPORTED_LANGUAGES } from '../i18n/index';
 
 export default function LanguageSelector({ variant = 'default' }) {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
 
