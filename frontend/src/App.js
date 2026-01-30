@@ -12,6 +12,7 @@ import InstitutionDashboard from './pages/InstitutionDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentDashboardRestricted from './pages/StudentDashboardRestricted';
 import StudentExamDashboard from './pages/StudentExamDashboard';
+import SequentialExamDashboard from './pages/SequentialExamDashboard';
 import AITutor from './pages/AITutor';
 import AITutorMultiAgent from './pages/AITutorMultiAgent';
 import ExamSimulator from './pages/ExamSimulator';
