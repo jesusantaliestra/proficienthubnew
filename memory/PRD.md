@@ -2,9 +2,75 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 11.4  
+**Version:** 11.5  
 **Date:** January 30, 2026  
-**Status:** Production Ready - Demo Premium + HeyGen + Analytics Conversión
+**Status:** Production Ready - Sequential Exams + i18n 80 Languages + HeyGen
+
+---
+
+## 🧪 Session 14.20 - January 30, 2026 (Sequential Exams + i18n + Tutorial)
+
+### ✅ Sequential Exam System (CRITICAL - COMPLETE)
+**Unique exam assignment per user - no repeats until cycle**
+
+**Business Logic:**
+```
+First Purchase (5 exams) → 001, 002, 003, 004, 005
+Upsell (+5 exams)        → 006, 007, 008, 009, 010
+Upsell (+5 exams)        → 011, 012, 013, 014, 015
+...continues until 100...
+After 100, cycles back   → 001, 002, 003, ... (repeat)
+```
+
+**Key Features:**
+- Per-USER assignment (not per-institution)
+- 100 unique exams per exam type bank
+- Sequential IDs (001-100)
+- Automatic cycling after 100
+- Completion tracking per exam
+- Dashboard shows all available with status
+
+**Endpoints:**
+| Endpoint | Description |
+|----------|-------------|
+| `POST /api/sequential-exams/purchase` | Buy exams, assigns sequential IDs |
+| `POST /api/sequential-exams/upsell` | Add more exams, continues sequence |
+| `GET /api/sequential-exams/dashboard/{type}` | Full dashboard with all exams |
+| `POST /api/sequential-exams/complete/{type}/{id}` | Mark exam completed |
+| `GET /api/sequential-exams/my-access/{type}` | User's access for exam type |
+| `GET /api/sequential-exams/my-access-all` | All exam types access |
+
+### ✅ i18n - 80 Languages (COMPLETE)
+**Full internationalization support**
+
+**Implementation:**
+- Library: `react-i18next`
+- Languages: 80 most spoken languages worldwide
+- Detection: Browser language auto-detect
+- Storage: localStorage persistence
+
+**Popular Languages Supported:**
+English, Español, 中文, हिन्दी, العربية, Português, Русский, 日本語, Deutsch, Français, 한국어, Italiano, Türkçe, Polski, Nederlands, and 65 more...
+
+**Components:**
+- `LanguageSelector.jsx` - Searchable dropdown with flags
+- `i18n/index.js` - Configuration and translations
+- Compact variant for headers
+- Full variant for settings
+
+### ✅ HeyGen Tutorial Video (IN PROGRESS)
+**Premium video avatar for onboarding**
+
+**Configuration:**
+- Default Avatar: `Adriana_BizTalk_Front_public`
+- Default Voice: Ray (English)
+- Available Avatars: 1287
+- Tutorial Templates: 3 (onboarding, ai_tutor, analytics)
+
+**Latest Video Generation:**
+- Video ID: `e26c802ef4ac493ea419ef106444269e`
+- Status: Processing
+- Script: "Welcome to ProficientHub. I will guide you through setting up your academy."
 
 ---
 
