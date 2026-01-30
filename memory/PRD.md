@@ -116,7 +116,7 @@ English, Español, 中文, हिन्दी, العربية, Português, Ру�
 - Compact variant for headers
 - Full variant for settings
 
-### ✅ HeyGen Tutorial Video (IN PROGRESS)
+### ✅ HeyGen Tutorial Video (BLOCKED - API Issues)
 **Premium video avatar for onboarding**
 
 **Configuration:**
@@ -127,8 +127,8 @@ English, Español, 中文, हिन्दी, العربية, Português, Ру�
 
 **Latest Video Generation:**
 - Video ID: `e26c802ef4ac493ea419ef106444269e`
-- Status: Processing
-- Script: "Welcome to ProficientHub. I will guide you through setting up your academy."
+- Status: **FAILED** - HeyGen API returned error
+- Note: API has been unreliable. Requires debugging with minimal configuration.
 
 ---
 
