@@ -105,11 +105,11 @@ export default function AIAgentsConfig() {
     setSaving(false);
   };
 
-  const updateAgent = (agentType, field, value) => {
+  const updateAgent = (agentId, field, value) => {
     setConfig(prev => ({
       ...prev,
       agents: prev.agents.map(agent => 
-        agent.agent_type === agentType 
+        agent.id === agentId 
           ? { ...agent, [field]: value }
           : agent
       )
@@ -117,7 +117,7 @@ export default function AIAgentsConfig() {
   };
 
   const getEnabledAgentsCount = () => {
-    return config?.agents?.filter(a => a.is_enabled).length || 0;
+    return config?.agents?.filter(a => a.enabled).length || 0;
   };
 
   if (loading) {
