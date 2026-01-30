@@ -8764,7 +8764,11 @@ try:
     app.include_router(institution_settings_router, prefix="/api", tags=["Institution Settings"])
     app.include_router(institution_messaging_router, prefix="/api", tags=["Institution Messaging"])
     
-    logger.info("New feature routers loaded successfully (18 modules)")
+    # Landing Agent
+    from routers.landing_agent import router as landing_agent_router
+    app.include_router(landing_agent_router, prefix="/api", tags=["Landing Agent"])
+    
+    logger.info("New feature routers loaded successfully (19 modules)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
