@@ -373,23 +373,29 @@ class TestDashboardAccess:
         assert response.status_code == 200
         return response.json()["access_token"]
     
-    def test_institution_dashboard(self, institution_auth):
-        """GET /api/institution/dashboard - Institution dashboard access"""
+    def test_institution_metrics(self, institution_auth):
+        """GET /api/institution/metrics - Institution metrics access"""
         headers = {"Authorization": f"Bearer {institution_auth}"}
-        response = requests.get(f"{BASE_URL}/api/institution/dashboard", headers=headers)
+        response = requests.get(f"{BASE_URL}/api/institution/metrics", headers=headers)
         assert response.status_code == 200
         data = response.json()
-        assert "stats" in data or "students" in data or "total_students" in data
-        print(f"✓ Institution dashboard accessible")
+        print(f"✓ Institution metrics accessible")
     
-    def test_student_dashboard(self, student_auth):
-        """GET /api/student/dashboard - Student dashboard access"""
-        headers = {"Authorization": f"Bearer {student_auth}"}
-        response = requests.get(f"{BASE_URL}/api/student/dashboard", headers=headers)
+    def test_institution_analytics_overview(self, institution_auth):
+        """GET /api/institution/analytics/overview - Institution analytics"""
+        headers = {"Authorization": f"Bearer {institution_auth}"}
+        response = requests.get(f"{BASE_URL}/api/institution/analytics/overview", headers=headers)
         assert response.status_code == 200
         data = response.json()
-        # Should have student-specific data
-        print(f"✓ Student dashboard accessible")
+        print(f"✓ Institution analytics overview accessible")
+    
+    def test_student_credits(self, student_auth):
+        """GET /api/student/credits - Student credits access"""
+        headers = {"Authorization": f"Bearer {student_auth}"}
+        response = requests.get(f"{BASE_URL}/api/student/credits", headers=headers)
+        assert response.status_code == 200
+        data = response.json()
+        print(f"✓ Student credits accessible")
     
     def test_me_endpoint(self, student_auth):
         """GET /api/auth/me - Get current user info"""
