@@ -278,33 +278,34 @@ export default function AnalyticsDashboard() {
                   <CardDescription>Evolución de ingresos y deals cerrados</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {revenueData.monthly_breakdown.slice(-6).map((month) => (
-                      <div key={month.month} className="flex items-center gap-4">
-                        <span className="w-20 text-sm text-gray-500">{month.month}</span>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-gray-100 rounded-full h-4">
-                              <div 
-                                className="bg-green-500 rounded-full h-4"
-                                style={{ 
-                                  width: `${Math.min(
-                                    (month.revenue / Math.max(...revenueData.monthly_breakdown.map(m => m.revenue || 1))) * 100, 
-                                    100
-                                  )}%` 
-                                }}
-                              />
-                            </div>
-                            <span className="text-sm font-medium w-24 text-right">
-                              {formatCurrency(month.revenue)}
-                            </span>
-                          </div>
-                        </div>
-                        <Badge variant={month.deals_won > 0 ? 'default' : 'secondary'}>
-                          {month.deals_won} deals
-                        </Badge>
-                      </div>
-                    ))}
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={revenueData.monthly_breakdown.slice(-12)}>
+                        <defs>
+                          <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={CHART_COLORS.success} stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor={CHART_COLORS.success} stopOpacity={0.1}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                        <YAxis 
+                          tick={{ fontSize: 12 }} 
+                          stroke="#9ca3af"
+                          tickFormatter={(value) => `$${value/1000}k`}
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend />
+                        <Area 
+                          type="monotone" 
+                          dataKey="revenue" 
+                          name="Ingresos"
+                          stroke={CHART_COLORS.success} 
+                          fillOpacity={1}
+                          fill="url(#colorRevenue)" 
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -338,20 +339,23 @@ export default function AnalyticsDashboard() {
                   </CardContent>
                 </Card>
 
+                {/* Forecast Chart */}
                 <Card className="bg-blue-50 border-blue-200">
                   <CardHeader>
                     <CardTitle className="text-lg text-blue-800">Pronóstico</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {revenueData.forecast.map((f) => (
-                      <div key={f.month} className="flex justify-between py-2 border-b border-blue-100 last:border-0">
-                        <span className="text-blue-700">{f.month}</span>
-                        <div className="text-right">
-                          <span className="font-bold text-blue-800">{formatCurrency(f.predicted_revenue)}</span>
-                          <span className="text-xs text-blue-500 ml-2">({Math.round(f.confidence * 100)}%)</span>
-                        </div>
-                      </div>
-                    ))}
+                    <div className="h-40">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={revenueData.forecast}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#bfdbfe" />
+                          <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#3b82f6" />
+                          <YAxis tick={{ fontSize: 11 }} stroke="#3b82f6" tickFormatter={(v) => `$${v/1000}k`} />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Bar dataKey="predicted_revenue" name="Ingresos Predichos" fill={CHART_COLORS.info} radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
