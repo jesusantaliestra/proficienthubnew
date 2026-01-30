@@ -28,6 +28,7 @@ export default function StudentExamDashboard() {
   const [academyContent, setAcademyContent] = useState(null);
   const [showUpsell, setShowUpsell] = useState(false);
   const [startingExam, setStartingExam] = useState(false);
+  const [purchasingPlan, setPurchasingPlan] = useState(null);
 
   const examType = user?.current_exam || 'oet';
   
