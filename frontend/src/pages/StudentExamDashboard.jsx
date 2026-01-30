@@ -516,6 +516,7 @@ export default function StudentExamDashboard() {
                 <div 
                   key={plan.id}
                   className="flex items-center justify-between p-4 bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500/50 transition-colors cursor-pointer"
+                  data-testid={`upsell-plan-${plan.id}`}
                 >
                   <div>
                     <h4 className="font-bold text-white">{plan.name}</h4>
@@ -527,8 +528,21 @@ export default function StudentExamDashboard() {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-emerald-400">${plan.price}</p>
-                    <Button size="sm" className="mt-2 bg-emerald-600 hover:bg-emerald-700">
-                      Comprar
+                    <Button 
+                      size="sm" 
+                      className="mt-2 bg-emerald-600 hover:bg-emerald-700"
+                      onClick={() => handlePurchase(plan.id)}
+                      disabled={purchasingPlan === plan.id}
+                      data-testid={`buy-plan-${plan.id}`}
+                    >
+                      {purchasingPlan === plan.id ? (
+                        <span className="flex items-center gap-2">
+                          <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Procesando...
+                        </span>
+                      ) : (
+                        'Comprar'
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -537,14 +551,21 @@ export default function StudentExamDashboard() {
               {/* Quick buy options */}
               <div className="border-t border-slate-700 pt-4 mt-2">
                 <p className="text-sm text-slate-400 mb-3">Compra rápida:</p>
-                <div className="flex gap-3">
+                <div className="flex gap-3 flex-wrap">
                   {upsellOptions?.quick_buys?.map((item) => (
                     <Button 
                       key={item.type}
                       variant="outline" 
                       className="border-slate-600 text-slate-300 hover:bg-slate-800"
+                      onClick={() => handleQuickBuy(item.type)}
+                      disabled={purchasingPlan === item.type}
+                      data-testid={`quick-buy-${item.type}`}
                     >
-                      <Plus className="w-4 h-4 mr-1" />
+                      {purchasingPlan === item.type ? (
+                        <div className="w-4 h-4 border-2 border-slate-300 border-t-transparent rounded-full animate-spin mr-1" />
+                      ) : (
+                        <Plus className="w-4 h-4 mr-1" />
+                      )}
                       {item.name} - ${item.price}
                     </Button>
                   ))}
