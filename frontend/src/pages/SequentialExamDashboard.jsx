@@ -5,13 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { 
   BookOpen, CheckCircle, Lock, Play, Trophy, 
   TrendingUp, Clock, Star, ArrowRight, Plus,
-  Brain, Target, Award
+  Brain, Target, Award, Layers, FileText, Info
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
+import LanguageSelector from '../components/LanguageSelector';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
