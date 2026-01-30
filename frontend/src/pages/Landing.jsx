@@ -14,6 +14,7 @@ import {
   Video, FolderOpen, Volume2, Coins, Plus
 } from 'lucide-react';
 import axios from 'axios';
+import LandingAgentWidget from '../components/LandingAgentWidget';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
