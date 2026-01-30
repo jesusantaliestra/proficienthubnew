@@ -62,6 +62,7 @@ const LEVELS = [
 
 export default function StudentDashboardRestricted() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [examHistory, setExamHistory] = useState([]);
