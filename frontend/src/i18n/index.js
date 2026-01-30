@@ -98,15 +98,24 @@ const resources = {
         login: 'Sign In',
         register: 'Get Started',
         dashboard: 'Dashboard',
-        logout: 'Sign Out'
+        logout: 'Sign Out',
+        settings: 'Settings',
+        students: 'Students',
+        analytics: 'Analytics',
+        exams: 'Exams',
+        community: 'Community',
+        ai_tutor: 'AI Tutor'
       },
       // Landing
       landing: {
-        hero_title: 'Master Your Exam with AI-Powered Preparation',
-        hero_subtitle: 'Practice with realistic simulations, get instant feedback, and track your progress with our intelligent tutoring system.',
-        get_started: 'Get Started Free',
+        hero_title: 'Scale Your Academy 10x With AI',
+        hero_subtitle: 'Your current teachers can handle 10x more students with AI tutors, instant feedback, and premium analytics.',
+        get_started: 'Start Free Trial',
         request_demo: 'Request Demo',
-        trusted_by: 'Trusted by leading institutions worldwide'
+        trusted_by: 'Trusted by leading institutions worldwide',
+        b2b_platform: 'B2B Platform for Language Institutions',
+        features_title: 'Everything you need to succeed',
+        roi_calculator: 'Calculate Your ROI'
       },
       // Pricing
       pricing: {
@@ -114,7 +123,7 @@ const resources = {
         subtitle: 'Choose the plan that fits your institution',
         per_license: 'per license',
         per_month: '/month',
-        individual_license: 'Individual License',
+        individual_license: 'Individual License Price',
         duration: 'Contract Duration',
         months: 'months',
         month: 'month',
@@ -122,11 +131,14 @@ const resources = {
         buy_now: 'Buy Now',
         request_demo: 'Request Free Demo',
         license_note: 'Each license is individual and gives full access to 1 student',
-        licenses: 'licenses'
+        licenses: 'licenses',
+        most_popular: 'Most Popular',
+        enterprise: 'Enterprise',
+        contact_sales: 'Contact Sales'
       },
       // Dashboard
       dashboard: {
-        welcome: 'Welcome',
+        welcome: 'Welcome back',
         my_exams: 'My Exams',
         progress: 'Progress',
         available: 'Available',
@@ -135,7 +147,14 @@ const resources = {
         start_exam: 'Start Exam',
         continue: 'Continue',
         view_results: 'View Results',
-        credits_remaining: 'Credits Remaining'
+        credits_remaining: 'Credits Remaining',
+        total_students: 'Total Students',
+        pass_rate: 'Pass Rate',
+        at_risk: 'At Risk Students',
+        exams_completed: 'Exams Completed',
+        overview: 'Overview',
+        performance: 'Performance Trend',
+        distribution: 'Exam Distribution'
       },
       // Exams
       exams: {
@@ -147,7 +166,36 @@ const resources = {
         submit: 'Submit',
         next: 'Next',
         previous: 'Previous',
-        finish: 'Finish Exam'
+        finish: 'Finish Exam',
+        start: 'Start',
+        resume: 'Resume',
+        full_mode: 'Full Exam',
+        section_mode: 'By Sections',
+        full_mode_desc: 'Take all sections in one sitting, simulating real exam conditions.',
+        section_mode_desc: 'Complete each section separately, at your own pace.',
+        sections_completed: 'sections completed',
+        in_progress: 'In Progress',
+        exam_used_warning: 'Once started, the exam attempt will be used.',
+        listening: 'Listening',
+        reading: 'Reading',
+        writing: 'Writing',
+        speaking: 'Speaking'
+      },
+      // Institution
+      institution: {
+        add_student: 'Add Student',
+        students: 'Students',
+        settings: 'Settings',
+        crm: 'CRM & Sales',
+        marketplace: 'Marketplace',
+        video_classes: 'Video Classes',
+        library: 'Library',
+        notifications: 'Notifications',
+        api_keys: 'API Keys',
+        integrations: 'Integrations',
+        erp: 'ERP',
+        sso: 'SSO Configuration',
+        alerts: 'Alerts'
       },
       // Common
       common: {
@@ -162,7 +210,25 @@ const resources = {
         filter: 'Filter',
         all: 'All',
         yes: 'Yes',
-        no: 'No'
+        no: 'No',
+        add: 'Add',
+        remove: 'Remove',
+        view: 'View',
+        download: 'Download',
+        upload: 'Upload',
+        back: 'Back',
+        close: 'Close',
+        confirm: 'Confirm',
+        from_last_month: 'from last month',
+        from_last_week: 'from last week'
+      },
+      // Language selector
+      language: {
+        select: 'Select Language',
+        search: 'Search languages...',
+        popular: 'Popular',
+        all_languages: 'All Languages',
+        supported: 'languages supported'
       }
     }
   },
@@ -176,21 +242,30 @@ const resources = {
         login: 'Iniciar Sesión',
         register: 'Comenzar',
         dashboard: 'Panel',
-        logout: 'Cerrar Sesión'
+        logout: 'Cerrar Sesión',
+        settings: 'Configuración',
+        students: 'Estudiantes',
+        analytics: 'Analíticas',
+        exams: 'Exámenes',
+        community: 'Comunidad',
+        ai_tutor: 'Tutor IA'
       },
       landing: {
-        hero_title: 'Domina tu Examen con Preparación Impulsada por IA',
-        hero_subtitle: 'Practica con simulaciones realistas, obtén retroalimentación instantánea y sigue tu progreso con nuestro sistema de tutoría inteligente.',
-        get_started: 'Comenzar Gratis',
+        hero_title: 'Escala tu Academia 10x con IA',
+        hero_subtitle: 'Tus profesores actuales pueden atender 10x más estudiantes con tutores IA, feedback instantáneo y analíticas premium.',
+        get_started: 'Comenzar Prueba Gratis',
         request_demo: 'Solicitar Demo',
-        trusted_by: 'Confiado por instituciones líderes en todo el mundo'
+        trusted_by: 'Confiado por instituciones líderes en todo el mundo',
+        b2b_platform: 'Plataforma B2B para Instituciones de Idiomas',
+        features_title: 'Todo lo que necesitas para triunfar',
+        roi_calculator: 'Calcula tu ROI'
       },
       pricing: {
         title: 'Precios Simples y Transparentes',
         subtitle: 'Elige el plan que se adapte a tu institución',
         per_license: 'por licencia',
         per_month: '/mes',
-        individual_license: 'Licencia Individual',
+        individual_license: 'Precio por Licencia Individual',
         duration: 'Duración del Contrato',
         months: 'meses',
         month: 'mes',
@@ -198,10 +273,13 @@ const resources = {
         buy_now: 'Contratar Ahora',
         request_demo: 'Solicitar Demo Gratuita',
         license_note: 'Cada licencia es individual y da acceso completo a 1 estudiante',
-        licenses: 'licencias'
+        licenses: 'licencias',
+        most_popular: 'Más Popular',
+        enterprise: 'Empresarial',
+        contact_sales: 'Contactar Ventas'
       },
       dashboard: {
-        welcome: 'Bienvenido',
+        welcome: 'Bienvenido de nuevo',
         my_exams: 'Mis Exámenes',
         progress: 'Progreso',
         available: 'Disponibles',
@@ -210,7 +288,14 @@ const resources = {
         start_exam: 'Iniciar Examen',
         continue: 'Continuar',
         view_results: 'Ver Resultados',
-        credits_remaining: 'Créditos Restantes'
+        credits_remaining: 'Créditos Restantes',
+        total_students: 'Total Estudiantes',
+        pass_rate: 'Tasa de Aprobación',
+        at_risk: 'Estudiantes en Riesgo',
+        exams_completed: 'Exámenes Completados',
+        overview: 'Resumen',
+        performance: 'Tendencia de Rendimiento',
+        distribution: 'Distribución de Exámenes'
       },
       exams: {
         mock_exam: 'Examen de Práctica',
@@ -221,7 +306,35 @@ const resources = {
         submit: 'Enviar',
         next: 'Siguiente',
         previous: 'Anterior',
-        finish: 'Finalizar Examen'
+        finish: 'Finalizar Examen',
+        start: 'Iniciar',
+        resume: 'Reanudar',
+        full_mode: 'Examen Completo',
+        section_mode: 'Por Secciones',
+        full_mode_desc: 'Toma todas las secciones en una sola sesión, simulando condiciones reales.',
+        section_mode_desc: 'Completa cada sección por separado, a tu propio ritmo.',
+        sections_completed: 'secciones completadas',
+        in_progress: 'En Progreso',
+        exam_used_warning: 'Una vez iniciado, el intento de examen se considerará usado.',
+        listening: 'Comprensión Auditiva',
+        reading: 'Comprensión Lectora',
+        writing: 'Expresión Escrita',
+        speaking: 'Expresión Oral'
+      },
+      institution: {
+        add_student: 'Agregar Estudiante',
+        students: 'Estudiantes',
+        settings: 'Configuración',
+        crm: 'CRM y Ventas',
+        marketplace: 'Marketplace',
+        video_classes: 'Clases en Video',
+        library: 'Biblioteca',
+        notifications: 'Notificaciones',
+        api_keys: 'Claves API',
+        integrations: 'Integraciones',
+        erp: 'ERP',
+        sso: 'Configuración SSO',
+        alerts: 'Alertas'
       },
       common: {
         loading: 'Cargando...',
@@ -235,7 +348,386 @@ const resources = {
         filter: 'Filtrar',
         all: 'Todos',
         yes: 'Sí',
-        no: 'No'
+        no: 'No',
+        add: 'Agregar',
+        remove: 'Quitar',
+        view: 'Ver',
+        download: 'Descargar',
+        upload: 'Subir',
+        back: 'Volver',
+        close: 'Cerrar',
+        confirm: 'Confirmar',
+        from_last_month: 'respecto al mes pasado',
+        from_last_week: 'respecto a la semana pasada'
+      },
+      language: {
+        select: 'Seleccionar Idioma',
+        search: 'Buscar idiomas...',
+        popular: 'Populares',
+        all_languages: 'Todos los Idiomas',
+        supported: 'idiomas soportados'
+      }
+    }
+  },
+  pt: {
+    translation: {
+      nav: {
+        home: 'Início',
+        features: 'Recursos',
+        pricing: 'Preços',
+        about: 'Sobre',
+        login: 'Entrar',
+        register: 'Começar',
+        dashboard: 'Painel',
+        logout: 'Sair',
+        settings: 'Configurações',
+        students: 'Alunos',
+        analytics: 'Análises',
+        exams: 'Exames',
+        community: 'Comunidade',
+        ai_tutor: 'Tutor IA'
+      },
+      landing: {
+        hero_title: 'Escale sua Academia 10x com IA',
+        hero_subtitle: 'Seus professores atuais podem atender 10x mais alunos com tutores IA, feedback instantâneo e análises premium.',
+        get_started: 'Começar Teste Grátis',
+        request_demo: 'Solicitar Demo',
+        trusted_by: 'Confiado por instituições líderes em todo o mundo',
+        b2b_platform: 'Plataforma B2B para Instituições de Idiomas',
+        features_title: 'Tudo que você precisa para ter sucesso',
+        roi_calculator: 'Calcule seu ROI'
+      },
+      pricing: {
+        title: 'Preços Simples e Transparentes',
+        subtitle: 'Escolha o plano que se adapta à sua instituição',
+        per_license: 'por licença',
+        per_month: '/mês',
+        individual_license: 'Preço por Licença Individual',
+        duration: 'Duração do Contrato',
+        months: 'meses',
+        month: 'mês',
+        total: 'Total',
+        buy_now: 'Contratar Agora',
+        request_demo: 'Solicitar Demo Grátis',
+        license_note: 'Cada licença é individual e dá acesso completo a 1 aluno',
+        licenses: 'licenças',
+        most_popular: 'Mais Popular',
+        enterprise: 'Empresarial',
+        contact_sales: 'Contatar Vendas'
+      },
+      dashboard: {
+        welcome: 'Bem-vindo de volta',
+        my_exams: 'Meus Exames',
+        progress: 'Progresso',
+        available: 'Disponíveis',
+        completed: 'Completados',
+        locked: 'Bloqueados',
+        start_exam: 'Iniciar Exame',
+        continue: 'Continuar',
+        view_results: 'Ver Resultados',
+        credits_remaining: 'Créditos Restantes',
+        total_students: 'Total de Alunos',
+        pass_rate: 'Taxa de Aprovação',
+        at_risk: 'Alunos em Risco',
+        exams_completed: 'Exames Completados',
+        overview: 'Visão Geral',
+        performance: 'Tendência de Desempenho',
+        distribution: 'Distribuição de Exames'
+      },
+      exams: {
+        mock_exam: 'Simulado',
+        full_test: 'Teste Completo',
+        section: 'Seção',
+        time_remaining: 'Tempo Restante',
+        questions: 'Questões',
+        submit: 'Enviar',
+        next: 'Próximo',
+        previous: 'Anterior',
+        finish: 'Finalizar Exame',
+        start: 'Iniciar',
+        resume: 'Retomar',
+        full_mode: 'Exame Completo',
+        section_mode: 'Por Seções',
+        full_mode_desc: 'Faça todas as seções de uma vez, simulando condições reais.',
+        section_mode_desc: 'Complete cada seção separadamente, no seu ritmo.',
+        sections_completed: 'seções completadas',
+        in_progress: 'Em Progresso',
+        exam_used_warning: 'Uma vez iniciado, a tentativa será considerada usada.',
+        listening: 'Compreensão Auditiva',
+        reading: 'Compreensão de Leitura',
+        writing: 'Expressão Escrita',
+        speaking: 'Expressão Oral'
+      },
+      common: {
+        loading: 'Carregando...',
+        error: 'Ocorreu um erro',
+        success: 'Sucesso',
+        save: 'Salvar',
+        cancel: 'Cancelar',
+        delete: 'Excluir',
+        edit: 'Editar',
+        search: 'Buscar',
+        filter: 'Filtrar',
+        all: 'Todos',
+        yes: 'Sim',
+        no: 'Não',
+        add: 'Adicionar',
+        remove: 'Remover',
+        view: 'Ver',
+        download: 'Baixar',
+        upload: 'Enviar',
+        back: 'Voltar',
+        close: 'Fechar',
+        confirm: 'Confirmar',
+        from_last_month: 'em relação ao mês passado',
+        from_last_week: 'em relação à semana passada'
+      },
+      language: {
+        select: 'Selecionar Idioma',
+        search: 'Buscar idiomas...',
+        popular: 'Populares',
+        all_languages: 'Todos os Idiomas',
+        supported: 'idiomas suportados'
+      }
+    }
+  },
+  zh: {
+    translation: {
+      nav: {
+        home: '首页',
+        features: '功能',
+        pricing: '价格',
+        about: '关于',
+        login: '登录',
+        register: '开始',
+        dashboard: '仪表板',
+        logout: '退出',
+        settings: '设置',
+        students: '学生',
+        analytics: '分析',
+        exams: '考试',
+        community: '社区',
+        ai_tutor: 'AI导师'
+      },
+      landing: {
+        hero_title: '用AI将您的学院扩大10倍',
+        hero_subtitle: '通过AI导师、即时反馈和高级分析，您现有的教师可以处理10倍的学生。',
+        get_started: '开始免费试用',
+        request_demo: '申请演示',
+        trusted_by: '全球领先机构信赖',
+        b2b_platform: '语言机构B2B平台',
+        features_title: '成功所需的一切',
+        roi_calculator: '计算您的ROI'
+      },
+      dashboard: {
+        welcome: '欢迎回来',
+        my_exams: '我的考试',
+        progress: '进度',
+        available: '可用',
+        completed: '已完成',
+        start_exam: '开始考试',
+        continue: '继续',
+        view_results: '查看结果',
+        credits_remaining: '剩余学分',
+        total_students: '学生总数',
+        overview: '概览'
+      },
+      exams: {
+        mock_exam: '模拟考试',
+        full_test: '完整测试',
+        section: '部分',
+        time_remaining: '剩余时间',
+        submit: '提交',
+        next: '下一个',
+        previous: '上一个',
+        finish: '完成考试',
+        start: '开始',
+        full_mode: '完整考试',
+        section_mode: '分部分',
+        listening: '听力',
+        reading: '阅读',
+        writing: '写作',
+        speaking: '口语'
+      },
+      common: {
+        loading: '加载中...',
+        error: '发生错误',
+        success: '成功',
+        save: '保存',
+        cancel: '取消',
+        delete: '删除',
+        edit: '编辑',
+        search: '搜索',
+        all: '全部',
+        yes: '是',
+        no: '否'
+      },
+      language: {
+        select: '选择语言',
+        search: '搜索语言...',
+        popular: '热门',
+        all_languages: '所有语言',
+        supported: '种语言支持'
+      }
+    }
+  },
+  fr: {
+    translation: {
+      nav: {
+        home: 'Accueil',
+        features: 'Fonctionnalités',
+        pricing: 'Tarifs',
+        about: 'À propos',
+        login: 'Connexion',
+        register: 'Commencer',
+        dashboard: 'Tableau de bord',
+        logout: 'Déconnexion',
+        settings: 'Paramètres',
+        students: 'Étudiants',
+        analytics: 'Analytique',
+        exams: 'Examens',
+        community: 'Communauté',
+        ai_tutor: 'Tuteur IA'
+      },
+      landing: {
+        hero_title: 'Multipliez votre Académie par 10 avec l\'IA',
+        hero_subtitle: 'Vos enseignants actuels peuvent gérer 10x plus d\'étudiants avec des tuteurs IA, un feedback instantané et des analyses premium.',
+        get_started: 'Essai Gratuit',
+        request_demo: 'Demander une Démo',
+        trusted_by: 'Fait confiance par des institutions leaders dans le monde',
+        b2b_platform: 'Plateforme B2B pour Institutions de Langues',
+        features_title: 'Tout ce dont vous avez besoin pour réussir',
+        roi_calculator: 'Calculez votre ROI'
+      },
+      dashboard: {
+        welcome: 'Bienvenue',
+        my_exams: 'Mes Examens',
+        progress: 'Progression',
+        available: 'Disponibles',
+        completed: 'Terminés',
+        start_exam: 'Commencer l\'Examen',
+        continue: 'Continuer',
+        view_results: 'Voir les Résultats',
+        credits_remaining: 'Crédits Restants',
+        total_students: 'Total Étudiants',
+        overview: 'Aperçu'
+      },
+      exams: {
+        mock_exam: 'Examen Blanc',
+        full_test: 'Test Complet',
+        section: 'Section',
+        time_remaining: 'Temps Restant',
+        submit: 'Soumettre',
+        next: 'Suivant',
+        previous: 'Précédent',
+        finish: 'Terminer l\'Examen',
+        start: 'Commencer',
+        full_mode: 'Examen Complet',
+        section_mode: 'Par Sections',
+        listening: 'Compréhension Orale',
+        reading: 'Compréhension Écrite',
+        writing: 'Expression Écrite',
+        speaking: 'Expression Orale'
+      },
+      common: {
+        loading: 'Chargement...',
+        error: 'Une erreur s\'est produite',
+        success: 'Succès',
+        save: 'Enregistrer',
+        cancel: 'Annuler',
+        delete: 'Supprimer',
+        edit: 'Modifier',
+        search: 'Rechercher',
+        all: 'Tous',
+        yes: 'Oui',
+        no: 'Non'
+      },
+      language: {
+        select: 'Sélectionner la Langue',
+        search: 'Rechercher des langues...',
+        popular: 'Populaires',
+        all_languages: 'Toutes les Langues',
+        supported: 'langues prises en charge'
+      }
+    }
+  },
+  de: {
+    translation: {
+      nav: {
+        home: 'Startseite',
+        features: 'Funktionen',
+        pricing: 'Preise',
+        about: 'Über uns',
+        login: 'Anmelden',
+        register: 'Starten',
+        dashboard: 'Dashboard',
+        logout: 'Abmelden',
+        settings: 'Einstellungen',
+        students: 'Studenten',
+        analytics: 'Analytik',
+        exams: 'Prüfungen',
+        community: 'Community',
+        ai_tutor: 'KI-Tutor'
+      },
+      landing: {
+        hero_title: 'Skalieren Sie Ihre Akademie 10x mit KI',
+        hero_subtitle: 'Ihre aktuellen Lehrer können mit KI-Tutoren, sofortigem Feedback und Premium-Analysen 10x mehr Studenten betreuen.',
+        get_started: 'Kostenlos Testen',
+        request_demo: 'Demo Anfordern',
+        trusted_by: 'Vertraut von führenden Institutionen weltweit',
+        b2b_platform: 'B2B-Plattform für Sprachinstitute',
+        features_title: 'Alles was Sie zum Erfolg brauchen',
+        roi_calculator: 'Berechnen Sie Ihren ROI'
+      },
+      dashboard: {
+        welcome: 'Willkommen zurück',
+        my_exams: 'Meine Prüfungen',
+        progress: 'Fortschritt',
+        available: 'Verfügbar',
+        completed: 'Abgeschlossen',
+        start_exam: 'Prüfung Starten',
+        continue: 'Fortsetzen',
+        view_results: 'Ergebnisse Ansehen',
+        credits_remaining: 'Verbleibende Credits',
+        total_students: 'Studenten Gesamt',
+        overview: 'Übersicht'
+      },
+      exams: {
+        mock_exam: 'Probeprüfung',
+        full_test: 'Vollständiger Test',
+        section: 'Abschnitt',
+        time_remaining: 'Verbleibende Zeit',
+        submit: 'Absenden',
+        next: 'Weiter',
+        previous: 'Zurück',
+        finish: 'Prüfung Beenden',
+        start: 'Starten',
+        full_mode: 'Vollständige Prüfung',
+        section_mode: 'Abschnittsweise',
+        listening: 'Hörverstehen',
+        reading: 'Leseverstehen',
+        writing: 'Schriftlicher Ausdruck',
+        speaking: 'Mündlicher Ausdruck'
+      },
+      common: {
+        loading: 'Laden...',
+        error: 'Ein Fehler ist aufgetreten',
+        success: 'Erfolg',
+        save: 'Speichern',
+        cancel: 'Abbrechen',
+        delete: 'Löschen',
+        edit: 'Bearbeiten',
+        search: 'Suchen',
+        all: 'Alle',
+        yes: 'Ja',
+        no: 'Nein'
+      },
+      language: {
+        select: 'Sprache Wählen',
+        search: 'Sprachen suchen...',
+        popular: 'Beliebt',
+        all_languages: 'Alle Sprachen',
+        supported: 'Sprachen unterstützt'
       }
     }
   }
