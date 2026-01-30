@@ -2,9 +2,51 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 11.1  
+**Version:** 11.2  
 **Date:** January 30, 2026  
 **Status:** Production Ready - Multi-Agent AI System + Consumable Mocks
+
+---
+
+## 🧪 Session 14.17 - January 30, 2026 (P0 + P1 Complete)
+
+### ✅ P0: AI Agents Configuration UI (COMPLETE)
+**Frontend: AIAgentsConfig.jsx**
+Full UI for institutions to configure their AI tutors.
+
+**Features Implemented:**
+- Route: `/institution/ai-agents`
+- Sidebar link: "AI Tutores" with purple "AI" badge
+- 3 tabs: Agentes, Avatares, Contenido
+- Per-agent configuration:
+  - Enable/disable toggle
+  - Voice selector (Nova, Echo, Alloy, Fable, Shimmer)
+  - Credits per message display
+- Save button with toast confirmation
+
+**3 AI Agents Displayed:**
+| Agent | Icon | Color | Credits/msg |
+|-------|------|-------|-------------|
+| Official Tutor | BookOpen | Blue | 1 |
+| Mock Coach | Target | Orange | 2 |
+| Study Planner | Calendar | Green | 1 |
+
+### ✅ P1: Student Exam Dashboard Upsell + PDF (COMPLETE)
+**Frontend: StudentExamDashboard.jsx**
+Enhanced student dashboard with purchase and download capabilities.
+
+**Features Implemented:**
+- `handlePurchase()` function for buying exam plans
+- `handleQuickBuy()` function for single credit purchases
+- Loading states on purchase buttons
+- Upsell modal with plan options and prices
+- PDF download button on completed exams
+- Credits display (Mocks, Speaking, Writing)
+
+**Backend Endpoints Used:**
+- `POST /api/exam-plans/purchase` - Buy full plan
+- `POST /api/exam-plans/quick-purchase` - Buy single credit
+- `GET /api/exam-plans/attempt/{id}/pdf` - Download report
 
 ---
 
