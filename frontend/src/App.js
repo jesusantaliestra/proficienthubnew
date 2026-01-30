@@ -324,6 +324,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* Alerts Automation - Monetizable Feature */}
+      <Route 
+        path="/institution/alerts" 
+        element={
+          <ProtectedRoute allowedTypes={['institution', 'admin']}>
+            <AlertsAutomation />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Catch all - redirect to landing */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
