@@ -40,6 +40,7 @@ import CommunityHub from './pages/CommunityHub';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import AlertsAutomation from './pages/AlertsAutomation';
 import AIAgentsConfig from './pages/AIAgentsConfig';
+import ConversionAnalyticsDashboard from './pages/ConversionAnalyticsDashboard';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
