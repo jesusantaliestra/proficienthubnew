@@ -377,6 +377,21 @@ export default function SequentialExamDashboard() {
                       View Results
                     </Button>
                   </div>
+                ) : inProgress ? (
+                  <div className="space-y-2">
+                    <Progress value={inProgress.progress_percent} className="h-2" />
+                    <p className="text-xs text-amber-300">
+                      {inProgress.sections_completed.length}/{inProgress.sections_completed.length + inProgress.sections_remaining.length} secciones
+                    </p>
+                    <Button 
+                      size="sm"
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-black"
+                      onClick={() => startExam(exam.exam_id)}
+                    >
+                      <Play className="w-4 h-4 mr-1" />
+                      Continuar
+                    </Button>
+                  </div>
                 ) : (
                   <Button 
                     size="sm"
@@ -389,7 +404,8 @@ export default function SequentialExamDashboard() {
                 )}
               </CardContent>
             </Card>
-          ))}
+          );
+          })}
           
           {/* Upsell Card */}
           <Card 
