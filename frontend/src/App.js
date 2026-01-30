@@ -204,6 +204,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* Student Premium Exam Dashboard - Integrated Academy + ProficientHub */}
+      <Route 
+        path="/student/exam-dashboard" 
+        element={
+          <ProtectedRoute allowedTypes={['student', 'individual']}>
+            <StudentExamDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* AI Tutor - Multi-Agent System */}
       <Route 
         path="/tutor/:examType" 
