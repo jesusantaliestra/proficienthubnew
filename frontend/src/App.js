@@ -171,6 +171,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* Demo & HeyGen Management */}
+      <Route 
+        path="/superadmin/demo-management" 
+        element={
+          <ProtectedRoute allowedTypes={['admin']}>
+            <DemoManagement />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Income Calculator - Dedicated page */}
       <Route 
         path="/income-calculator" 
