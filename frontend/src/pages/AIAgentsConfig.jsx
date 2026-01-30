@@ -15,8 +15,15 @@ import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Agent icons and colors
+// Agent icons and colors - using 'id' field from backend
 const AGENT_CONFIG = {
+  official_tutor: {
+    icon: BookOpen,
+    color: 'from-blue-500 to-indigo-500',
+    bgColor: 'bg-blue-100',
+    textColor: 'text-blue-600',
+    description: 'Tutor oficial especializado en el contenido del examen'
+  },
   mock_coach: {
     icon: Target,
     color: 'from-orange-500 to-red-500',
@@ -24,14 +31,7 @@ const AGENT_CONFIG = {
     textColor: 'text-orange-600',
     description: 'Ayuda a los estudiantes durante el examen cuando se atascan'
   },
-  exam_tutor: {
-    icon: BookOpen,
-    color: 'from-blue-500 to-indigo-500',
-    bgColor: 'bg-blue-100',
-    textColor: 'text-blue-600',
-    description: 'Tutor especializado en el contenido del examen'
-  },
-  study_planner: {
+  planner: {
     icon: Calendar,
     color: 'from-green-500 to-emerald-500',
     bgColor: 'bg-green-100',
