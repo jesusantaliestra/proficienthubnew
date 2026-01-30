@@ -1506,6 +1506,9 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+      
+      {/* Landing Agent Widget */}
+      <LandingAgentWidget />
     </div>
   );
 }
