@@ -400,3 +400,329 @@ async def get_all_exam_access(current_user: dict = Depends(get_current_user)):
         }
     
     return result
+
+
+# =============================================
+# Section-Based Exam Logic
+# =============================================
+
+@router.post("/start/{exam_type}/{exam_id}")
+async def start_exam(
+    exam_type: str,
+    exam_id: str,
+    request: StartExamRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Start an exam attempt - either full or section by section.
+    
+    Modes:
+    - "full": Takes the entire exam in one sitting (traditional mock)
+    - "section": Takes one section at a time (uses the same exam attempt)
+    
+    Business Rule: 
+    - Starting ANY section of an exam "uses" that exam number
+    - Once ANY section is started, the exam is considered "in progress"
+    - The exam can only be completed once (all sections done)
+    """
+    
+    user_id = current_user["id"]
+    
+    # Verify user has access to this exam
+    access = await db.user_exam_access.find_one(
+        {"user_id": user_id, "exam_type": exam_type}
+    )
+    
+    if not access:
+        raise HTTPException(status_code=403, detail="No tienes acceso a este tipo de examen")
+    
+    if exam_id not in access.get("available_exams", []):
+        raise HTTPException(status_code=403, detail="Este examen no está desbloqueado")
+    
+    # Check if this exam is already completed
+    if exam_id in access.get("completed_exams", []):
+        raise HTTPException(status_code=400, detail="Este examen ya fue completado")
+    
+    # Check for existing attempt
+    existing_attempt = await db.exam_attempts_progress.find_one(
+        {"user_id": user_id, "exam_type": exam_type, "exam_id": exam_id}
+    )
+    
+    sections = get_sections_for_exam_type(exam_type)
+    
+    if existing_attempt:
+        # Exam already started - can only continue in same mode
+        if existing_attempt.get("mode") == "full" and request.mode == "section":
+            raise HTTPException(
+                status_code=400, 
+                detail="Este examen fue iniciado en modo completo. No puedes cambiar a modo por secciones."
+            )
+        
+        # If section mode, check which section they want
+        if request.mode == "section":
+            if not request.section:
+                raise HTTPException(status_code=400, detail="Debes especificar la sección")
+            
+            if request.section not in sections:
+                raise HTTPException(status_code=400, detail=f"Sección inválida. Secciones disponibles: {sections}")
+            
+            if request.section in existing_attempt.get("sections_completed", []):
+                raise HTTPException(status_code=400, detail="Esta sección ya fue completada")
+        
+        return {
+            "status": "resumed",
+            "exam_id": exam_id,
+            "mode": existing_attempt.get("mode"),
+            "sections": sections,
+            "sections_completed": existing_attempt.get("sections_completed", []),
+            "sections_remaining": [s for s in sections if s not in existing_attempt.get("sections_completed", [])],
+            "started_at": existing_attempt.get("started_at"),
+            "current_section": request.section if request.mode == "section" else None,
+            "message": "Continuando examen en progreso"
+        }
+    
+    # New attempt - create progress record
+    attempt_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "exam_type": exam_type,
+        "exam_id": exam_id,
+        "mode": request.mode,
+        "sections": sections,
+        "sections_completed": [],
+        "sections_scores": {},
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "status": "in_progress",
+        "institution_id": current_user.get("institution_id"),
+        "current_section": request.section if request.mode == "section" else None
+    }
+    
+    await db.exam_attempts_progress.insert_one(attempt_doc)
+    
+    return {
+        "status": "started",
+        "exam_id": exam_id,
+        "mode": request.mode,
+        "sections": sections,
+        "sections_completed": [],
+        "sections_remaining": sections,
+        "started_at": attempt_doc["started_at"],
+        "current_section": request.section if request.mode == "section" else None,
+        "message": f"Examen iniciado en modo {'completo' if request.mode == 'full' else 'por secciones'}"
+    }
+
+
+@router.post("/complete-section/{exam_type}/{exam_id}")
+async def complete_section(
+    exam_type: str,
+    exam_id: str,
+    request: CompleteSectionRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Complete a section of an exam.
+    
+    When all sections are completed, the exam is marked as fully completed.
+    """
+    
+    user_id = current_user["id"]
+    
+    # Get the progress record
+    progress = await db.exam_attempts_progress.find_one(
+        {"user_id": user_id, "exam_type": exam_type, "exam_id": exam_id}
+    )
+    
+    if not progress:
+        raise HTTPException(status_code=404, detail="No hay un examen en progreso")
+    
+    if progress.get("status") == "completed":
+        raise HTTPException(status_code=400, detail="Este examen ya fue completado")
+    
+    sections = progress.get("sections", [])
+    if request.section not in sections:
+        raise HTTPException(status_code=400, detail=f"Sección inválida: {request.section}")
+    
+    sections_completed = progress.get("sections_completed", [])
+    if request.section in sections_completed:
+        raise HTTPException(status_code=400, detail="Esta sección ya fue completada")
+    
+    # Update the section completion
+    sections_completed.append(request.section)
+    sections_scores = progress.get("sections_scores", {})
+    sections_scores[request.section] = {
+        "score": request.score,
+        "time_taken_seconds": request.time_taken_seconds,
+        "completed_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Check if all sections are now complete
+    all_completed = len(sections_completed) >= len(sections)
+    
+    update_data = {
+        "sections_completed": sections_completed,
+        "sections_scores": sections_scores,
+        "last_updated": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if all_completed:
+        # Calculate final score (average of all sections)
+        total_score = sum(s.get("score", 0) for s in sections_scores.values())
+        final_score = total_score / len(sections) if sections else 0
+        
+        update_data["status"] = "completed"
+        update_data["completed_at"] = datetime.now(timezone.utc).isoformat()
+        update_data["final_score"] = final_score
+        
+        # Mark the exam as completed in user_exam_access
+        await db.user_exam_access.update_one(
+            {"user_id": user_id, "exam_type": exam_type},
+            {"$addToSet": {"completed_exams": exam_id}}
+        )
+        
+        # Create a final exam attempt record
+        await db.exam_attempts.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "exam_type": exam_type,
+            "exam_id": exam_id,
+            "mode": progress.get("mode"),
+            "score": final_score,
+            "sections_scores": sections_scores,
+            "started_at": progress.get("started_at"),
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+            "institution_id": current_user.get("institution_id")
+        })
+    
+    await db.exam_attempts_progress.update_one(
+        {"user_id": user_id, "exam_type": exam_type, "exam_id": exam_id},
+        {"$set": update_data}
+    )
+    
+    return {
+        "success": True,
+        "section": request.section,
+        "score": request.score,
+        "sections_completed": sections_completed,
+        "sections_remaining": [s for s in sections if s not in sections_completed],
+        "exam_completed": all_completed,
+        "final_score": update_data.get("final_score") if all_completed else None,
+        "message": "Examen completado! 🎉" if all_completed else f"Sección {request.section} completada"
+    }
+
+
+@router.get("/progress/{exam_type}/{exam_id}")
+async def get_exam_progress(
+    exam_type: str,
+    exam_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get the progress of a specific exam attempt"""
+    
+    user_id = current_user["id"]
+    
+    progress = await db.exam_attempts_progress.find_one(
+        {"user_id": user_id, "exam_type": exam_type, "exam_id": exam_id},
+        {"_id": 0}
+    )
+    
+    if not progress:
+        # Check if exam is available but not started
+        access = await db.user_exam_access.find_one(
+            {"user_id": user_id, "exam_type": exam_type}
+        )
+        
+        if access and exam_id in access.get("available_exams", []):
+            sections = get_sections_for_exam_type(exam_type)
+            completed = exam_id in access.get("completed_exams", [])
+            return {
+                "exam_id": exam_id,
+                "exam_type": exam_type,
+                "status": "completed" if completed else "not_started",
+                "sections": sections,
+                "sections_completed": sections if completed else [],
+                "sections_remaining": [] if completed else sections,
+                "can_start": not completed
+            }
+        
+        raise HTTPException(status_code=404, detail="Examen no encontrado")
+    
+    sections = progress.get("sections", [])
+    sections_completed = progress.get("sections_completed", [])
+    
+    return {
+        "exam_id": exam_id,
+        "exam_type": exam_type,
+        "status": progress.get("status"),
+        "mode": progress.get("mode"),
+        "sections": sections,
+        "sections_completed": sections_completed,
+        "sections_remaining": [s for s in sections if s not in sections_completed],
+        "sections_scores": progress.get("sections_scores", {}),
+        "started_at": progress.get("started_at"),
+        "completed_at": progress.get("completed_at"),
+        "final_score": progress.get("final_score"),
+        "can_continue": progress.get("status") != "completed"
+    }
+
+
+@router.get("/available-modes/{exam_type}")
+async def get_available_exam_modes(exam_type: str):
+    """Get available modes for an exam type and section information"""
+    
+    sections = get_sections_for_exam_type(exam_type)
+    
+    return {
+        "exam_type": exam_type,
+        "modes": [
+            {
+                "mode": "full",
+                "name": "Examen Completo",
+                "description": "Toma todas las secciones en una sola sesión, simulando las condiciones reales del examen.",
+                "recommended_for": "Práctica de examen real, evaluación completa"
+            },
+            {
+                "mode": "section",
+                "name": "Por Secciones",
+                "description": "Completa cada sección por separado, a tu propio ritmo.",
+                "recommended_for": "Práctica específica, estudio enfocado"
+            }
+        ],
+        "sections": [
+            {
+                "id": section,
+                "name": section.replace("_", " ").title(),
+                "order": i + 1
+            }
+            for i, section in enumerate(sections)
+        ],
+        "note": "Importante: Una vez iniciado cualquier modo, el examen se considera 'usado'. Completa todas las secciones para obtener tu puntuación final."
+    }
+
+
+@router.get("/in-progress")
+async def get_in_progress_exams(current_user: dict = Depends(get_current_user)):
+    """Get all exams currently in progress for the user"""
+    
+    user_id = current_user["id"]
+    
+    in_progress = await db.exam_attempts_progress.find(
+        {"user_id": user_id, "status": "in_progress"},
+        {"_id": 0}
+    ).to_list(50)
+    
+    return {
+        "exams_in_progress": [
+            {
+                "exam_id": p.get("exam_id"),
+                "exam_type": p.get("exam_type"),
+                "mode": p.get("mode"),
+                "sections_completed": p.get("sections_completed", []),
+                "sections_remaining": [s for s in p.get("sections", []) if s not in p.get("sections_completed", [])],
+                "started_at": p.get("started_at"),
+                "progress_percent": round(len(p.get("sections_completed", [])) / len(p.get("sections", [])) * 100) if p.get("sections") else 0
+            }
+            for p in in_progress
+        ],
+        "total": len(in_progress)
+    }
+
