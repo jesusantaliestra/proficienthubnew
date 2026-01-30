@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { 
   Gift, Users, Clock, TrendingUp, ArrowLeft, RefreshCw, 
   Calendar, CheckCircle, XCircle, Plus, Play, Settings,
-  Video, Sparkles, Globe, Mic
+  Video, Sparkles, Globe, Mic, BarChart3
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
