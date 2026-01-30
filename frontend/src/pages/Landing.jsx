@@ -398,8 +398,8 @@ export default function Landing() {
       <section id="features" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Everything Your Institution Needs</h2>
-            <p className="text-xl text-gray-600">Premium features designed for scale and student success</p>
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">{t('landing.features_title')}</h2>
+            <p className="text-xl text-gray-600">{t('landing.features_subtitle')}</p>
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -421,10 +421,10 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-4 py-2 mb-6">
-              10 Major Exams Supported
+              {t('landing.exams_badge')}
             </Badge>
-            <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">All Major English Proficiency Exams</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">One platform, complete preparation with real exam conditions and AI-powered feedback</p>
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">{t('landing.exams_title')}</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t('landing.exams_subtitle')}</p>
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
