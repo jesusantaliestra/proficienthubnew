@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import LanguageSelector from '../components/LanguageSelector';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -281,6 +282,7 @@ const SuperadminDashboard = () => {
                 <Settings className="w-4 h-4 mr-2" />
                 Admin Panel
               </Button>
+              <LanguageSelector variant="compact" />
             </div>
           </div>
         </div>
