@@ -114,8 +114,24 @@ const resources = {
         request_demo: 'Request Demo',
         trusted_by: 'Trusted by leading institutions worldwide',
         b2b_platform: 'B2B Platform for Language Institutions',
-        features_title: 'Everything you need to succeed',
-        roi_calculator: 'Calculate Your ROI'
+        features_title: 'Everything Your Institution Needs',
+        features_subtitle: 'Premium features designed for scale and student success',
+        roi_calculator: 'Calculate Your ROI',
+        exams_badge: '10 Major Exams Supported',
+        exams_title: 'All Major English Proficiency Exams',
+        exams_subtitle: 'One platform, complete preparation with real exam conditions and AI-powered feedback',
+        student_capacity: 'Student Capacity',
+        pass_rate_increase: 'Pass Rate Increase',
+        time_saved: 'Time Saved',
+        revenue_increase: 'Revenue Increase',
+        footer_tagline: 'The most advanced B2B platform for language exam preparation',
+        footer_product: 'Product',
+        footer_company: 'Company',
+        footer_support: 'Support',
+        contact_us: 'Contact Us',
+        help_center: 'Help Center',
+        privacy: 'Privacy',
+        terms: 'Terms'
       },
       // Pricing
       pricing: {
