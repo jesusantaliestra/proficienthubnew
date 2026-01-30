@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Globe, ChevronDown, Search, Check } from 'lucide-react';
-import { SUPPORTED_LANGUAGES } from '../i18n';
+import { SUPPORTED_LANGUAGES } from '../i18n/index';
 
 export default function LanguageSelector({ variant = 'default' }) {
   const { i18n } = useTranslation();
