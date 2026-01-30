@@ -43,10 +43,6 @@ export default function StudentExamDashboard() {
 
   const config = EXAM_CONFIG[examType] || EXAM_CONFIG.oet;
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
   const loadDashboardData = async () => {
     setLoading(true);
     try {
@@ -69,6 +65,11 @@ export default function StudentExamDashboard() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    loadDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const startMockExam = async (section = null) => {
     if (credits?.credits?.mocks?.remaining <= 0 && !section) {
