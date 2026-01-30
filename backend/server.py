@@ -8780,7 +8780,11 @@ try:
     from routers.heygen_tutorials import router as heygen_tutorials_router
     app.include_router(heygen_tutorials_router, prefix="/api", tags=["HeyGen Tutorials"])
     
-    logger.info("New feature routers loaded successfully (22 modules)")
+    # Sequential Exams
+    from routers.sequential_exams import router as sequential_exams_router
+    app.include_router(sequential_exams_router, prefix="/api", tags=["Sequential Exams"])
+    
+    logger.info("New feature routers loaded successfully (23 modules)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
