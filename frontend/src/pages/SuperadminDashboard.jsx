@@ -11,7 +11,7 @@ import {
   DollarSign, Activity, Search, RefreshCw, ChevronRight, Settings,
   BarChart3, Award, Zap, Clock, Globe, Shield, Gift, ArrowUpRight,
   ArrowDownRight, Eye, MessageSquare, Bell, AlertTriangle, CheckCircle,
-  Info, X, BellRing
+  Info, X, BellRing, Bot
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
