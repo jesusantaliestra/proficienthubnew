@@ -369,21 +369,69 @@ export default function AnalyticsDashboard() {
             <div className="grid lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Rendimiento por Fuente</CardTitle>
-                  <CardDescription>Comparación de conversión y valor por fuente de leads</CardDescription>
+                  <CardTitle>Distribución por Fuente</CardTitle>
+                  <CardDescription>Proporción de leads por origen</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-6">
-                    {leadSourceData.sources.map((source) => (
-                      <div key={source.source} className="space-y-2">
-                        <div className="flex justify-between items-center">
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={leadSourceData.sources}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={100}
+                          fill="#8884d8"
+                          dataKey="leads"
+                          nameKey="label"
+                        >
+                          {leadSourceData.sources.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Conversión por Fuente</CardTitle>
+                  <CardDescription>Tasa de conversión por origen</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={leadSourceData.sources} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis type="number" tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                        <YAxis dataKey="label" type="category" width={100} tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Bar dataKey="conversion_rate" name="Tasa de Conversión %" fill={CHART_COLORS.primary} radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Detalle por Fuente</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {leadSourceData.sources.map((source, index) => (
+                      <div key={source.source} className="p-4 rounded-lg border" style={{ borderColor: COLORS[index % COLORS.length] + '40' }}>
+                        <div className="flex justify-between items-center mb-3">
                           <span className="font-medium">{source.label}</span>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={source.conversion_rate >= 20 ? 'default' : 'secondary'}>
-                              {source.conversion_rate}% conv.
-                            </Badge>
-                            <span className="text-sm text-gray-500">{source.leads} leads</span>
-                          </div>
+                          <Badge variant={source.conversion_rate >= 20 ? 'default' : 'secondary'}>
+                            {source.conversion_rate}% conv.
+                          </Badge>
                         </div>
                         <div className="grid grid-cols-3 gap-2 text-sm">
                           <div className="bg-green-50 p-2 rounded text-center">
@@ -392,7 +440,7 @@ export default function AnalyticsDashboard() {
                           </div>
                           <div className="bg-yellow-50 p-2 rounded text-center">
                             <div className="font-bold text-yellow-700">{source.in_pipeline}</div>
-                            <div className="text-yellow-600 text-xs">En Pipeline</div>
+                            <div className="text-yellow-600 text-xs">Pipeline</div>
                           </div>
                           <div className="bg-red-50 p-2 rounded text-center">
                             <div className="font-bold text-red-700">{source.lost}</div>
@@ -404,30 +452,6 @@ export default function AnalyticsDashboard() {
                   </div>
                 </CardContent>
               </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recomendaciones</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {leadSourceData.recommendations.filter(Boolean).map((rec, i) => (
-                      <div key={i} className="flex items-start gap-3 p-3 bg-indigo-50 rounded-lg">
-                        <div className="p-1 bg-indigo-100 rounded">
-                          <Zap className="w-4 h-4 text-indigo-600" />
-                        </div>
-                        <p className="text-sm text-indigo-800">{rec}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {leadSourceData.top_performing && (
-                    <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
-                      <h4 className="font-medium text-green-800 mb-2">Mejor Fuente</h4>
-                      <p className="text-2xl font-bold text-green-700">
-                        {leadSourceData.top_performing.replace('_', ' ').toUpperCase()}
-                      </p>
-                    </div>
                   )}
                 </CardContent>
               </Card>
