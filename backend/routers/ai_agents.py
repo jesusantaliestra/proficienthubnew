@@ -587,9 +587,9 @@ async def get_instant_exam_feedback(
     
     institution_id = current_user.get("institution_id")
     
-    # Get LLM config
-    config = await db.ai_agent_configs.find_one({"institution_id": institution_id})
-    llm_provider = config.get("default_llm", "openai_gpt4") if config else "openai_gpt4"
+    # Get platform LLM config (set by ProficientHub, not academy)
+    platform_config = await db.platform_config.find_one({"type": "llm"})
+    llm_provider = platform_config.get("default_llm", "openai_gpt4") if platform_config else "openai_gpt4"
     
     # Build feedback prompt
     feedback_prompt = build_exam_feedback_prompt(
