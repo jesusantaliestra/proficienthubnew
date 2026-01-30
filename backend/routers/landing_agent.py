@@ -91,7 +91,12 @@ async def landing_agent_chat(request: LandingChatMessage):
         {"config_type": "landing_agent"},
         {"_id": 0}
     )
-    max_messages = config.get("max_messages_per_session", 5) if config else 5
+    
+    # Handle case when config is None
+    if config is None:
+        config = {}
+    
+    max_messages = config.get("max_messages_per_session", 5)
     
     if session["message_count"] >= max_messages:
         return {
@@ -105,8 +110,8 @@ async def landing_agent_chat(request: LandingChatMessage):
         }
     
     # Get LLM configuration
-    llm_provider = config.get("llm_provider", "openai") if config else "openai"
-    llm_model = config.get("llm_model", "gpt-4") if config else "gpt-4"
+    llm_provider = config.get("llm_provider", "openai")
+    llm_model = config.get("llm_model", "gpt-4")
     system_prompt = config.get("system_prompt") or DEFAULT_SYSTEM_PROMPT
     
     # Build conversation history
