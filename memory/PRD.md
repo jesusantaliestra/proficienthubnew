@@ -2,9 +2,67 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 11.5  
+**Version:** 11.6  
 **Date:** January 30, 2026  
-**Status:** Production Ready - Sequential Exams + i18n 80 Languages + HeyGen
+**Status:** Production Ready - Section-Based Exams + i18n 80 Languages
+
+---
+
+## 🧪 Session 14.21 - January 30, 2026 (Section-Based Exams + Language Selector UI)
+
+### ✅ Section-Based Exam Logic (P0 - COMPLETE)
+**Students can choose between full exam or section-by-section mode**
+
+**Business Logic:**
+- **Full Mode**: Take all sections in one sitting (traditional mock)
+- **Section Mode**: Complete each section separately, at your own pace
+- **Critical Rule**: Starting ANY section "uses" the exam attempt
+- Once started, exam cannot be switched to different mode
+- All sections must be completed for final score
+
+**New Endpoints:**
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/sequential-exams/available-modes/{type}` | Returns modes and sections for exam type |
+| `POST /api/sequential-exams/start/{type}/{id}` | Start exam in full or section mode |
+| `POST /api/sequential-exams/complete-section/{type}/{id}` | Complete a section with score |
+| `GET /api/sequential-exams/progress/{type}/{id}` | Get exam progress and section status |
+| `GET /api/sequential-exams/in-progress` | Get all in-progress exams for user |
+
+**Exam Sections by Type:**
+```
+IELTS Academic/General: listening, reading, writing, speaking
+TOEFL: reading, listening, speaking, writing
+OET: listening, reading, writing, speaking
+PTE: speaking_writing, reading, listening
+```
+
+### ✅ Language Selector UI (P0 - COMPLETE)
+**LanguageSelector component added to all major pages**
+
+**Integrated In:**
+- Landing Page (header nav)
+- StudentDashboardRestricted (header)
+- InstitutionDashboard (header)
+- SuperadminDashboard (header)
+
+**Features:**
+- Compact variant for headers
+- 80 languages with flag emojis
+- Search functionality
+- Popular languages quick access (EN, ES, ZH, HI, AR, PT, JA, DE, KO, FR)
+- localStorage persistence
+
+### ✅ Sequential Exam Dashboard Enhanced
+**Mode selection dialog and in-progress tracking**
+
+**UI Features:**
+- Mode selection dialog when clicking "Start"
+- Full exam mode option with time estimate
+- Section-by-section mode with individual section buttons
+- In-progress exams display with progress percentage
+- Continue button for in-progress exams
+- Warning about exam usage once started
 
 ---
 
