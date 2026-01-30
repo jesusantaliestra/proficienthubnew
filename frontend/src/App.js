@@ -23,6 +23,7 @@ import IncomeCalculator from './pages/IncomeCalculator';
 import ExamBankAdmin from './pages/ExamBankAdmin';
 import WhiteLabelSettings from './pages/WhiteLabelSettings';
 import SuperadminDashboard from './pages/SuperadminDashboard';
+import LandingAgentAdmin from './pages/LandingAgentAdmin';
 import PricingConfig from './pages/PricingConfig';
 
 // Enterprise Pages
