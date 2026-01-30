@@ -40,6 +40,7 @@ const SUPPORTED_LANGUAGES = {
 
 export default function InstitutionDashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, logout, token } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [metrics, setMetrics] = useState(null);
