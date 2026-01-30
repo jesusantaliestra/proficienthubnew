@@ -410,3 +410,89 @@ async def get_template_script(template_id: str, language: str = "es"):
         "language": language,
         "script": script
     }
+
+
+
+# =============================================
+# HeyGen Webhook Endpoint
+# =============================================
+
+class HeyGenWebhookPayload(BaseModel):
+    event_type: str  # "video.completed", "video.failed"
+    video_id: str
+    status: Optional[str] = None
+    video_url: Optional[str] = None
+    thumbnail_url: Optional[str] = None
+    duration: Optional[float] = None
+    error: Optional[str] = None
+
+@router.post("/webhook")
+async def heygen_webhook(payload: HeyGenWebhookPayload):
+    """
+    Webhook endpoint for HeyGen API callbacks.
+    
+    Configure this URL in your HeyGen dashboard:
+    https://your-domain.com/api/heygen/webhook
+    
+    HeyGen will call this endpoint when:
+    - A video is completed (event_type: "video.completed" or "avatar_video.success")
+    - A video fails (event_type: "video.failed" or "avatar_video.fail")
+    """
+    
+    # Log the webhook event
+    webhook_log = {
+        "id": str(uuid.uuid4()),
+        "event_type": payload.event_type,
+        "video_id": payload.video_id,
+        "status": payload.status,
+        "video_url": payload.video_url,
+        "error": payload.error,
+        "received_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.heygen_webhook_logs.insert_one(webhook_log)
+    
+    # Update the video record based on event type
+    if payload.event_type in ["video.completed", "avatar_video.success"]:
+        await db.tutorial_videos.update_one(
+            {"heygen_video_id": payload.video_id},
+            {"$set": {
+                "status": "completed",
+                "video_url": payload.video_url,
+                "thumbnail_url": payload.thumbnail_url,
+                "duration": payload.duration,
+                "completed_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        return {"status": "success", "message": "Video marked as completed"}
+    
+    elif payload.event_type in ["video.failed", "avatar_video.fail"]:
+        await db.tutorial_videos.update_one(
+            {"heygen_video_id": payload.video_id},
+            {"$set": {
+                "status": "failed",
+                "error": payload.error,
+                "failed_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        return {"status": "success", "message": "Video marked as failed"}
+    
+    return {"status": "received", "event_type": payload.event_type}
+
+
+@router.get("/webhook/logs")
+async def get_webhook_logs(
+    limit: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get recent webhook logs (admin only)"""
+    
+    if current_user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    logs = await db.heygen_webhook_logs.find(
+        {},
+        {"_id": 0}
+    ).sort("received_at", -1).limit(limit).to_list(limit)
+    
+    return {"logs": logs, "count": len(logs)}
