@@ -1630,14 +1630,14 @@ Build a B2B/B2C SaaS platform for English proficiency exam preparation (TOEFL, I
 - **Student (first login)**: student1@demo.com / 62Wuaor4R4Qp (requires password change)
 
 ## URLs
-- Landing: https://academic-portal-74.preview.emergentagent.com
-- Login: https://academic-portal-74.preview.emergentagent.com/login
-- Admin: https://academic-portal-74.preview.emergentagent.com/admin
-- **Superadmin**: https://academic-portal-74.preview.emergentagent.com/superadmin
-- Student Portal: https://academic-portal-74.preview.emergentagent.com/student-portal
-- White-Label Portal: https://academic-portal-74.preview.emergentagent.com/student-portal/demo-language-academy
-- AI Tutor: https://academic-portal-74.preview.emergentagent.com/tutor/ielts
-- Exam: https://academic-portal-74.preview.emergentagent.com/exam/ielts
+- Landing: https://eduplat-suite.preview.emergentagent.com
+- Login: https://eduplat-suite.preview.emergentagent.com/login
+- Admin: https://eduplat-suite.preview.emergentagent.com/admin
+- **Superadmin**: https://eduplat-suite.preview.emergentagent.com/superadmin
+- Student Portal: https://eduplat-suite.preview.emergentagent.com/student-portal
+- White-Label Portal: https://eduplat-suite.preview.emergentagent.com/student-portal/demo-language-academy
+- AI Tutor: https://eduplat-suite.preview.emergentagent.com/tutor/ielts
+- Exam: https://eduplat-suite.preview.emergentagent.com/exam/ielts
 
 ## Remaining Backlog
 

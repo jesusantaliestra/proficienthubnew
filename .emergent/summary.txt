@@ -1,59 +1,76 @@
 <analysis>**original_problem_statement**: The user is building ProficientHub, a Supreme tier, full-stack educational platform. The initial scope has expanded significantly to include an Enterprise Suite (API, ERP), advanced CRM, a full-stack gamification system, A/B testing, SAML SSO, comprehensive white-labeling, a community hub, and mobile build scripts.
 
-During this session, the user added several major new feature requests:
-1.  **Advanced Analytics Dashboard**: A dedicated dashboard for institutions with interactive charts (using Recharts) to visualize CRM and revenue data.
-2.  **Monetizable Automated Alerts**: A system allowing institutions to configure and pay for automated alerts, such as when a sales lead becomes stagnant.
-3.  **Consumable Mock Exams & Upsells**: A shift from a generic credit system to a specific plan-based model (e.g., 5 exam attempts). When attempts run out, students should be able to easily purchase more (upsell). The exam experience must simulate real conditions with a timer.
-4.  **Premium Downloadable Feedback**: After an exam, students receive high-quality feedback that can be downloaded as a PDF.
-5.  **Seamless Integration**: The student dashboard must seamlessly integrate academy-provided content and ProficientHub-provided features (like mocks) into a single, premium-branded experience.
-6.  **Flexible Multi-Agent AI Tutor System**: A highly configurable system with three distinct AI agents (Mock Exam Coach, Exam Tutor, Planner).
-    -   **Configuration**: ProficientHub (the admin) sets the underlying LLM (e.g., GPT-4, Claude). Institutions can enable/disable agents and give them custom names.
-    -   **Tiers**: The system supports a basic tier (with Rive for avatars) and a premium tier (with HeyGen).
-    -   **Functionality**: The Mock Exam Coach provides real-time assistance if a student gets stuck during an exam.
+During the session, the user added several major feature requests:
+1.  **AI Agent Configuration UI**: Complete the frontend for institutions to manage their AI tutors.
+2.  **Student Upsell Flow**: Implement the UI for students to purchase more mock exams and download PDF feedback.
+3.  **Backend/Frontend Refactoring**: Continue breaking down the monolithic  and  files.
+4.  **Interactive Landing Page Agent**: Add a chat widget to the landing page, powered by an LLM configurable by a superadmin.
+5.  **Recharts Integration**: Add analytics charts to the new Landing Agent admin dashboard.
+6.  **Premium Demo System**: Create a system for superadmins to manage premium demos (e.g., 7-day trials) for institutions.
+7.  **HeyGen Integration**: Integrate the HeyGen API to create premium, avatar-led video tutorials. The API key must be securely stored and managed by the superadmin.
+8.  **Pricing Page Overhaul**: The public pricing page must be updated to clarify that licenses are individual, prices are monthly, and allow customers to select a contract duration (1-12 months) before purchasing.
+9.  **Sequential Exam Logic**: When a student buys or upsells exam packs, they must receive unique, non-repeating exams from a bank of 100. Once the bank is exhausted for a user, it cycles back to the beginning.
+10. **Internationalization (i18n)**: The entire platform must support translation into the 80 most spoken languages.
+11. **Section-Based Exams**: Students must be able to choose between taking a mock exam in its entirety (full simulation) or completing it section by section. Taking a section should use up the full exam attempt for that specific exam number.
+12. **UI Language Selector**: Add a language selector to the header of the landing page and all user dashboards.
 
 **User's preferred language**: Spanish. The next agent MUST respond in Spanish.
 
 **what currently exists?**:
-The platform is a mature FastAPI/React application with numerous advanced features. This session added:
--   **Real Domain Verification**: The backend logic using  to check DNS records for white-label domains is implemented and tested.
--   **Advanced Analytics Dashboard**: A full-stack feature is live at . It uses Recharts to display interactive  and  visualizations for CRM and revenue data, powered by the new  router.
--   **Monetizable Automated Alerts**: A full-stack skeleton is in place. This includes the  router, a new frontend page at , and a link in the institution sidebar.
--   **Consumable Mocks & PDF Feedback**: A full-stack system has been implemented. The backend logic is handled by  and uses the  library for PDF generation. A new, integrated student dashboard is available at .
--   **Multi-Agent AI Tutor System**: The backend is substantially complete. The  router has been updated with logic for the three configurable agents, avatar tiers (Rive/HeyGen), real-time exam help, and role-based configuration (ProficientHub sets the LLM, institutions customize names).
--   **Backend Refactoring**: Progress was made by creating new routers for , and . However,  still contains many legacy endpoints.
--   **Mobile Documentation**: The  file was populated with comprehensive instructions.
+-   **AI Agent Config & Student Upsell (P0/P1)**: These tasks are fully implemented and verified. The AI Agent configuration UI was successfully built and connected to the legacy endpoints in  after a conflict with a newer router was identified and resolved. The student dashboard now correctly handles upsell logic.
+-   **Backend Refactoring**: Significant progress was made. The agent created new, modular routers for , , , , , , , and , and registered them in . The larger task of migrating legacy code from  into these routers is still in progress.
+-   **Landing Agent & Recharts**: A full-stack feature is live. An interactive chat widget is present on the landing page. A new  page allows superadmins to configure the agent's LLM provider and view usage analytics via interactive Recharts graphs.
+-   **Premium Demo & HeyGen Integration**: A full-stack system is in place. A new  page allows management of premium demos and HeyGen settings. The user-provided HeyGen API key has been successfully integrated, and the system can list available avatars (1,287 found).
+-   **Pricing Page**: The pricing card on the landing page has been completely revamped to include contract duration selectors (1-12 months), clear per-license/per-month pricing, and distinct Contratar Ahora (Hire Now) and Solicitar Demo Gratuita (Request Free Demo) buttons.
+-   **Sequential Exams**: The backend logic is implemented in  and has been verified via curl. It correctly assigns unique, non-repeating exams to users upon purchase and subsequent upsells.
+-   **Internationalization (i18n)**: The foundational setup is complete.  and related packages are installed, a configuration file () is created, and the root React component is wrapped with the . A  component has been created but not yet placed in the UI.
 
 **Last working item**:
--   **Last item agent was working**: Implementing the frontend for the **AI Agent Configuration** page. The agent had just created the file  to allow institutions to manage their AI tutors (rename, enable/disable).
+-   **Last item agent was working**: The agent was about to modify the  router to implement the user's latest requirement: allowing students to choose between taking a full mock exam or taking it section by section.
 -   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: both. The agent needs to build the UI, connect it to the backend endpoints in , and then use the testing agent to verify the full-stack functionality.
+-   **Which testing method agent to use?**: both. First, use  or a python script to test the new backend logic. Then, use the frontend testing agent to build and verify the UI that allows students to make this choice.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- There are no known pending issues. The agent has consistently used the testing subagent, which has identified and fixed minor bugs as they arose.
+There are no known bugs or regressions. The primary pending items are in-progress tasks.
 
 **In progress Task List**:
--   **Task 1: Complete AI Agent Configuration UI (P0)**
-    -   **Where to resume**: The file  is empty. The backend logic is mostly ready.
-    -   **Next Steps**:
-        1.  Add the route for  to .
-        2.  Add a link to this new page in the  sidebar.
-        3.  Build the React component in  to fetch the current AI agent settings, allow institutions to edit agent names and toggle their active status, and save the changes.
-    -   **What will be achieved with this?**: Fulfills the user's requirement for academies to customize their AI tutors.
+-   **Task 1: Implement Section-Based Exam Logic (P0)**
+    -   **Where to resume**: . The file is ready to be edited.
+    -   **What will be achieved with this?**: Fulfills the user's critical requirement for flexible exam-taking options. This involves updating the backend to track exam state (full vs. partial) and creating a new UI for students to choose their exam mode.
     -   **Status**: IN PROGRESS
     -   **Should Test frontend/backend/both after fix?**: Both.
     -   **Blocked on something**: No.
 
--   **Task 2: Continue Backend Refactoring (P0)**
-    -   **Where to resume**: Approximately 183 endpoints remain in . While new routers (, ) have been created, the original endpoints in  have not been removed. The largest remaining module to migrate is  (36 endpoints).
-    -   **What will be achieved with this?**: A more stable, scalable, and maintainable backend. This is a critical technical debt reduction task.
+-   **Task 2: Add Language Selector to UI (P0)**
+    -   **Where to resume**: The component  exists. It needs to be imported and placed in the main application layout, likely in the header of the landing page and dashboards.
+    -   **What will be achieved with this?**: Fulfills the user's explicit request to make language switching easily accessible.
+    -   **Status**: NOT STARTED
+    -   **Should Test frontend/backend/both after fix?**: Frontend.
+    -   **Blocked on something**: No.
+
+-   **Task 3: Successfully Generate HeyGen Tutorial Video (P1)**
+    -   **Where to resume**: The video generation process failed multiple times, likely due to API limits or avatar/voice configuration issues. The last attempt was still in progress.
+    -   **Next debug checklist**:
+        1.  Check the status of the last video generation job:  the status endpoint ().
+        2.  If failed, review the error message from the HeyGen API.
+        3.  Try generating a video with the simplest possible configuration: a known public talking avatar and a very short, simple English script.
+        4.  Consult the HeyGen API documentation via  if errors persist.
+    -   **What will be achieved with this?**: A core part of the premium tutorial feature.
+    -   **Status**: BLOCKED (on HeyGen API flakiness)
+    -   **Should Test frontend/backend/both after fix?**: Backend.
+    -   **Blocked on something**: Potential HeyGen API issues.
+
+-   **Task 4: Continue Backend Refactoring (P2)**
+    -   **Where to resume**:  (~183 endpoints remain). The next logical step is to migrate the 36  endpoints from  into the existing (but mostly empty)  file and the newly created , , and  routers.
+    -   **What will be achieved with this?**: Improved backend stability, maintainability, and scalability.
     -   **Status**: IN PROGRESS
     -   **Should Test frontend/backend/both after fix?**: Backend.
     -   **Blocked on something**: No.
 
--   **Task 3: Complete  Refactoring (P2)**
-    -   **Where to resume**: The file is still over 1800 lines. The agent previously identified the , , , and  sections as the next candidates for extraction into separate components within the  directory.
+-   **Task 5: Continue Frontend Refactoring (P2)**
+    -   **Where to resume**: The file  is extremely large. The plan to extract the  functionality into smaller, dedicated components under  is still pending.
     -   **What will be achieved with this?**: Improved frontend code maintainability and performance.
     -   **Status**: IN PROGRESS
     -   **Should Test frontend/backend/both after fix?**: Frontend.
@@ -61,20 +78,21 @@ The platform is a mature FastAPI/React application with numerous advanced featur
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks**:
-    -   **P1: Finalize Student Dashboard UI**: Implement the UI for the upsell flow (allowing students to buy more mock exams) and the button to download the PDF feedback in .
+    -   **P1: Build Premium Interactive Tutorial UI**: Once a HeyGen video is generated, build the frontend component to display it as a premium onboarding/tutorial feature.
+    -   **P1: Build Conversion Analytics Dashboard**: Create the UI for the  page's Conversión tab, using Recharts to visualize the 10-stage funnel data from the  endpoints.
 -   **Future Tasks**:
-    -   **P2: Integrate Recharts into other dashboards**: Add interactive charts to other relevant areas of the platform.
+    -   **P2: Integrate Recharts into other dashboards**: Add interactive charts to other relevant areas (e.g., student progress, main institution dashboard).
     -   **Backlog (Blocked)**: **Integrate ElevenLabs API Key**: The backend is ready. This task is blocked until the user provides the API key post-deployment.
 
 **Completed work in this session**
--   **Real Domain Verification**: Backend logic using  was implemented and verified.
--   **Advanced Analytics Dashboard**: A full-stack feature with interactive Recharts was built (, ).
--   **Monetizable Automated Alerts**: A full-stack skeleton was created (, ).
--   **Consumable Mocks & PDF Feedback**: A full-stack system was implemented (, , ).
--   **Multi-Agent AI Tutor System**: The complex backend logic was implemented in , respecting the user's detailed requirements for configuration and tiers.
--   **Backend Refactoring Progress**: Created new modular routers:  and .
--   **Mobile Build Documentation**: The  file was significantly updated and is considered complete.
--   **Full Regression Testing**: Multiple successful test runs were executed using the testing agent, ensuring stability after major feature additions.
+-   **AI Agent Configuration UI**: Completed and tested.
+-   **Student Dashboard Upsell Logic**: Frontend implemented and tested.
+-   **Backend Refactoring (Creation of Routers)**: Created 8 new modular routers (, , , , , , , ).
+-   **Landing Page Agent & Admin**: A full-stack feature with a chat widget and a superadmin configuration page with Recharts analytics is live.
+-   **Pricing Page Overhaul**: The landing page pricing section was completely updated to user specifications.
+-   **Premium Demo & HeyGen System**: Full-stack implementation is complete, including a superadmin management page and successful API key integration.
+-   **Sequential Exam Logic**: Backend logic for non-repeating exam upsells is complete and verified.
+-   **i18n Foundation**: Installed packages and set up initial configuration files.
 
 **Earlier issues found/mentioned but not fixed**
 -   None.
@@ -86,71 +104,78 @@ The platform is a mature FastAPI/React application with numerous advanced featur
 
 
 **Key Technical Concepts**
--   **Backend**: FastAPI, Motor (async MongoDB), , .
--   **Frontend**: React, TailwindCSS, Shadcn UI, .
--   **Architecture**: Multi-tenant with data isolation by institution and exam type.
+-   **Backend**: FastAPI, Motor, , , HeyGen API.
+-   **Frontend**: React, TailwindCSS, Shadcn UI, , , .
+-   **Architecture**: Multi-tenant, modular routers, sequential content delivery.
 
 **key DB schema**
--   **exam_plans**: Stores student-specific plans with consumable credits (e.g., mock_exams_remaining).
--   **ai_agent_configs**: Stores institution-specific naming and status for AI agents.
--   **platform_config**: Stores global settings managed by ProficientHub, such as the active LLM.
+-   **sequential_exam_progress**: 
+-   **premium_demos**: 
+-   **platform_config**: Stores global settings like HeyGen API key, default avatar/voice, and landing agent LLM config.
 
 **All files of reference**
 -   **Created**:
-    -   , , , , 
-    -   , , , 
+    -   , , , , , , , 
+    -   , , 
+    -   , 
+    -   
 -   **Updated**:
     -    (to register all new routers)
-    -    (major overhaul)
-    -    (to add new routes)
-    -    (to add new sidebar links)
-    -   
+    -    (to align with legacy backend data structure)
+    -    (to add purchase logic)
+    -    (major pricing section overhaul)
+    -    (added new links)
+    -    (added all new routes)
+    -    (to add i18n provider)
     -   
 
 **Critical Info for New Agent**
--   **User-Driven Development**: The user frequently interrupts with detailed, high-priority feature requests that redefine the project's direction. Be prepared to pause ongoing refactoring work to address these new requirements immediately.
--   **Business Logic is Key**: The multi-tenant model is very specific. A student's access is strictly isolated to the exam and academy they paid for. The single premium dashboard concept, where all features feel native to the academy's brand, is paramount.
--   **Configuration Roles**: Clearly distinguish between what ProficientHub controls (e.g., LLM choice) and what institutions can configure (e.g., AI agent names). This is a strict rule.
--   **Refactoring Debt**: The agent has correctly prioritized new features over completing the refactoring of  and . These tasks remain important but are secondary to user requests. A key step not yet taken is deleting the legacy endpoints from  after they are successfully migrated to new routers.
+-   **User-Driven Development**: The user frequently adds large, complex features. Prioritize new feature requests over ongoing refactoring tasks.
+-   **Backend Refactoring Strategy**: The agent correctly identified that some legacy endpoints in  (like for ) are more feature-rich than their newer router counterparts. The correct approach is to adapt the frontend for now and plan a more careful migration later, rather than simply deleting the legacy code. Do not remove endpoints from  until their full functionality has been replicated and tested in a modular router.
+-   **HeyGen Flakiness**: The HeyGen API has been unreliable for video generation. Be prepared to debug this. Check the status of the last job and try again with a minimal configuration if it failed.
+-   **Sequential Logic is Vital**: The logic ensuring students receive unique, non-repeating exams is a critical business rule. It has been tested on the backend, but any future changes must be validated carefully.
 
 **documents and test reports created in this job**
 -   
 -   
 -   
 -   
--    (updated extensively)
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. **User**: Requests the Multi-Agent AI Tutor system with detailed specs on configuration, tiers, and functionality. **Status**: In Progress.
-9.  **User**: Agrees to the AI tutor enhancement, clarifies that the mock exam coach should provide real-time help, and confirms only ProficientHub can choose the LLM. **Status**: Implemented.
-8.  **User**: Responds to the webhook suggestion by saying the API is sufficient for now and to continue with the plan. **Status**: Completed.
-7.  **User**: Provides a large set of new requirements: monetizable alerts, interactive charts, and completion of mobile docs. **Status**: Implemented.
-6.  **User**: Approves the Analytics Dashboard enhancement. **Status**: Implemented.
-5.  **User**: Confirms the new business logic: the student experience must be a seamless, integrated dashboard, not separate modules from the academy and ProficientHub. **Status**: Acknowledged.
-4.  **User**: Asks the agent to implement consumable mocks and PDF feedback in parallel. **Status**: Implemented.
-3.  **User**: Confirms the agent's understanding of the multi-tenant business logic and answers clarifying questions. **Status**: Acknowledged.
-2.  **User**: Provides a critical, detailed explanation of the desired business logic for multi-tenancy, exam access, upsells, and content ownership. **Status**: Acknowledged.
-1.  **User**: Instructs the agent to continue with the plan after being asked about an enhancement. **Status**: Completed.
+10. **User**: Requests a premium interactive tutorial with HeyGen, i18n for 80 languages, and the critical sequential exam logic. **Status**: In Progress.
+9.  **User**: Clarifies sequential exam logic: bank of 100 exams per user, cycles after depletion. Approves 2-3 months as a commercial option. Approves the interactive tutorial concept. **Status**: Implemented/Acknowledged.
+8.  **User**: Confirms demo trial details: 3 for ProficientHub, usable for whitelabels. Provides HeyGen API key. Specifies trial should be 7 days, extendable by superadmin. Wants a full, customizable tour. **Status**: Implemented.
+7.  **User**: Responds to agent's plan: continue with refactoring, integrate Recharts, and add a demo. **Status**: Completed.
+6.  **User**: Asks for a premium interactive tutorial with HeyGen, conversion analytics, and clarifies the free trial is a premium demo. **Status**: Implemented.
+5.  **User**: Responds to agent's finish summary: proceed with backend/frontend refactoring, integrate Recharts, and likes the idea of an interactive agent on the landing page. **Status**: Completed.
+4.  **User**: Responds to agent's finish summary: confirms P0/P1 are good. Asks to proceed with backend/frontend refactoring and P2/backlog tasks. **Status**: Acknowledged.
+3.  **User**: User's initial response to the plan: p0+ p1 + refactprozacopm + p2 backlog guturo (approving the plan). **Status**: Completed.
 
 **Project Health Check:**
--   **Broken**: None.
--   **Mocked**: ElevenLabs text-to-speech generation (backend is ready, awaiting user API key).
+-   **Broken**: HeyGen video generation is unreliable and has failed multiple times. Requires debugging.
+-   **Mocked**: ElevenLabs TTS (awaiting API key from user), Stripe Payments (uses a test key for all transactions).
 
 **3rd Party Integrations**
+-   **HeyGen**: (NEW) Integrated for premium video tutorials. API key is configured.
+-   **, , **: (NEW) Installed for internationalization.
 -   **ElevenLabs**: Awaiting API key.
 -   **, **: For SAML SSO.
 -   ****: For domain verification.
--   ****: (NEW) For interactive frontend charts.
--   ****: (NEW) For backend PDF generation.
+-   ****: For interactive frontend charts.
+-   ****: For backend PDF generation.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES. The agent has been diligent in running the testing agent after implementing each major feature, ensuring high stability.
+-   **Testing agent used after significant changes**: YES. The agent used the testing agent five times in this session, which was crucial for identifying and resolving bugs, including a critical API route conflict.
+-   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: None.
 -   **Known regressions**: None.
 
 **Credentials to test flow:**
--   Use  /  for institution login.
+-   **Institution**:  / 
+-   **Superadmin**:  / 
 
 **What agent forgot to execute**
--   The agent has not forgotten any tasks but has strategically paused the large-scale refactoring of  and  to prioritize the user's new feature requests.
--   A crucial step of the backend refactoring is still pending: deleting the legacy endpoints from  once they have been successfully migrated to and tested in their new modular routers.</analysis>
+-   The agent has not forgotten any tasks but has correctly paused the full migration of legacy code from  to prioritize the user's constant stream of new, high-priority features. The next step in refactoring is to begin moving the code, not just creating empty router files.
+-   The newly created  component has not been placed anywhere in the application UI yet.</analysis>
