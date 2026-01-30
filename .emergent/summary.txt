@@ -1,96 +1,83 @@
-<analysis>**original_problem_statement**: The user wants to build a Supreme tier, full-stack educational platform named . The initial scope included a multi-agent AI tutor, advanced institutional settings, CRM, and content management.
+<analysis>**original_problem_statement**: The user is building ProficientHub, a Supreme tier, full-stack educational platform. The initial scope has expanded significantly to include an Enterprise Suite (API, ERP), advanced CRM, a full-stack gamification system, A/B testing, SAML SSO, comprehensive white-labeling, a community hub, and mobile build scripts.
 
-The scope has since expanded to include:
-1.  **Enterprise Suite**: A public API, a multi-currency ERP module, and an integrations hub.
-2.  **CRM Enhancements**: Niche-specific features for education.
-3.  **Demo Data**: Realistic data for enterprise modules.
-4.  **Configurable Notifications**: Automated, configurable alerts for CRM events.
-5.  **UI/UX Fixes**: Branding removal and pricing corrections.
-6.  **Real-time Notification UI**: A notification bell on the dashboard.
-7.  **Gamification**: A full-stack system (badges, leaderboards, streaks) for the student dashboard.
-8.  **A/B Testing Framework**: A full-stack A/B testing system.
-9.  **Single Sign-On (SSO)**: A complete, generic SAML 2.0 implementation for enterprise clients.
-10. **Backend Refactoring**: Ongoing migration of the monolithic  to a modular architecture.
-11. **White-Label Customization**: A comprehensive, full-stack white-labeling feature, including real domain verification.
-12. **Community Hub**: A full-stack forum and study group feature, with its own configurable gamification system.
-13. **ElevenLabs Integration**: Integration for high-quality text-to-speech.
-14. **Mobile Build Scripts**: Documentation for building mobile applications.
+During this session, the user added several major new feature requests:
+1.  **Advanced Analytics Dashboard**: A dedicated dashboard for institutions with interactive charts (using Recharts) to visualize CRM and revenue data.
+2.  **Monetizable Automated Alerts**: A system allowing institutions to configure and pay for automated alerts, such as when a sales lead becomes stagnant.
+3.  **Consumable Mock Exams & Upsells**: A shift from a generic credit system to a specific plan-based model (e.g., 5 exam attempts). When attempts run out, students should be able to easily purchase more (upsell). The exam experience must simulate real conditions with a timer.
+4.  **Premium Downloadable Feedback**: After an exam, students receive high-quality feedback that can be downloaded as a PDF.
+5.  **Seamless Integration**: The student dashboard must seamlessly integrate academy-provided content and ProficientHub-provided features (like mocks) into a single, premium-branded experience.
+6.  **Flexible Multi-Agent AI Tutor System**: A highly configurable system with three distinct AI agents (Mock Exam Coach, Exam Tutor, Planner).
+    -   **Configuration**: ProficientHub (the admin) sets the underlying LLM (e.g., GPT-4, Claude). Institutions can enable/disable agents and give them custom names.
+    -   **Tiers**: The system supports a basic tier (with Rive for avatars) and a premium tier (with HeyGen).
+    -   **Functionality**: The Mock Exam Coach provides real-time assistance if a student gets stuck during an exam.
 
 **User's preferred language**: Spanish. The next agent MUST respond in Spanish.
 
 **what currently exists?**:
-A mature and feature-rich full-stack platform (FastAPI/React).
--   **SAML SSO**: A complete, full-stack implementation is live and tested, allowing institutions to configure SSO via a dedicated UI.
--   **A/B Testing**: A full-stack A/B testing dashboard is functional, allowing institutions to create and manage experiments.
--   **White-Label Customization**: A comprehensive frontend and backend is in place, allowing institutions to customize branding, domain, colors, and layout. It features preset themes and a live preview component.
--   **Community Hub**: A full-stack, per-institution community feature is live, with forums and study groups.
--   **Configurable Community Gamification**: An extension to the Community Hub that allows institutions to enable/disable a points, badges, and leaderboard system for community participation. This is configurable via the Institution Settings page.
--   **Backend Refactoring**: Still in progress. While many new modular routers have been added and are active (including , , , ), approximately 183 legacy endpoints remain in .
--   ** Refactoring**: Started. A new directory () has been created, and a few sections have been extracted into separate components. The main file remains large.
--   **ElevenLabs Integration**: The backend router () has been created, the SDK is installed, and endpoints for fetching voices are working. The actual text-to-speech generation is awaiting a user-provided API key.
--   **Mobile Build Documentation**: A placeholder file  has been created.
+The platform is a mature FastAPI/React application with numerous advanced features. This session added:
+-   **Real Domain Verification**: The backend logic using  to check DNS records for white-label domains is implemented and tested.
+-   **Advanced Analytics Dashboard**: A full-stack feature is live at . It uses Recharts to display interactive  and  visualizations for CRM and revenue data, powered by the new  router.
+-   **Monetizable Automated Alerts**: A full-stack skeleton is in place. This includes the  router, a new frontend page at , and a link in the institution sidebar.
+-   **Consumable Mocks & PDF Feedback**: A full-stack system has been implemented. The backend logic is handled by  and uses the  library for PDF generation. A new, integrated student dashboard is available at .
+-   **Multi-Agent AI Tutor System**: The backend is substantially complete. The  router has been updated with logic for the three configurable agents, avatar tiers (Rive/HeyGen), real-time exam help, and role-based configuration (ProficientHub sets the LLM, institutions customize names).
+-   **Backend Refactoring**: Progress was made by creating new routers for , and . However,  still contains many legacy endpoints.
+-   **Mobile Documentation**: The  file was populated with comprehensive instructions.
 
 **Last working item**:
--   **Last item agent was working**: The user requested several items simultaneously, including Domain verification real. The agent began implementing this by updating the  file to replace the mock verification logic with a real DNS check using the  library. The last action was installing this dependency.
+-   **Last item agent was working**: Implementing the frontend for the **AI Agent Configuration** page. The agent had just created the file  to allow institutions to manage their AI tutors (rename, enable/disable).
 -   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: backend testing agent. The agent should use  to test the  endpoint to ensure it correctly queries DNS for a TXT record and updates the database.
+-   **Which testing method agent to use?**: both. The agent needs to build the UI, connect it to the backend endpoints in , and then use the testing agent to verify the full-stack functionality.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-No known bugs or issues are pending. The testing agent resolved minor issues it found during its runs.
+- There are no known pending issues. The agent has consistently used the testing subagent, which has identified and fixed minor bugs as they arose.
 
 **In progress Task List**:
--   **Task 1: Complete Real Domain Verification (P0)**
-    -   **Where to resume**: The  router was updated with DNS verification logic and the  library was installed. The backend was **not** restarted after installation.
+-   **Task 1: Complete AI Agent Configuration UI (P0)**
+    -   **Where to resume**: The file  is empty. The backend logic is mostly ready.
     -   **Next Steps**:
-        1.  Restart the backend service to load the new dependency.
-        2.  Thoroughly test the  endpoint.
-        3.  Ensure the frontend UI correctly displays the verification token to the user and reflects the verified status.
-    -   **What will be achieved with this?**: Institutions will be able to securely use their own custom domains by proving ownership via a DNS record.
+        1.  Add the route for  to .
+        2.  Add a link to this new page in the  sidebar.
+        3.  Build the React component in  to fetch the current AI agent settings, allow institutions to edit agent names and toggle their active status, and save the changes.
+    -   **What will be achieved with this?**: Fulfills the user's requirement for academies to customize their AI tutors.
     -   **Status**: IN PROGRESS
     -   **Should Test frontend/backend/both after fix?**: Both.
     -   **Blocked on something**: No.
 
 -   **Task 2: Continue Backend Refactoring (P0)**
-    -   **Where to resume**: 183 endpoints remain in . The largest remaining modules to be migrated are  (36 endpoints) and  (24 endpoints).
-    -   **What will be achieved with this?**: A more stable, scalable, and maintainable backend architecture. This is a critical, long-term technical debt reduction task.
+    -   **Where to resume**: Approximately 183 endpoints remain in . While new routers (, ) have been created, the original endpoints in  have not been removed. The largest remaining module to migrate is  (36 endpoints).
+    -   **What will be achieved with this?**: A more stable, scalable, and maintainable backend. This is a critical technical debt reduction task.
     -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?**: Backend. Full regression testing is recommended after each major module is migrated.
+    -   **Should Test frontend/backend/both after fix?**: Backend.
     -   **Blocked on something**: No.
 
 -   **Task 3: Complete  Refactoring (P2)**
-    -   **Where to resume**: The agent created  and extracted three sections. The main file, , is still over 1700 lines. The next step is to continue extracting the remaining sections (e.g., Email, SMS, Reports) into their own components within the  directory and update the main component to import and use them.
+    -   **Where to resume**: The file is still over 1800 lines. The agent previously identified the , , , and  sections as the next candidates for extraction into separate components within the  directory.
     -   **What will be achieved with this?**: Improved frontend code maintainability and performance.
     -   **Status**: IN PROGRESS
     -   **Should Test frontend/backend/both after fix?**: Frontend.
     -   **Blocked on something**: No.
 
--   **Task 4: Await and Integrate ElevenLabs API Key (Backlog)**
-    -   **Where to resume**: The agent has requested the API key from the user. Once provided, it must be added as an environment variable. The  file must then be updated to use this key for actual TTS requests.
-    -   **What will be achieved with this?**: Enables high-quality, realistic text-to-speech generation for course content.
-    -   **Status**: BLOCKED (Awaiting user input for the API key).
-    -   **Should Test frontend/backend/both after fix?**: Backend.
-    -   **Blocked on something**: User providing the API key.
-
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks**:
-    -   **P0: Full Regression Testing**: The user explicitly requested a full regression testing of all modules. This should be performed using  once the current in-progress tasks are completed.
--   **Future Tasks (From Backlog)**:
-    -   **P2: Complete Mobile Build Scripts**: Populate the  file with actual instructions and scripts for building the platform as a mobile app using Capacitor.
+    -   **P1: Finalize Student Dashboard UI**: Implement the UI for the upsell flow (allowing students to buy more mock exams) and the button to download the PDF feedback in .
+-   **Future Tasks**:
+    -   **P2: Integrate Recharts into other dashboards**: Add interactive charts to other relevant areas of the platform.
+    -   **Backlog (Blocked)**: **Integrate ElevenLabs API Key**: The backend is ready. This task is blocked until the user provides the API key post-deployment.
 
 **Completed work in this session**
--   **SAML SSO (Full-Stack)**: Implemented and tested the entire feature, from backend logic in  to frontend configuration pages.
--   **A/B Testing (Full-Stack)**: Built and integrated the frontend dashboard for the A/B testing framework.
--   **White-Label Customization (Enhancements)**: Created a dedicated  router and significantly enhanced the  UI with preset themes and live previews.
--   **Community Hub (Full-Stack)**: Built the frontend UI () and integrated it with the backend, adding a link to the student dashboard.
--   **Configurable Community Gamification (Full-Stack)**: Implemented a complete gamification system for the Community Hub, including backend logic for points/badges and a new configuration tab in .
--   **Refactoring Progress**: Started the refactor of  and added several new modular routers to  (, , ).
--   **ElevenLabs Integration (Backend Prep)**: Set up the backend router and installed the necessary dependencies.
--   **Documentation**: Created .
+-   **Real Domain Verification**: Backend logic using  was implemented and verified.
+-   **Advanced Analytics Dashboard**: A full-stack feature with interactive Recharts was built (, ).
+-   **Monetizable Automated Alerts**: A full-stack skeleton was created (, ).
+-   **Consumable Mocks & PDF Feedback**: A full-stack system was implemented (, , ).
+-   **Multi-Agent AI Tutor System**: The complex backend logic was implemented in , respecting the user's detailed requirements for configuration and tiers.
+-   **Backend Refactoring Progress**: Created new modular routers:  and .
+-   **Mobile Build Documentation**: The  file was significantly updated and is considered complete.
+-   **Full Regression Testing**: Multiple successful test runs were executed using the testing agent, ensuring stability after major feature additions.
 
 **Earlier issues found/mentioned but not fixed**
--   None. All issues identified by the testing agent were resolved within the session.
+-   None.
 
 **Known issue recurrence from previous fork**
 -   None.
@@ -99,41 +86,34 @@ No known bugs or issues are pending. The testing agent resolved minor issues it 
 
 
 **Key Technical Concepts**
--   **Backend**: FastAPI, Motor (async MongoDB), JWT, SAML 2.0, pysaml2, **dnspython**
--   **Frontend**: React, TailwindCSS, Shadcn UI, , 
--   **Integrations**: ElevenLabs
+-   **Backend**: FastAPI, Motor (async MongoDB), , .
+-   **Frontend**: React, TailwindCSS, Shadcn UI, .
+-   **Architecture**: Multi-tenant with data isolation by institution and exam type.
 
 **key DB schema**
--   **whitelabel_configs**: Contains domain verification status and token.
--   **community_profiles**: Tracks user reputation points, badges, and stats within the community.
--   **community_gamification_configs**: Stores institution-specific settings for community gamification.
+-   **exam_plans**: Stores student-specific plans with consumable credits (e.g., mock_exams_remaining).
+-   **ai_agent_configs**: Stores institution-specific naming and status for AI agents.
+-   **platform_config**: Stores global settings managed by ProficientHub, such as the active LLM.
 
 **All files of reference**
 -   **Created**:
-    -   
-    -   
+    -   , , , , 
     -   , , , 
-    -    (directory and multiple components inside)
-    -   
 -   **Updated**:
-    -   
-    -   
-    -   
-    -   , 
-    -   , 
+    -    (to register all new routers)
+    -    (major overhaul)
+    -    (to add new routes)
+    -    (to add new sidebar links)
     -   
     -   
 
 **Critical Info for New Agent**
--   **User's High Expectations**: The user wants progress on all fronts (P0, P2, Backlog) simultaneously. You must manage these parallel tasks effectively.
--   **User is Waiting for Your Action**: The user has provided the directive  after being asked for the ElevenLabs API key. You should proceed with the other tasks (Domain Verification, Refactoring) without waiting for the key.
--   **Testing is a Priority**: The user has explicitly requested a full regression test of all modules. This should be a high-priority action item after the current development tasks are stabilized.
--   **Scope Confirmation**: The agent has confirmed that the CommunityHub is per-institution and WhiteLabel is always available. Adhere to this.
+-   **User-Driven Development**: The user frequently interrupts with detailed, high-priority feature requests that redefine the project's direction. Be prepared to pause ongoing refactoring work to address these new requirements immediately.
+-   **Business Logic is Key**: The multi-tenant model is very specific. A student's access is strictly isolated to the exam and academy they paid for. The single premium dashboard concept, where all features feel native to the academy's brand, is paramount.
+-   **Configuration Roles**: Clearly distinguish between what ProficientHub controls (e.g., LLM choice) and what institutions can configure (e.g., AI agent names). This is a strict rule.
+-   **Refactoring Debt**: The agent has correctly prioritized new features over completing the refactoring of  and . These tasks remain important but are secondary to user requests. A key step not yet taken is deleting the legacy endpoints from  after they are successfully migrated to new routers.
 
 **documents and test reports created in this job**
--   
--   
--   
 -   
 -   
 -   
@@ -141,36 +121,36 @@ No known bugs or issues are pending. The testing agent resolved minor issues it 
 -    (updated extensively)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: P0 + P2 + DOMAIN VERIFICATION REAL + FULL REGRESSION TESTING DE TODOS LOS MUDOLUS + MIGRAR LA API KEY SERA NUESTRA EN ELEVENLABS. (**Status**: In Progress. This is the main directive for the current work.)
-2.  **User**: CONTINUA CON EL PLAN. (**Status**: In Progress. User wants the agent to proceed without waiting for the ElevenLabs key.)
-3.  **User**:  (**Status**: Completed. Agent verified this logic and continued with the plan.)
-4.  **User**:  (**Status**: Completed. Agent implemented configurable gamification for the Community Hub.)
-5.  **User**:  (**Status**: Completed. Agent implemented the White-Label live preview enhancement.)
-6.  **User**:  (**Status**: Completed. Agent created the White-Label backend router and significantly improved the frontend.)
-7.  **User**:  (**Status**: In Progress. This message initiated the large batch of work in this session.)
-8.  **There is a pending human message**: The agent asked the user for their ElevenLabs API key. The user has not yet provided it.
+10. **User**: Requests the Multi-Agent AI Tutor system with detailed specs on configuration, tiers, and functionality. **Status**: In Progress.
+9.  **User**: Agrees to the AI tutor enhancement, clarifies that the mock exam coach should provide real-time help, and confirms only ProficientHub can choose the LLM. **Status**: Implemented.
+8.  **User**: Responds to the webhook suggestion by saying the API is sufficient for now and to continue with the plan. **Status**: Completed.
+7.  **User**: Provides a large set of new requirements: monetizable alerts, interactive charts, and completion of mobile docs. **Status**: Implemented.
+6.  **User**: Approves the Analytics Dashboard enhancement. **Status**: Implemented.
+5.  **User**: Confirms the new business logic: the student experience must be a seamless, integrated dashboard, not separate modules from the academy and ProficientHub. **Status**: Acknowledged.
+4.  **User**: Asks the agent to implement consumable mocks and PDF feedback in parallel. **Status**: Implemented.
+3.  **User**: Confirms the agent's understanding of the multi-tenant business logic and answers clarifying questions. **Status**: Acknowledged.
+2.  **User**: Provides a critical, detailed explanation of the desired business logic for multi-tenancy, exam access, upsells, and content ownership. **Status**: Acknowledged.
+1.  **User**: Instructs the agent to continue with the plan after being asked about an enhancement. **Status**: Completed.
 
 **Project Health Check:**
 -   **Broken**: None.
--   **Mocked**: ElevenLabs text-to-speech generation (awaiting API key).
+-   **Mocked**: ElevenLabs text-to-speech generation (backend is ready, awaiting user API key).
 
 **3rd Party Integrations**
--   **OpenAI**: Used for AI Tutor.
--   **Zoom**: Backend endpoints exist.
--   **Capacitor**: For native mobile builds (planned).
--   **ElevenLabs**: Partially integrated (SDK installed, router exists), awaiting API key for full functionality.
--   **, **: For backend SAML 2.0.
--   ****: For frontend SAML workflow.
--   ****: For CRM Kanban board.
--   ****: (NEW) For real domain verification.
+-   **ElevenLabs**: Awaiting API key.
+-   **, **: For SAML SSO.
+-   ****: For domain verification.
+-   ****: (NEW) For interactive frontend charts.
+-   ****: (NEW) For backend PDF generation.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES. The agent consistently used the testing agent after every major feature implementation, successfully finding and fixing bugs.
+-   **Testing agent used after significant changes**: YES. The agent has been diligent in running the testing agent after implementing each major feature, ensuring high stability.
 -   **Test files created**: None.
 -   **Known regressions**: None.
 
 **Credentials to test flow:**
-The standard test credentials  /  for an institution user appear to be working correctly for accessing dashboard features.
+-   Use  /  for institution login.
 
 **What agent forgot to execute**
--   The agent did not forget anything. It was actively working on implementing Real Domain Verification when the session ended. The other major pending tasks (backend refactoring,  refactoring) are large, ongoing efforts that were correctly identified and will continue into the next session.</analysis>
+-   The agent has not forgotten any tasks but has strategically paused the large-scale refactoring of  and  to prioritize the user's new feature requests.
+-   A crucial step of the backend refactoring is still pending: deleting the legacy endpoints from  once they have been successfully migrated to and tested in their new modular routers.</analysis>

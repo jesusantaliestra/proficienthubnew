@@ -11,7 +11,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://proficienthub-1.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://academic-portal-74.preview.emergentagent.com').rstrip('/')
 
 class TestPricingCalculator:
     """Test pricing calculator with student count, exams, and credit tiers"""
@@ -291,7 +291,7 @@ class TestStripeCheckout:
                 "exams": 1,
                 "credit_tier": "basic",
                 "billing_cycle": "monthly",
-                "origin_url": "https://proficienthub-1.preview.emergentagent.com"
+                "origin_url": "https://academic-portal-74.preview.emergentagent.com"
             }
         )
         
@@ -309,7 +309,7 @@ class TestStripeCheckout:
     def test_test_package_checkout_endpoint_exists(self):
         """Test POST /api/checkout/test-package endpoint exists"""
         response = requests.post(
-            f"{BASE_URL}/api/checkout/test-package?package_type=writing&package_id=writing_100&origin_url=https://proficienthub-1.preview.emergentagent.com"
+            f"{BASE_URL}/api/checkout/test-package?package_type=writing&package_id=writing_100&origin_url=https://academic-portal-74.preview.emergentagent.com"
         )
         
         # Should return 200 with checkout URL or 500 if Stripe not configured
@@ -378,7 +378,7 @@ class TestStripeCheckoutIntegration:
                 "exams": 1,
                 "credit_tier": "basic",
                 "billing_cycle": "monthly",
-                "origin_url": "https://proficienthub-1.preview.emergentagent.com"
+                "origin_url": "https://academic-portal-74.preview.emergentagent.com"
             }
         )
         
@@ -396,7 +396,7 @@ class TestStripeCheckoutIntegration:
     def test_test_package_checkout_returns_url(self):
         """Test test package checkout returns a valid checkout URL"""
         response = requests.post(
-            f"{BASE_URL}/api/checkout/test-package?package_type=writing&package_id=writing_100&origin_url=https://proficienthub-1.preview.emergentagent.com"
+            f"{BASE_URL}/api/checkout/test-package?package_type=writing&package_id=writing_100&origin_url=https://academic-portal-74.preview.emergentagent.com"
         )
         
         if response.status_code == 200:
