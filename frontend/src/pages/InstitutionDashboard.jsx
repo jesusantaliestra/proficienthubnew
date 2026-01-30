@@ -651,6 +651,15 @@ export default function InstitutionDashboard() {
               <span>Alertas</span>
               <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-0.5 rounded-full">PRO</span>
             </button>
+            <button 
+              onClick={() => navigate('/institution/ai-agents')} 
+              className="sidebar-item w-full" 
+              data-testid="nav-ai-agents"
+            >
+              <Brain className="w-5 h-5" />
+              <span>AI Tutores</span>
+              <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-violet-500 to-purple-500 text-white px-2 py-0.5 rounded-full">AI</span>
+            </button>
           </div>
           
           <button className="sidebar-item w-full" data-testid="nav-settings">
