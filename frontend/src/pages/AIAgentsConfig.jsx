@@ -238,44 +238,35 @@ export default function AIAgentsConfig() {
                           {/* Custom Name */}
                           <div className="grid md:grid-cols-2 gap-4">
                             <div>
-                              <Label className="text-sm font-medium">Nombre Personalizado</Label>
-                              <Input 
-                                value={agent.custom_name || ''}
-                                onChange={(e) => updateAgent(agent.agent_type, 'custom_name', e.target.value)}
-                                placeholder={agent.agent_type === 'mock_coach' ? 'Ej: Coach María' :
-                                             agent.agent_type === 'exam_tutor' ? 'Ej: Prof. García' : 'Ej: Planificador Ana'}
-                                className="mt-1"
-                              />
+                              <Label className="text-sm font-medium">Voz Personalizada</Label>
+                              <select 
+                                className="w-full mt-1 p-2 border rounded-md"
+                                value={agent.custom_voice_id || ''}
+                                onChange={(e) => updateAgent(agent.id, 'custom_voice_id', e.target.value)}
+                              >
+                                <option value="">Voz por defecto</option>
+                                <option value="nova">Nova (Suave)</option>
+                                <option value="echo">Echo (Cálida)</option>
+                                <option value="alloy">Alloy (Neutral)</option>
+                                <option value="fable">Fable (Narrativa)</option>
+                                <option value="shimmer">Shimmer (Expresiva)</option>
+                              </select>
                               <p className="text-xs text-slate-400 mt-1">
-                                Los estudiantes verán este nombre
+                                {agent.voice_enabled ? 'Voz habilitada' : 'Sin voz (solo texto)'}
                               </p>
                             </div>
                             
                             <div>
-                              <Label className="text-sm font-medium">Tipo de Avatar</Label>
-                              <select 
-                                className="w-full mt-1 p-2 border rounded-md"
-                                value={agent.avatar_tier || 'basic'}
-                                onChange={(e) => updateAgent(agent.agent_type, 'avatar_tier', e.target.value)}
-                              >
-                                {Object.entries(AVATAR_TIERS).map(([key, tier]) => (
-                                  <option key={key} value={key}>
-                                    {tier.name} - {tier.description}
-                                  </option>
-                                ))}
-                              </select>
+                              <Label className="text-sm font-medium">Créditos por mensaje</Label>
+                              <Input 
+                                value={agent.credits_per_message || 1}
+                                disabled
+                                className="mt-1 bg-slate-50"
+                              />
+                              <p className="text-xs text-slate-400 mt-1">
+                                Créditos consumidos por interacción
+                              </p>
                             </div>
-                          </div>
-
-                          {/* Custom Personality */}
-                          <div className="mt-4">
-                            <Label className="text-sm font-medium">Personalidad (opcional)</Label>
-                            <Textarea 
-                              value={agent.custom_personality || ''}
-                              onChange={(e) => updateAgent(agent.agent_type, 'custom_personality', e.target.value)}
-                              placeholder="Describe cómo quieres que se comporte este agente..."
-                              className="mt-1 h-20"
-                            />
                           </div>
                         </div>
                       </div>
