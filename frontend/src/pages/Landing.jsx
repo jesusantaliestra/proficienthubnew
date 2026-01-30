@@ -38,6 +38,7 @@ export default function Landing() {
   const [numLicenses, setNumLicenses] = useState(100);
   const [calculatedPrice, setCalculatedPrice] = useState(null);
   const [calculatingPrice, setCalculatingPrice] = useState(false);
+  const [selectedDuration, setSelectedDuration] = useState(1); // Duration in months
   
   // Exam types selection (doesn't affect price, just configuration)
   const [selectedExamTypes, setSelectedExamTypes] = useState(['all']);
