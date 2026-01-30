@@ -249,7 +249,7 @@ class TestHeyGenIntegration:
             json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
         )
         if response.status_code == 200:
-            return response.json().get("token")
+            return response.json().get("access_token")
         pytest.skip(f"Admin login failed: {response.status_code}")
     
     def test_heygen_config(self, admin_token):
