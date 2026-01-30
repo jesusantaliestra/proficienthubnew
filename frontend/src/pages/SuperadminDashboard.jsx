@@ -265,6 +265,16 @@ const SuperadminDashboard = () => {
               <Button 
                 variant="outline" 
                 size="sm"
+                onClick={() => navigate('/superadmin/demo-management')}
+                className="border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/20"
+                data-testid="demo-management-btn"
+              >
+                <Gift className="w-4 h-4 mr-2" />
+                Demos & HeyGen
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
                 onClick={() => navigate('/admin')}
                 className="border-white/20 text-white hover:bg-white/10"
               >
