@@ -274,27 +274,82 @@ export default function SequentialExamDashboard() {
           </CardContent>
         </Card>
 
+        {/* In Progress Exams */}
+        {inProgressExams.filter(e => e.exam_type === examType).length > 0 && (
+          <Card className="bg-amber-900/20 border-amber-800/50 mb-8">
+            <CardHeader>
+              <CardTitle className="text-amber-200 flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                Exámenes en Progreso
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {inProgressExams
+                  .filter(e => e.exam_type === examType)
+                  .map((exam) => (
+                    <div 
+                      key={exam.exam_id}
+                      className="flex items-center justify-between p-4 bg-slate-900/50 rounded-xl border border-amber-800/30"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                          <Layers className="w-5 h-5 text-amber-400" />
+                        </div>
+                        <div>
+                          <p className="text-white font-medium">Examen {exam.exam_id}</p>
+                          <p className="text-sm text-slate-400">
+                            {exam.sections_completed.length}/{exam.sections_completed.length + exam.sections_remaining.length} secciones completadas
+                            ({exam.progress_percent}%)
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Progress value={exam.progress_percent} className="w-24 h-2" />
+                        <Button
+                          size="sm"
+                          className="bg-amber-500 hover:bg-amber-600 text-black"
+                          onClick={() => startExam(exam.exam_id)}
+                        >
+                          Continuar
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Exam Grid */}
         <h3 className="text-xl font-bold text-white mb-4">Your Exams</h3>
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {exams.map((exam) => (
+          {exams.map((exam) => {
+            // Check if this exam is in progress
+            const inProgress = inProgressExams.find(e => e.exam_id === exam.exam_id && e.exam_type === examType);
+            
+            return (
             <Card 
               key={exam.exam_id}
               className={`bg-slate-900/50 border-slate-800 overflow-hidden transition-all hover:border-slate-700 ${
                 exam.status === 'completed' ? 'ring-2 ring-emerald-500/30' : ''
-              }`}
+              } ${inProgress ? 'ring-2 ring-amber-500/30' : ''}`}
             >
               <div className={`h-1.5 ${
                 exam.status === 'completed' 
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-500' 
-                  : 'bg-gradient-to-r from-violet-500 to-indigo-500'
+                  : inProgress
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+                    : 'bg-gradient-to-r from-violet-500 to-indigo-500'
               }`} />
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <Badge className={
                     exam.status === 'completed'
                       ? 'bg-emerald-500/20 text-emerald-400'
-                      : 'bg-violet-500/20 text-violet-400'
+                      : inProgress
+                        ? 'bg-amber-500/20 text-amber-400'
+                        : 'bg-violet-500/20 text-violet-400'
                   }>
                     {exam.exam_id}
                   </Badge>
