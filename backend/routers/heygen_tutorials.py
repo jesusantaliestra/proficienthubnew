@@ -241,6 +241,10 @@ async def generate_tutorial_video(
     if not avatar_id:
         raise HTTPException(status_code=400, detail="No se ha configurado un avatar por defecto")
     
+    # Voice ID is required - use default if not provided
+    if not voice_id:
+        voice_id = "2eca0d3dd5ec4a1ea6efa6194b19eb78"  # Ray (English) as fallback
+    
     # Prepare video generation request
     video_payload = {
         "video_inputs": [{
@@ -253,9 +257,6 @@ async def generate_tutorial_video(
                 "type": "text",
                 "input_text": request.script,
                 "voice_id": voice_id
-            } if voice_id else {
-                "type": "text",
-                "input_text": request.script
             }
         }],
         "dimension": {
