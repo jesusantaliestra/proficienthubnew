@@ -5196,6 +5196,7 @@ async def get_gamification_profile(current_user: dict = Depends(get_current_user
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         await db.gamification_profiles.insert_one(profile)
+        profile.pop("_id", None)  # Remove MongoDB _id
     
     profile["gamification_enabled"] = True
     return profile
