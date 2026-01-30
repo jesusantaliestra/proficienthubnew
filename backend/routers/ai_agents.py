@@ -223,7 +223,7 @@ async def get_ai_config(current_user: dict = Depends(get_current_user)):
 
 @router.put("/config")
 async def update_ai_config(config: AIConfigUpdate, current_user: dict = Depends(get_current_user)):
-    """Update AI agents configuration - Institution only"""
+    """Update AI agents configuration - Institution only (can name agents, enable/disable, set avatar)"""
     if current_user["user_type"] != "institution":
         raise HTTPException(status_code=403, detail="Only institutions can configure AI agents")
     
@@ -231,7 +231,7 @@ async def update_ai_config(config: AIConfigUpdate, current_user: dict = Depends(
         "institution_id": current_user["id"],
         "ai_tutor_enabled": config.ai_tutor_enabled,
         "agents": [a.dict() for a in config.agents],
-        "default_llm": config.default_llm.value,
+        # LLM is NOT set here - only ProficientHub admin can set it
         "default_avatar_tier": config.default_avatar_tier.value,
         "elevenlabs_voice_id": config.elevenlabs_voice_id,
         "heygen_avatar_id": config.heygen_avatar_id,
