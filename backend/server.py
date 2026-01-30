@@ -8738,6 +8738,7 @@ try:
     from routers.elevenlabs import router as elevenlabs_router
     from routers.crm import router as crm_router
     from routers.analytics_dashboard import router as analytics_dashboard_router
+    from routers.alerts_automation import router as alerts_automation_router
     
     app.include_router(admin_router, prefix="/api", tags=["Admin"])
     app.include_router(marketplace_router, prefix="/api", tags=["Marketplace"])
@@ -8751,8 +8752,9 @@ try:
     app.include_router(elevenlabs_router, prefix="/api", tags=["ElevenLabs"])
     app.include_router(crm_router, prefix="/api", tags=["CRM"])
     app.include_router(analytics_dashboard_router, prefix="/api", tags=["Analytics Dashboard"])
+    app.include_router(alerts_automation_router, prefix="/api", tags=["Alerts Automation"])
     
-    logger.info("New feature routers loaded successfully (12 modules: Admin, Marketplace, A/B Testing, Gamification, Student, Video Classes, SSO, White-Label, Community, ElevenLabs, CRM, Analytics Dashboard)")
+    logger.info("New feature routers loaded successfully (13 modules: Admin, Marketplace, A/B Testing, Gamification, Student, Video Classes, SSO, White-Label, Community, ElevenLabs, CRM, Analytics Dashboard, Alerts Automation)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
