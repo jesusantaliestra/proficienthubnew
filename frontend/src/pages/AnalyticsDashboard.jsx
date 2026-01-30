@@ -5,9 +5,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Badge } from '../components/ui/badge';
 import { 
   TrendingUp, TrendingDown, Users, DollarSign, Target, Activity,
-  BarChart3, PieChart, LineChart, Download, RefreshCw, Calendar,
+  BarChart3, PieChart as PieChartIcon, LineChart as LineChartIcon, Download, RefreshCw, Calendar,
   AlertTriangle, CheckCircle, Clock, Zap
 } from 'lucide-react';
+import {
+  LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
