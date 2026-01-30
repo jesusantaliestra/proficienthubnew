@@ -362,26 +362,26 @@ export default function Landing() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                 <div className="text-4xl font-black text-gray-900 mb-1">10x</div>
-                <div className="text-gray-500 font-medium text-sm">Student Capacity</div>
+                <div className="text-gray-500 font-medium text-sm">{t('landing.student_capacity')}</div>
               </div>
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                 <div className="text-4xl font-black text-[#58CC02] mb-1">+23%</div>
-                <div className="text-gray-500 font-medium text-sm">Pass Rate Increase</div>
+                <div className="text-gray-500 font-medium text-sm">{t('landing.pass_rate_increase')}</div>
               </div>
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                 <div className="text-4xl font-black text-gray-900 mb-1">-60%</div>
-                <div className="text-gray-500 font-medium text-sm">No-Show Reduction</div>
+                <div className="text-gray-500 font-medium text-sm">{t('landing.time_saved')}</div>
               </div>
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                <div className="text-4xl font-black text-gray-900 mb-1">500+</div>
-                <div className="text-gray-500 font-medium text-sm">Partner Institutions</div>
+                <div className="text-4xl font-black text-gray-900 mb-1">+40%</div>
+                <div className="text-gray-500 font-medium text-sm">{t('landing.revenue_increase')}</div>
               </div>
             </div>
           </div>
           
           {/* Exam Logos Row */}
           <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
-            <span className="text-sm text-gray-400 font-medium">Prepare for:</span>
+            <span className="text-sm text-gray-400 font-medium">{t('nav.exams')}:</span>
             {examTypes.map((exam) => (
               <div key={exam.id} className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-lg ${exam.color} flex items-center justify-center`}>
