@@ -75,7 +75,7 @@ class TestSequentialExams:
             json={"email": INSTITUTION_EMAIL, "password": INSTITUTION_PASSWORD}
         )
         if response.status_code == 200:
-            return response.json().get("token")
+            return response.json().get("access_token")
         pytest.skip(f"Institution login failed: {response.status_code}")
     
     def test_sequential_exam_purchase_first_5(self, institution_token):
