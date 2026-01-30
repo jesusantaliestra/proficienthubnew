@@ -317,27 +317,26 @@ export default function Landing() {
           <div className="text-center max-w-5xl mx-auto mb-20">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-100 to-blue-100 text-gray-700 px-5 py-2.5 rounded-full mb-8 shadow-sm">
               <Building className="w-4 h-4 text-green-600" />
-              <span className="font-semibold text-sm">B2B Platform for Language Institutions</span>
+              <span className="font-semibold text-sm">{t('landing.b2b_platform')}</span>
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             </div>
             
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-[1.1] mb-8 tracking-tight">
-              Scale Your Academy
+              {t('landing.hero_title').split(' ').slice(0, 3).join(' ')}
               <span className="block bg-gradient-to-r from-[#58CC02] to-[#1cb0f6] bg-clip-text text-transparent">
-                10x With AI
+                {t('landing.hero_title').includes('10x') ? '10x With AI' : t('landing.hero_title').split(' ').slice(3).join(' ')}
               </span>
             </h1>
             
             <p className="text-xl md:text-2xl text-gray-600 leading-relaxed max-w-3xl mx-auto mb-10">
-              Your current teachers can handle <strong className="text-gray-900">10x more students</strong> with AI tutors, 
-              instant feedback, and premium analytics. Prepare students for 
+              {t('landing.hero_subtitle')} {' '}
               <span className="font-semibold text-blue-600"> TOEFL</span>,
               <span className="font-semibold text-red-600"> IELTS</span>,
               <span className="font-semibold text-purple-600"> Cambridge</span>,
               <span className="font-semibold text-pink-600"> Trinity</span>,
               <span className="font-semibold text-indigo-600"> TOEIC</span>,
               <span className="font-semibold text-cyan-600"> CELPIP</span>,
-              <span className="font-semibold text-orange-600"> PTE</span>, and
+              <span className="font-semibold text-orange-600"> PTE</span>, y
               <span className="font-semibold text-emerald-600"> OET</span>.
             </p>
             
@@ -347,7 +346,7 @@ export default function Landing() {
                 onClick={() => document.getElementById('trial').scrollIntoView({ behavior: 'smooth' })}
                 data-testid="hero-cta-btn"
               >
-                Start Free Trial
+                {t('landing.get_started')}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
               <button 
@@ -355,7 +354,7 @@ export default function Landing() {
                 onClick={() => document.getElementById('calculator').scrollIntoView({ behavior: 'smooth' })}
               >
                 <Calculator className="w-5 h-5 text-green-600" />
-                Calculate Your ROI
+                {t('landing.roi_calculator')}
               </button>
             </div>
             
