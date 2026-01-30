@@ -255,6 +255,16 @@ const SuperadminDashboard = () => {
               <Button 
                 variant="outline" 
                 size="sm"
+                onClick={() => navigate('/superadmin/landing-agent')}
+                className="border-violet-500/50 text-violet-300 hover:bg-violet-500/20"
+                data-testid="landing-agent-btn"
+              >
+                <Bot className="w-4 h-4 mr-2" />
+                Landing Agent
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
                 onClick={() => navigate('/admin')}
                 className="border-white/20 text-white hover:bg-white/10"
               >
