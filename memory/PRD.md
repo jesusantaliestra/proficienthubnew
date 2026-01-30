@@ -2,9 +2,92 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 11.3  
+**Version:** 11.4  
 **Date:** January 30, 2026  
-**Status:** Production Ready - Landing Agent + Recharts Analytics
+**Status:** Production Ready - Demo Premium + HeyGen + Analytics Conversión
+
+---
+
+## 🧪 Session 14.19 - January 30, 2026 (Demo Premium + HeyGen + Pricing Update)
+
+### ✅ Demo Premium System (COMPLETE)
+**7-day full-access demos with superadmin management**
+
+**Features:**
+- Default: 7 días de acceso completo
+- Máximo 50 estudiantes por demo
+- 8 features habilitados (mocks, AI tutor, analytics, PDF, speaking, writing, progress, branding)
+- Superadmin puede extender días a instituciones específicas
+- Tracking de conversión demo → cliente
+
+**Endpoints:**
+- `POST /api/demo/request` - Solicitar demo (público)
+- `GET /api/demo/status/{id}` - Estado de demo
+- `POST /api/demo/extend` - Extender días (admin)
+- `GET /api/demo/admin/list` - Listar demos
+- `POST /api/demo/admin/convert/{id}` - Convertir a cliente
+
+### ✅ HeyGen Tutorial Integration (COMPLETE)
+**Premium video avatars for tutorials**
+
+**Stats:**
+- **1287 avatares disponibles** (verificado via API)
+- 3 plantillas de tutorial predefinidas
+- Soporte español/inglés
+
+**Endpoints:**
+- `GET /api/heygen/admin/avatars` - 1287 avatares
+- `GET /api/heygen/admin/voices` - Voces disponibles
+- `POST /api/heygen/admin/generate-tutorial` - Generar video
+- `GET /api/heygen/video/{id}/status` - Estado de generación
+
+**Tutorial Templates:**
+- `onboarding_welcome` - Bienvenida y setup inicial
+- `feature_ai_tutor` - Tour de AI Tutores
+- `feature_analytics` - Tour de Analytics
+
+### ✅ Pricing Update (COMPLETE)
+**Clear monthly pricing with duration selector**
+
+**Changes:**
+- Texto "Precio por Licencia Individual" + "/mes por licencia"
+- Selector de duración: 1, 2, 3, 4, 6, 12 meses
+- Botón "Contratar Ahora" + "Solicitar Demo Gratuita"
+- Nota: "Cada licencia es individual y da acceso completo a 1 estudiante"
+- Cálculo total: licencias × precio × meses
+
+### ✅ Conversion Analytics (COMPLETE)
+**Funnel tracking with 10 stages**
+
+**Funnel Stages:**
+1. landing_visit
+2. chat_widget_opened
+3. chat_interaction
+4. demo_requested
+5. demo_activated
+6. demo_engaged
+7. pricing_viewed
+8. checkout_started
+9. payment_completed
+10. converted_to_customer
+
+**Endpoints:**
+- `POST /api/conversion-analytics/track` - Track events
+- `GET /api/conversion-analytics/funnel` - Funnel metrics
+- `GET /api/conversion-analytics/trends` - Daily trends
+- `GET /api/conversion-analytics/demo-analytics` - Demo stats
+- `GET /api/conversion-analytics/revenue-attribution` - Revenue by source
+
+### ✅ Demo Management Page (COMPLETE)
+**Admin page for demos and HeyGen**
+
+**Route:** `/superadmin/demo-management`
+
+**4 Tabs:**
+1. **Demos Activas** - Lista de demos con extensión y conversión
+2. **Conversión** - Funnel chart con Recharts
+3. **HeyGen** - Estado de API, avatares, generación de videos
+4. **Configuración** - Config de demos y HeyGen
 
 ---
 
