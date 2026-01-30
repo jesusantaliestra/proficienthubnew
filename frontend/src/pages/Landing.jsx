@@ -722,31 +722,84 @@ export default function Landing() {
                     {/* Price Card */}
                     <div className="bg-gradient-to-br from-[#58CC02] to-green-600 rounded-2xl p-6 text-white">
                       <div className="text-center mb-4">
-                        <div className="text-green-100 text-sm mb-1">Price Per License</div>
+                        <div className="text-green-100 text-sm mb-1">Precio por Licencia Individual</div>
                         <div className="text-5xl font-extrabold">${calculatedPrice.pricing.price_per_license}</div>
+                        <div className="text-green-200 text-sm mt-1">/mes por licencia</div>
                         {calculatedPrice.pricing.full_price_per_license > calculatedPrice.pricing.price_per_license && (
                           <div className="text-green-200 line-through text-lg mt-1">
-                            ${calculatedPrice.pricing.full_price_per_license}
+                            ${calculatedPrice.pricing.full_price_per_license}/mes
                           </div>
                         )}
                       </div>
                       
-                      <div className="border-t border-green-400 pt-4 mt-4">
-                        <div className="flex justify-between text-lg">
-                          <span className="text-green-100">Order Total:</span>
-                          <span className="font-extrabold text-2xl">${calculatedPrice.pricing.total_order_price.toLocaleString()}</span>
-                        </div>
-                        <div className="text-green-200 text-sm mt-2">
-                          {calculatedPrice.summary}
+                      {/* Duration Selector */}
+                      <div className="bg-white/10 rounded-xl p-4 mb-4">
+                        <div className="text-green-100 text-sm mb-3 font-semibold">Duración del contrato:</div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[1, 2, 3, 4, 6, 12].map((months) => (
+                            <button
+                              key={months}
+                              onClick={() => setSelectedDuration(months)}
+                              className={`py-2 px-3 rounded-lg text-sm font-bold transition-all ${
+                                selectedDuration === months
+                                  ? 'bg-white text-[#58CC02]'
+                                  : 'bg-white/20 text-white hover:bg-white/30'
+                              }`}
+                            >
+                              {months} {months === 1 ? 'mes' : 'meses'}
+                            </button>
+                          ))}
                         </div>
                       </div>
                       
-                      <button 
-                        className="w-full mt-6 bg-white text-[#58CC02] font-bold py-4 rounded-xl hover:bg-green-50 transition-colors text-lg"
-                        onClick={() => navigate('/register')}
-                      >
-                        Request Demo
-                      </button>
+                      <div className="border-t border-green-400 pt-4 mt-4">
+                        <div className="flex justify-between text-sm text-green-100 mb-1">
+                          <span>Licencias:</span>
+                          <span className="font-bold">{calculatedPrice.volume_tier.num_licenses.toLocaleString()} × ${calculatedPrice.pricing.price_per_license}/mes</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-green-100 mb-3">
+                          <span>Duración:</span>
+                          <span className="font-bold">{selectedDuration || 1} {(selectedDuration || 1) === 1 ? 'mes' : 'meses'}</span>
+                        </div>
+                        <div className="flex justify-between text-lg border-t border-green-400 pt-3">
+                          <span className="text-green-100">Total a pagar:</span>
+                          <span className="font-extrabold text-2xl">
+                            ${(calculatedPrice.pricing.total_order_price * (selectedDuration || 1)).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="text-green-200 text-xs mt-2">
+                          {calculatedPrice.volume_tier.num_licenses.toLocaleString()} licencias individuales × {selectedDuration || 1} {(selectedDuration || 1) === 1 ? 'mes' : 'meses'}
+                        </div>
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="mt-6 space-y-3">
+                        <button 
+                          className="w-full bg-white text-[#58CC02] font-bold py-4 rounded-xl hover:bg-green-50 transition-colors text-lg flex items-center justify-center gap-2"
+                          onClick={() => {
+                            // Store pricing config for checkout
+                            localStorage.setItem('pricingConfig', JSON.stringify({
+                              ...calculatedPrice,
+                              duration: selectedDuration || 1,
+                              totalAmount: calculatedPrice.pricing.total_order_price * (selectedDuration || 1)
+                            }));
+                            navigate('/checkout');
+                          }}
+                        >
+                          <CheckCircle className="w-5 h-5" />
+                          Contratar Ahora
+                        </button>
+                        <button 
+                          className="w-full bg-transparent border-2 border-white text-white font-bold py-3 rounded-xl hover:bg-white/10 transition-colors"
+                          onClick={() => navigate('/register?demo=true')}
+                        >
+                          Solicitar Demo Gratuita
+                        </button>
+                      </div>
+                      
+                      <p className="text-green-200 text-xs text-center mt-4">
+                        * Cada licencia es individual y da acceso completo a 1 estudiante
+                      </p>
                     </div>
                   </div>
                 ) : (
