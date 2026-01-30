@@ -153,7 +153,9 @@ async def create_lead(lead_data: LeadCreate, current_user: dict = Depends(get_cu
     }
     
     await db.crm_leads.insert_one(lead_doc)
-    lead_doc.pop("_id", None)
+    # Remove MongoDB _id to avoid serialization issues
+    if "_id" in lead_doc:
+        del lead_doc["_id"]
     
     return {"id": lead_id, "message": "Lead created successfully", "lead": lead_doc}
 
