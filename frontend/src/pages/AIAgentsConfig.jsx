@@ -205,11 +205,11 @@ export default function AIAgentsConfig() {
         <TabsContent value="agents">
           <div className="grid gap-6">
             {config.agents.map((agent) => {
-              const agentInfo = AGENT_CONFIG[agent.agent_type];
+              const agentInfo = AGENT_CONFIG[agent.id];
               const Icon = agentInfo?.icon || Bot;
               
               return (
-                <Card key={agent.agent_type} className={`overflow-hidden ${!agent.is_enabled ? 'opacity-60' : ''}`}>
+                <Card key={agent.id} className={`overflow-hidden ${!agent.enabled ? 'opacity-60' : ''}`}>
                   <div className={`h-2 bg-gradient-to-r ${agentInfo?.color || 'from-gray-400 to-gray-500'}`} />
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between gap-6">
@@ -221,19 +221,18 @@ export default function AIAgentsConfig() {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <Switch 
-                              checked={agent.is_enabled}
-                              onCheckedChange={(checked) => updateAgent(agent.agent_type, 'is_enabled', checked)}
+                              checked={agent.enabled}
+                              onCheckedChange={(checked) => updateAgent(agent.id, 'enabled', checked)}
                             />
                             <span className="font-medium text-slate-700">
-                              {agent.agent_type === 'mock_coach' ? 'Mock Exam Coach' :
-                               agent.agent_type === 'exam_tutor' ? 'Exam Tutor' : 'Study Planner'}
+                              {agent.name || agent.name_es || agent.id}
                             </span>
-                            {agent.is_enabled && (
+                            {agent.enabled && (
                               <Badge className="bg-green-100 text-green-700">Activo</Badge>
                             )}
                           </div>
                           <p className="text-sm text-slate-500 mb-4">
-                            {agentInfo?.description}
+                            {agent.description || agentInfo?.description}
                           </p>
 
                           {/* Custom Name */}
