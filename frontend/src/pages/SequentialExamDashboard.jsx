@@ -34,6 +34,8 @@ export default function SequentialExamDashboard() {
 
   useEffect(() => {
     loadDashboard();
+    loadExamModes();
+    loadInProgressExams();
   }, [examType]);
 
   const loadDashboard = async () => {
@@ -51,8 +53,71 @@ export default function SequentialExamDashboard() {
     setLoading(false);
   };
 
+  const loadExamModes = async () => {
+    try {
+      const res = await axios.get(
+        `${API_URL}/api/sequential-exams/available-modes/${examType}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setExamModes(res.data);
+    } catch (err) {
+      console.error('Error loading exam modes:', err);
+    }
+  };
+
+  const loadInProgressExams = async () => {
+    try {
+      const res = await axios.get(
+        `${API_URL}/api/sequential-exams/in-progress`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setInProgressExams(res.data.exams_in_progress || []);
+    } catch (err) {
+      console.error('Error loading in-progress exams:', err);
+    }
+  };
+
   const startExam = (examId) => {
-    navigate(`/exam/${examType}/${examId}`);
+    // Check if this exam is already in progress
+    const inProgress = inProgressExams.find(e => e.exam_id === examId && e.exam_type === examType);
+    if (inProgress) {
+      // Resume the exam
+      navigate(`/exam/${examType}/${examId}?mode=${inProgress.mode}`);
+      return;
+    }
+    // Show mode selection dialog
+    setSelectedExam(examId);
+    setShowModeDialog(true);
+  };
+
+  const handleStartExamWithMode = async (mode, section = null) => {
+    setStartingExam(true);
+    try {
+      const payload = {
+        exam_id: selectedExam,
+        mode: mode,
+        ...(section && { section })
+      };
+      
+      await axios.post(
+        `${API_URL}/api/sequential-exams/start/${examType}/${selectedExam}`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setShowModeDialog(false);
+      
+      // Navigate to exam
+      if (mode === 'full') {
+        navigate(`/exam/${examType}?exam_id=${selectedExam}&mode=full`);
+      } else {
+        navigate(`/exam/${examType}/${section}?exam_id=${selectedExam}&mode=section`);
+      }
+    } catch (err) {
+      console.error('Error starting exam:', err);
+      toast.error(err.response?.data?.detail || 'Error al iniciar el examen');
+    }
+    setStartingExam(false);
   };
 
   const handleUpsell = () => {
