@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import LandingAgentWidget from '../components/LandingAgentWidget';
+import LanguageSelector from '../components/LanguageSelector';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -291,6 +292,7 @@ export default function Landing() {
             </div>
             
             <div className="flex items-center gap-3">
+              <LanguageSelector variant="compact" />
               <Button variant="ghost" className="text-gray-600 font-semibold hover:bg-gray-100" onClick={() => navigate('/login')} data-testid="nav-login-btn">
                 Log In
               </Button>

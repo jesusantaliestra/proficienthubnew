@@ -32,13 +32,22 @@ class ExamPurchase(BaseModel):
 
 class StartExamRequest(BaseModel):
     exam_id: str
-    mode: str  # "full" or "sections"
+    mode: str  # "full" or "section"
+    section: Optional[str] = None  # Required if mode is "section"
 
 class CompleteSectionRequest(BaseModel):
     section: str
     score: float = 0
     answers: Optional[Dict[str, Any]] = None
     time_taken_seconds: int = 0
+
+class ExamAttemptStatus(BaseModel):
+    exam_id: str
+    mode: str  # "full", "partial", "completed"
+    sections_completed: List[str] = []
+    sections_remaining: List[str] = []
+    started_at: Optional[str] = None
+    can_continue: bool = True
 
 class ExamAccessResponse(BaseModel):
     exam_type: str
