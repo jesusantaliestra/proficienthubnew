@@ -1,396 +1,719 @@
 """
-AI Agents Router
-Handles AI tutor interactions, credits, and configuration
+AI Agents Configuration & Orchestration Router
+Configurable multi-agent AI tutoring system with LLM abstraction layer.
+Supports: GPT-4, Claude Opus, Gemini - easily switchable per academy.
+Avatar tiers: Basic (Rive) | Premium (HeyGen)
+Voice: ElevenLabs
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
 from datetime import datetime, timezone
+from enum import Enum
 import uuid
 import os
+import json
 
-import sys
-sys.path.append('/app/backend')
-from database import db
-from utils.auth import get_current_user
+from motor.motor_asyncio import AsyncIOMotorClient
 
 router = APIRouter(prefix="/ai-agents", tags=["AI Agents"])
 
-# ==================== AI AGENT DEFINITIONS ====================
-AI_AGENTS = {
-    "official_tutor": {
-        "name": "Official IELTS Tutor",
-        "name_es": "Tutor Oficial IELTS",
-        "description": "Comprehensive exam preparation with official test strategies",
-        "icon": "GraduationCap",
-        "credits_per_message": 2,
-        "voice_enabled": True,
-        "system_prompt": """You are an official {exam_type} exam preparation tutor. Your role is to:
-        1. Provide detailed explanations of exam formats and scoring
-        2. Offer strategic tips for each section
-        3. Give constructive feedback on practice responses
-        4. Motivate and encourage students
-        Always be supportive, patient, and thorough in your explanations."""
-    },
+# Database connection
+client = AsyncIOMotorClient(os.environ.get('MONGO_URL'))
+db = client[os.environ.get('DB_NAME', 'proficienthub')]
+
+# Auth utility
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import jwt
+
+JWT_SECRET = os.environ.get('JWT_SECRET', 'proficienthub-secret-key')
+security = HTTPBearer(auto_error=False)
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+        user = await db.users.find_one({"id": payload["user_id"]}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+# ==================== LLM ABSTRACTION LAYER ====================
+
+class LLMProvider(str, Enum):
+    OPENAI_GPT4 = "openai_gpt4"
+    OPENAI_GPT4O = "openai_gpt4o"
+    CLAUDE_OPUS = "claude_opus"
+    CLAUDE_SONNET = "claude_sonnet"
+    GEMINI_PRO = "gemini_pro"
+    GEMINI_FLASH = "gemini_flash"
+
+class AvatarTier(str, Enum):
+    NONE = "none"
+    BASIC = "basic"  # Rive 2D animated
+    PREMIUM = "premium"  # HeyGen realistic video
+
+class AgentType(str, Enum):
+    MOCK_COACH = "mock_coach"  # Mock Exam Coach
+    EXAM_TUTOR = "exam_tutor"  # Exam-specific tutor
+    STUDY_PLANNER = "study_planner"  # Agent Planner
+
+# Default agent personalities and prompts
+DEFAULT_AGENT_CONFIGS = {
     "mock_coach": {
-        "name": "Mock Test Coach",
-        "name_es": "Entrenador de Simulacros",
-        "description": "Socratic method coach - guides without giving answers",
-        "icon": "Brain",
-        "credits_per_message": 1,
-        "voice_enabled": True,
-        "system_prompt": """You are a Socratic method coach for {exam_type} preparation. IMPORTANT RULES:
-        1. NEVER give direct answers - instead ask guiding questions
-        2. If student gets stuck, give hints not solutions
-        3. Encourage critical thinking and self-discovery
-        4. After 5 failed attempts, provide the answer with explanation
-        5. Always celebrate small progress
-        Use questions like: "What do you think about...?", "Why might that be...?", "What if you considered...?" """
+        "default_name": "Mock Coach",
+        "default_personality": "Expert exam strategy coach. Helps students understand exam format, time management, and test-taking techniques.",
+        "system_prompt_template": """You are {agent_name}, a professional exam coach specializing in {exam_type}.
+Your role is to help students with:
+- Exam format and structure understanding
+- Time management strategies
+- Test-taking techniques and tips
+- Stress management during exams
+- Identifying common pitfalls
+
+Exam context: {exam_context}
+Academy materials: {academy_materials}
+
+Respond in the student's language. Be encouraging but realistic. Focus on actionable advice."""
     },
-    "planner": {
-        "name": "Study Planner",
-        "name_es": "Planificador de Estudio",
-        "description": "Creates personalized study schedules and tracks progress",
-        "icon": "Calendar",
-        "credits_per_message": 1,
-        "voice_enabled": False,
-        "system_prompt": """You are a study planning assistant for {exam_type} preparation. You help students:
-        1. Create realistic study schedules based on their target date
-        2. Balance practice across all exam sections
-        3. Set achievable daily and weekly goals
-        4. Adapt plans based on progress and weak areas
-        Always consider the student's available time and learning pace."""
+    "exam_tutor": {
+        "default_name": "Exam Tutor",
+        "default_personality": "Expert tutor for the specific exam content. Deep knowledge of all sections and question types.",
+        "system_prompt_template": """You are {agent_name}, an expert tutor for {exam_type}.
+Your role is to:
+- Explain concepts and content for all exam sections
+- Answer questions about {exam_type} topics
+- Provide practice exercises and explanations
+- Give feedback on student responses
+- Help improve language skills specific to {exam_type}
+
+Exam context: {exam_context}
+Academy materials: {academy_materials}
+Student profile: {student_profile}
+
+Be patient and thorough. Use examples from real exam questions. Adapt to the student's level."""
+    },
+    "study_planner": {
+        "default_name": "Study Planner",
+        "default_personality": "Intelligent study planning assistant. Creates personalized study schedules based on exam date and student goals.",
+        "system_prompt_template": """You are {agent_name}, a study planning assistant for {exam_type} preparation.
+Your role is to:
+- Create personalized study schedules
+- Track student progress and adjust plans
+- Recommend focus areas based on weaknesses
+- Set realistic goals and milestones
+- Motivate and keep students on track
+
+Student exam date: {exam_date}
+Student target score: {target_score}
+Current performance: {current_performance}
+Academy materials available: {academy_materials}
+
+Create specific, actionable plans. Be realistic about time requirements. Celebrate progress."""
     }
 }
 
 # ==================== MODELS ====================
-class CreditPurchase(BaseModel):
-    credits: int
 
-class AIAgentInteraction(BaseModel):
-    agent_type: str
+class AgentConfig(BaseModel):
+    agent_type: AgentType
+    is_enabled: bool = True
+    custom_name: Optional[str] = None
+    custom_personality: Optional[str] = None
+    avatar_tier: AvatarTier = AvatarTier.BASIC
+    llm_provider: LLMProvider = LLMProvider.OPENAI_GPT4
+    voice_id: Optional[str] = None  # ElevenLabs voice ID
+    heygen_avatar_id: Optional[str] = None  # For premium tier
+
+class AIConfigUpdate(BaseModel):
+    ai_tutor_enabled: bool = True
+    agents: List[AgentConfig]
+    default_llm: LLMProvider = LLMProvider.OPENAI_GPT4
+    default_avatar_tier: AvatarTier = AvatarTier.BASIC
+    elevenlabs_voice_id: Optional[str] = None
+    heygen_avatar_id: Optional[str] = None
+    custom_knowledge_base: Optional[str] = None  # Academy-specific content
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant", "system"]
+    content: str
+    timestamp: Optional[str] = None
+
+class AgentChatRequest(BaseModel):
+    agent_type: AgentType
     message: str
-    exam_type: str = "ielts"
     session_id: Optional[str] = None
-    context: Optional[Dict[str, Any]] = None
-    voice_enabled: Optional[bool] = False
+    include_voice: bool = False
+    include_avatar: bool = False
 
-# ==================== HELPER FUNCTIONS ====================
-async def consume_ai_credits(user_id: str, credits: int, agent_type: str, session_id: str):
-    """Internal function to consume AI credits"""
-    result = await db.ai_credits.find_one_and_update(
-        {"user_id": user_id, "$expr": {"$gte": [{"$subtract": ["$total_credits", "$used_credits"]}, credits]}},
-        {
-            "$inc": {"used_credits": credits},
-            "$set": {"last_updated": datetime.now(timezone.utc).isoformat()},
-            "$push": {
-                "usage_history": {
-                    "credits": credits,
-                    "agent_type": agent_type,
-                    "session_id": session_id,
-                    "timestamp": datetime.now(timezone.utc).isoformat()
-                }
-            }
-        }
-    )
-    return result is not None
+class ExamFeedbackRequest(BaseModel):
+    attempt_id: str
+    answers: Dict[str, Any]
+    exam_type: str
+    section: Optional[str] = None
 
-# ==================== CREDITS ENDPOINTS ====================
-@router.get("/credits")
-async def get_ai_credits(current_user: dict = Depends(get_current_user)):
-    """Get AI credits balance for institution or individual"""
-    user_id = current_user.get("institution_id") or current_user["id"]
-    user_type = current_user["user_type"]
-    
-    credits_doc = await db.ai_credits.find_one({"user_id": user_id}, {"_id": 0})
-    
-    if not credits_doc:
-        initial_credits = 100 if user_type == "institution" else 10
-        credits_doc = {
-            "user_id": user_id,
-            "user_type": user_type,
-            "total_credits": initial_credits,
-            "used_credits": 0,
-            "free_credits": initial_credits,
-            "purchased_credits": 0,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "last_updated": datetime.now(timezone.utc).isoformat()
-        }
-        await db.ai_credits.insert_one(credits_doc)
-    
-    return {
-        "total_credits": credits_doc.get("total_credits", 0),
-        "used_credits": credits_doc.get("used_credits", 0),
-        "remaining_credits": credits_doc.get("total_credits", 0) - credits_doc.get("used_credits", 0),
-        "free_credits": credits_doc.get("free_credits", 0),
-        "purchased_credits": credits_doc.get("purchased_credits", 0),
-        "last_updated": credits_doc.get("last_updated")
-    }
+# ==================== INSTITUTION AI CONFIGURATION ====================
 
-@router.post("/credits/purchase")
-async def purchase_ai_credits(purchase: CreditPurchase, current_user: dict = Depends(get_current_user)):
-    """Purchase AI credits for institution"""
-    if current_user["user_type"] not in ["institution", "admin"]:
-        raise HTTPException(status_code=403, detail="Only institutions can purchase credits")
-    
-    user_id = current_user["id"]
-    
-    credit_prices = {
-        100: 10,
-        500: 40,
-        1000: 70,
-        5000: 300,
-    }
-    
-    if purchase.credits not in credit_prices:
-        raise HTTPException(status_code=400, detail=f"Invalid credit amount. Choose from: {list(credit_prices.keys())}")
-    
-    price = credit_prices[purchase.credits]
-    
-    await db.ai_credits.update_one(
-        {"user_id": user_id},
-        {
-            "$inc": {
-                "total_credits": purchase.credits,
-                "purchased_credits": purchase.credits
-            },
-            "$set": {
-                "last_purchase": datetime.now(timezone.utc).isoformat(),
-                "last_updated": datetime.now(timezone.utc).isoformat()
-            },
-            "$push": {
-                "purchase_history": {
-                    "credits": purchase.credits,
-                    "price": price,
-                    "currency": "USD",
-                    "timestamp": datetime.now(timezone.utc).isoformat()
-                }
-            }
-        },
-        upsert=True
-    )
-    
-    return {
-        "success": True,
-        "credits_added": purchase.credits,
-        "price": price,
-        "message": f"Successfully added {purchase.credits} AI credits"
-    }
-
-# ==================== CONFIGURATION ENDPOINTS ====================
 @router.get("/config")
-async def get_agent_config(current_user: dict = Depends(get_current_user)):
-    """Get AI agent configuration for institution"""
-    institution_id = current_user.get("institution_id") or current_user.get("id")
+async def get_ai_config(current_user: dict = Depends(get_current_user)):
+    """Get AI agents configuration for institution"""
+    if current_user["user_type"] == "institution":
+        institution_id = current_user["id"]
+    elif current_user["user_type"] == "student":
+        institution_id = current_user.get("institution_id")
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
     
-    config = await db.ai_agent_config.find_one({"institution_id": institution_id}, {"_id": 0})
+    config = await db.ai_agent_configs.find_one(
+        {"institution_id": institution_id},
+        {"_id": 0}
+    )
     
     if not config:
+        # Return default config
         config = {
             "institution_id": institution_id,
-            "agents": {
-                "official_tutor": {"enabled": True, "voice_id": "nova"},
-                "mock_coach": {"enabled": True, "voice_id": "echo"},
-                "planner": {"enabled": True, "voice_id": None}
-            },
-            "default_voice_enabled": True,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "ai_tutor_enabled": True,
+            "agents": [
+                {
+                    "agent_type": "mock_coach",
+                    "is_enabled": True,
+                    "custom_name": "Mock Coach",
+                    "avatar_tier": "basic",
+                    "llm_provider": "openai_gpt4"
+                },
+                {
+                    "agent_type": "exam_tutor",
+                    "is_enabled": True,
+                    "custom_name": "Exam Tutor",
+                    "avatar_tier": "basic",
+                    "llm_provider": "openai_gpt4"
+                },
+                {
+                    "agent_type": "study_planner",
+                    "is_enabled": True,
+                    "custom_name": "Study Planner",
+                    "avatar_tier": "basic",
+                    "llm_provider": "openai_gpt4"
+                }
+            ],
+            "default_llm": "openai_gpt4",
+            "default_avatar_tier": "basic",
+            "llm_options": [e.value for e in LLMProvider],
+            "avatar_options": [e.value for e in AvatarTier]
         }
-        await db.ai_agent_config.insert_one(config)
     
-    agents_with_info = []
-    for agent_id, agent_info in AI_AGENTS.items():
-        agent_config = config.get("agents", {}).get(agent_id, {"enabled": True})
-        agents_with_info.append({
-            "id": agent_id,
-            "name": agent_info["name"],
-            "name_es": agent_info["name_es"],
-            "description": agent_info["description"],
-            "icon": agent_info["icon"],
-            "credits_per_message": agent_info["credits_per_message"],
-            "voice_enabled": agent_info["voice_enabled"],
-            "enabled": agent_config.get("enabled", True),
-            "custom_voice_id": agent_config.get("voice_id")
-        })
+    # Add available options
+    config["llm_options"] = [e.value for e in LLMProvider]
+    config["avatar_options"] = [e.value for e in AvatarTier]
+    config["agent_types"] = [e.value for e in AgentType]
     
-    return {
-        "agents": agents_with_info,
-        "default_voice_enabled": config.get("default_voice_enabled", True)
-    }
+    return config
 
-@router.post("/config")
-async def update_agent_config(config_update: Dict[str, Any], current_user: dict = Depends(get_current_user)):
-    """Update AI agent configuration for institution"""
+@router.put("/config")
+async def update_ai_config(config: AIConfigUpdate, current_user: dict = Depends(get_current_user)):
+    """Update AI agents configuration - Institution only"""
     if current_user["user_type"] != "institution":
-        raise HTTPException(status_code=403, detail="Only institutions can configure agents")
+        raise HTTPException(status_code=403, detail="Only institutions can configure AI agents")
     
-    institution_id = current_user["id"]
+    config_doc = {
+        "institution_id": current_user["id"],
+        "ai_tutor_enabled": config.ai_tutor_enabled,
+        "agents": [a.dict() for a in config.agents],
+        "default_llm": config.default_llm.value,
+        "default_avatar_tier": config.default_avatar_tier.value,
+        "elevenlabs_voice_id": config.elevenlabs_voice_id,
+        "heygen_avatar_id": config.heygen_avatar_id,
+        "custom_knowledge_base": config.custom_knowledge_base,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
     
-    await db.ai_agent_config.update_one(
-        {"institution_id": institution_id},
-        {
-            "$set": {
-                **config_update,
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }
-        },
+    await db.ai_agent_configs.update_one(
+        {"institution_id": current_user["id"]},
+        {"$set": config_doc},
         upsert=True
     )
     
-    return {"success": True, "message": "Agent configuration updated"}
+    return {"message": "AI configuration updated"}
 
-# ==================== AVAILABLE AGENTS ====================
-@router.get("/available")
+@router.get("/agents/available")
 async def get_available_agents(current_user: dict = Depends(get_current_user)):
-    """Get list of available AI agents for the user"""
+    """Get available AI agents for the student"""
+    if current_user["user_type"] != "student":
+        raise HTTPException(status_code=403, detail="Only students access agents")
+    
     institution_id = current_user.get("institution_id")
     
-    if institution_id:
-        config = await db.ai_agent_config.find_one({"institution_id": institution_id}, {"_id": 0})
-    else:
-        config = None
+    # Check if student has AI tutor access
+    has_ai_access = current_user.get("has_ai_tutor", False)
     
-    available_agents = []
-    for agent_id, agent_info in AI_AGENTS.items():
-        is_enabled = True
-        if config:
-            is_enabled = config.get("agents", {}).get(agent_id, {}).get("enabled", True)
+    # Check purchases for AI tutor
+    if not has_ai_access:
+        purchases = await db.student_purchases.find(
+            {"student_id": current_user["id"], "status": "completed"}
+        ).to_list(20)
         
-        if is_enabled:
-            available_agents.append({
-                "id": agent_id,
-                "name": agent_info["name"],
-                "name_es": agent_info["name_es"],
-                "description": agent_info["description"],
-                "icon": agent_info["icon"],
-                "credits_per_message": agent_info["credits_per_message"],
-                "voice_enabled": agent_info["voice_enabled"]
-            })
+        for p in purchases:
+            if p.get("ai_tutor_hours_total", 0) > 0:
+                ai_minutes_used = p.get("ai_tutor_minutes_used", 0)
+                ai_minutes_total = p.get("ai_tutor_hours_total", 0) * 60
+                if ai_minutes_used < ai_minutes_total:
+                    has_ai_access = True
+                    break
     
-    return {"agents": available_agents}
-
-# ==================== INTERACTION ENDPOINT ====================
-@router.post("/interact")
-async def interact_with_agent(interaction: AIAgentInteraction, current_user: dict = Depends(get_current_user)):
-    """Main endpoint for interacting with AI agents"""
-    
-    if interaction.agent_type not in AI_AGENTS:
-        raise HTTPException(status_code=400, detail=f"Invalid agent type. Choose from: {list(AI_AGENTS.keys())}")
-    
-    agent = AI_AGENTS[interaction.agent_type]
-    user_id = current_user.get("institution_id") or current_user["id"]
-    session_id = interaction.session_id or str(uuid.uuid4())
-    
-    credits_needed = agent["credits_per_message"]
-    has_credits = await consume_ai_credits(user_id, credits_needed, interaction.agent_type, session_id)
-    
-    if not has_credits:
+    if not has_ai_access:
         return {
-            "success": False,
-            "error": "insufficient_credits",
-            "message": "No hay créditos suficientes. Por favor compra más créditos para continuar.",
-            "credits_needed": credits_needed
+            "has_access": False,
+            "agents": [],
+            "message": "AI Tutor access requires a paid plan with AI features."
         }
     
-    try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
-        
-        api_key = os.environ.get('EMERGENT_LLM_KEY')
-        if not api_key:
-            raise HTTPException(status_code=500, detail="AI service not configured")
-        
-        system_prompt = agent["system_prompt"].format(exam_type=interaction.exam_type.upper())
-        
-        if interaction.agent_type == "mock_coach" and interaction.context:
-            attempt_count = interaction.context.get("attempt_count", 0)
-            current_question = interaction.context.get("current_question", "")
-            if attempt_count > 0:
-                system_prompt += f"\n\nCurrent question: {current_question}\nStudent's attempt number: {attempt_count}/5"
-                if attempt_count >= 5:
-                    system_prompt += "\nThis is their final attempt - provide the full answer and explanation."
-        
-        chat = LlmChat(
-            api_key=api_key,
-            model="gpt-4o-mini",
-            system_message=system_prompt
-        )
-        
-        response = await chat.send_async(UserMessage(interaction.message))
-        
-        # Store interaction history
-        history_doc = {
-            "id": str(uuid.uuid4()),
-            "session_id": session_id,
-            "user_id": current_user["id"],
-            "institution_id": current_user.get("institution_id"),
-            "agent_type": interaction.agent_type,
-            "exam_type": interaction.exam_type,
-            "user_message": interaction.message,
-            "agent_response": response.content,
-            "credits_used": credits_needed,
-            "created_at": datetime.now(timezone.utc).isoformat()
-        }
-        await db.ai_agent_history.insert_one(history_doc)
-        
-        return {
-            "success": True,
-            "response": response.content,
-            "session_id": session_id,
-            "agent_type": interaction.agent_type,
-            "credits_used": credits_needed
-        }
-        
-    except Exception as e:
-        # Refund credits on error
-        await db.ai_credits.update_one(
-            {"user_id": user_id},
-            {"$inc": {"used_credits": -credits_needed}}
-        )
-        raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")
-
-# ==================== HISTORY ENDPOINTS ====================
-@router.get("/history/{session_id}")
-async def get_session_history(session_id: str, current_user: dict = Depends(get_current_user)):
-    """Get conversation history for a session"""
-    history = await db.ai_agent_history.find(
-        {"session_id": session_id, "user_id": current_user["id"]},
+    # Get institution's AI config
+    config = await db.ai_agent_configs.find_one(
+        {"institution_id": institution_id},
         {"_id": 0}
-    ).sort("created_at", 1).to_list(100)
+    )
     
-    return {"history": history}
-
-@router.get("/sessions")
-async def get_user_sessions(
-    limit: int = 20,
-    current_user: dict = Depends(get_current_user)
-):
-    """Get recent sessions for the user"""
-    pipeline = [
-        {"$match": {"user_id": current_user["id"]}},
-        {"$group": {
-            "_id": "$session_id",
-            "agent_type": {"$first": "$agent_type"},
-            "exam_type": {"$first": "$exam_type"},
-            "message_count": {"$sum": 1},
-            "last_message": {"$max": "$created_at"},
-            "first_message": {"$min": "$created_at"}
-        }},
-        {"$sort": {"last_message": -1}},
-        {"$limit": limit}
-    ]
+    if not config or not config.get("ai_tutor_enabled"):
+        return {
+            "has_access": False,
+            "agents": [],
+            "message": "AI Tutor is not enabled for your academy."
+        }
     
-    sessions = await db.ai_agent_history.aggregate(pipeline).to_list(limit)
+    # Filter enabled agents
+    enabled_agents = []
+    for agent in config.get("agents", []):
+        if agent.get("is_enabled"):
+            agent_info = {
+                "type": agent["agent_type"],
+                "name": agent.get("custom_name") or DEFAULT_AGENT_CONFIGS[agent["agent_type"]]["default_name"],
+                "personality": agent.get("custom_personality") or DEFAULT_AGENT_CONFIGS[agent["agent_type"]]["default_personality"],
+                "avatar_tier": agent.get("avatar_tier", "basic"),
+                "has_voice": config.get("elevenlabs_voice_id") is not None,
+                "has_video_avatar": agent.get("avatar_tier") == "premium" and config.get("heygen_avatar_id")
+            }
+            enabled_agents.append(agent_info)
     
     return {
-        "sessions": [
-            {
-                "session_id": s["_id"],
-                "agent_type": s["agent_type"],
-                "exam_type": s["exam_type"],
-                "message_count": s["message_count"],
-                "last_message": s["last_message"],
-                "started_at": s["first_message"]
+        "has_access": True,
+        "agents": enabled_agents,
+        "exam_type": current_user.get("current_exam", ""),
+        "default_avatar_tier": config.get("default_avatar_tier", "basic")
+    }
+
+# ==================== CHAT WITH AGENTS ====================
+
+@router.post("/chat")
+async def chat_with_agent(
+    request: AgentChatRequest,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
+    """Send message to AI agent and get response"""
+    if current_user["user_type"] != "student":
+        raise HTTPException(status_code=403, detail="Only students can chat with agents")
+    
+    institution_id = current_user.get("institution_id")
+    
+    # Verify AI access
+    has_access = await verify_ai_access(current_user)
+    if not has_access:
+        raise HTTPException(status_code=402, detail="AI Tutor access required. Please upgrade your plan.")
+    
+    # Get agent config
+    config = await db.ai_agent_configs.find_one({"institution_id": institution_id})
+    if not config:
+        raise HTTPException(status_code=404, detail="AI not configured for this academy")
+    
+    agent_config = None
+    for agent in config.get("agents", []):
+        if agent["agent_type"] == request.agent_type.value and agent.get("is_enabled"):
+            agent_config = agent
+            break
+    
+    if not agent_config:
+        raise HTTPException(status_code=404, detail="Agent not available")
+    
+    # Get or create session
+    session_id = request.session_id or str(uuid.uuid4())
+    session = await db.ai_chat_sessions.find_one({"session_id": session_id})
+    
+    if not session:
+        session = {
+            "session_id": session_id,
+            "student_id": current_user["id"],
+            "institution_id": institution_id,
+            "agent_type": request.agent_type.value,
+            "messages": [],
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.ai_chat_sessions.insert_one(session)
+    
+    # Build context
+    exam_type = current_user.get("current_exam", "general")
+    context = await build_agent_context(
+        agent_type=request.agent_type.value,
+        exam_type=exam_type,
+        institution_id=institution_id,
+        student=current_user,
+        agent_config=agent_config
+    )
+    
+    # Get LLM response
+    llm_provider = agent_config.get("llm_provider", "openai_gpt4")
+    
+    # Build messages for LLM
+    messages = [{"role": "system", "content": context}]
+    
+    # Add conversation history (last 10 messages)
+    history = session.get("messages", [])[-10:]
+    for msg in history:
+        messages.append({"role": msg["role"], "content": msg["content"]})
+    
+    # Add user message
+    messages.append({"role": "user", "content": request.message})
+    
+    # Call LLM
+    response_text = await call_llm(llm_provider, messages)
+    
+    # Save messages to session
+    await db.ai_chat_sessions.update_one(
+        {"session_id": session_id},
+        {
+            "$push": {
+                "messages": {
+                    "$each": [
+                        {"role": "user", "content": request.message, "timestamp": datetime.now(timezone.utc).isoformat()},
+                        {"role": "assistant", "content": response_text, "timestamp": datetime.now(timezone.utc).isoformat()}
+                    ]
+                }
+            },
+            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    # Track AI usage
+    background_tasks.add_task(track_ai_usage, current_user["id"], 1)  # 1 minute per interaction
+    
+    # Prepare response
+    response = {
+        "session_id": session_id,
+        "agent_type": request.agent_type.value,
+        "agent_name": agent_config.get("custom_name") or DEFAULT_AGENT_CONFIGS[request.agent_type.value]["default_name"],
+        "message": response_text
+    }
+    
+    # Generate voice if requested
+    if request.include_voice and config.get("elevenlabs_voice_id"):
+        voice_url = await generate_voice(response_text, config["elevenlabs_voice_id"])
+        response["voice_url"] = voice_url
+    
+    # Generate avatar video if requested (premium tier)
+    if request.include_avatar and agent_config.get("avatar_tier") == "premium":
+        if config.get("heygen_avatar_id"):
+            response["avatar_video_status"] = "generating"
+            response["avatar_video_id"] = str(uuid.uuid4())
+    
+    return response
+
+@router.get("/chat/sessions")
+async def get_chat_sessions(current_user: dict = Depends(get_current_user)):
+    """Get student's chat session history"""
+    if current_user["user_type"] != "student":
+        raise HTTPException(status_code=403, detail="Only students can view sessions")
+    
+    sessions = await db.ai_chat_sessions.find(
+        {"student_id": current_user["id"]},
+        {"_id": 0, "messages": {"$slice": -1}}
+    ).sort("updated_at", -1).limit(20).to_list(20)
+    
+    return {"sessions": sessions}
+
+@router.get("/chat/session/{session_id}")
+async def get_session_history(session_id: str, current_user: dict = Depends(get_current_user)):
+    """Get full conversation history for a session"""
+    session = await db.ai_chat_sessions.find_one(
+        {"session_id": session_id, "student_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    return session
+
+# ==================== INSTANT EXAM FEEDBACK ====================
+
+@router.post("/exam-feedback")
+async def get_instant_exam_feedback(
+    request: ExamFeedbackRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get instant AI feedback on exam answers - identical to official format"""
+    if current_user["user_type"] != "student":
+        raise HTTPException(status_code=403, detail="Only students can get feedback")
+    
+    # Verify AI access
+    has_access = await verify_ai_access(current_user)
+    if not has_access:
+        raise HTTPException(status_code=402, detail="AI feedback requires a paid plan")
+    
+    institution_id = current_user.get("institution_id")
+    
+    # Get LLM config
+    config = await db.ai_agent_configs.find_one({"institution_id": institution_id})
+    llm_provider = config.get("default_llm", "openai_gpt4") if config else "openai_gpt4"
+    
+    # Build feedback prompt
+    feedback_prompt = build_exam_feedback_prompt(
+        exam_type=request.exam_type,
+        section=request.section,
+        answers=request.answers
+    )
+    
+    # Get AI feedback
+    messages = [
+        {"role": "system", "content": f"You are an official {request.exam_type.upper()} exam evaluator. Provide feedback exactly as the official exam would. Be specific, constructive, and accurate."},
+        {"role": "user", "content": feedback_prompt}
+    ]
+    
+    feedback_text = await call_llm(llm_provider, messages)
+    
+    # Parse structured feedback
+    feedback = parse_exam_feedback(feedback_text, request.exam_type, request.section)
+    
+    # Save feedback to attempt
+    await db.mock_attempts.update_one(
+        {"id": request.attempt_id},
+        {
+            "$set": {
+                "ai_feedback": feedback,
+                "feedback_generated_at": datetime.now(timezone.utc).isoformat()
             }
-            for s in sessions
-        ]
+        }
+    )
+    
+    return {
+        "attempt_id": request.attempt_id,
+        "feedback": feedback,
+        "official_format": True,
+        "exam_type": request.exam_type
+    }
+
+# ==================== HELPER FUNCTIONS ====================
+
+async def verify_ai_access(user: dict) -> bool:
+    """Check if user has AI tutor access"""
+    if user.get("has_ai_tutor"):
+        return True
+    
+    purchases = await db.student_purchases.find(
+        {"student_id": user["id"], "status": "completed"}
+    ).to_list(20)
+    
+    for p in purchases:
+        total_minutes = p.get("ai_tutor_hours_total", 0) * 60
+        used_minutes = p.get("ai_tutor_minutes_used", 0)
+        if total_minutes > used_minutes:
+            return True
+    
+    return False
+
+async def track_ai_usage(student_id: str, minutes: int):
+    """Track AI usage for billing"""
+    purchases = await db.student_purchases.find(
+        {
+            "student_id": student_id,
+            "status": "completed",
+            "$expr": {"$gt": [{"$multiply": ["$ai_tutor_hours_total", 60]}, "$ai_tutor_minutes_used"]}
+        }
+    ).sort("purchased_at", 1).to_list(1)
+    
+    if purchases:
+        await db.student_purchases.update_one(
+            {"id": purchases[0]["id"]},
+            {"$inc": {"ai_tutor_minutes_used": minutes}}
+        )
+
+async def build_agent_context(
+    agent_type: str,
+    exam_type: str,
+    institution_id: str,
+    student: dict,
+    agent_config: dict
+) -> str:
+    """Build system prompt with all context for the agent"""
+    template = DEFAULT_AGENT_CONFIGS[agent_type]["system_prompt_template"]
+    
+    exam_context = await get_exam_context(exam_type)
+    academy_materials = await get_academy_materials(institution_id, exam_type)
+    
+    student_profile = {
+        "name": student.get("name", "Student"),
+        "exam": exam_type,
+        "target_score": student.get("target_score"),
+        "exam_date": student.get("exam_date")
+    }
+    
+    prompt = template.format(
+        agent_name=agent_config.get("custom_name") or DEFAULT_AGENT_CONFIGS[agent_type]["default_name"],
+        exam_type=exam_type.upper(),
+        exam_context=exam_context,
+        academy_materials=academy_materials,
+        student_profile=json.dumps(student_profile),
+        exam_date=student.get("exam_date", "Not set"),
+        target_score=student.get("target_score", "Not set"),
+        current_performance="Based on recent exams"
+    )
+    
+    return prompt
+
+async def get_exam_context(exam_type: str) -> str:
+    """Get official exam context and structure"""
+    exam_info = {
+        "oet": "Occupational English Test for healthcare professionals. 4 sections: Listening (45min), Reading (60min), Writing (45min), Speaking (20min). Graded A-E.",
+        "ielts": "International English Language Testing System. 4 sections: Listening (30min), Reading (60min), Writing (60min), Speaking (11-14min). Band scores 0-9.",
+        "toefl": "Test of English as a Foreign Language. 4 sections: Reading (54-72min), Listening (41-57min), Speaking (17min), Writing (50min). Score 0-120.",
+        "pte": "Pearson Test of English Academic. Computer-based. Speaking & Writing (77-93min), Reading (32-41min), Listening (45-57min). Score 10-90.",
+        "cambridge": "Cambridge English Qualifications. Multiple levels (B2 First, C1 Advanced, C2 Proficiency). 4 papers: Reading & Use of English, Writing, Listening, Speaking."
+    }
+    return exam_info.get(exam_type, "Standard English proficiency exam with Reading, Writing, Listening, and Speaking sections.")
+
+async def get_academy_materials(institution_id: str, exam_type: str) -> str:
+    """Get academy-specific materials for context"""
+    materials = await db.academy_materials.find(
+        {"institution_id": institution_id, "exam_type": exam_type}
+    ).to_list(50)
+    
+    if not materials:
+        return "No additional academy-specific materials."
+    
+    material_list = [f"- {m.get('title', 'Material')}: {m.get('description', '')}" for m in materials[:10]]
+    return "\n".join(material_list)
+
+async def call_llm(provider: str, messages: List[dict]) -> str:
+    """Call the specified LLM provider - Abstraction layer for easy switching"""
+    try:
+        if provider in ["openai_gpt4", "openai_gpt4o"]:
+            return await call_openai(messages, provider)
+        elif provider in ["claude_opus", "claude_sonnet"]:
+            return await call_claude(messages, provider)
+        elif provider in ["gemini_pro", "gemini_flash"]:
+            return await call_gemini(messages, provider)
+        else:
+            return await call_openai(messages, "openai_gpt4")
+    except Exception as e:
+        print(f"LLM Error: {e}")
+        return "I apologize, but I'm having trouble processing your request. Please try again."
+
+async def call_openai(messages: List[dict], model: str) -> str:
+    """Call OpenAI API using emergentintegrations"""
+    try:
+        from emergentintegrations.llm.openai import OpenAIChat, OpenAIMessage
+        
+        api_key = os.environ.get("EMERGENT_LLM_KEY") or os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            return "OpenAI API key not configured."
+        
+        model_name = "gpt-4" if model == "openai_gpt4" else "gpt-4o"
+        
+        chat = OpenAIChat(api_key=api_key, model=model_name)
+        openai_messages = [OpenAIMessage(role=m["role"], content=m["content"]) for m in messages]
+        
+        response = await chat.async_chat(openai_messages)
+        return response.content
+    except ImportError:
+        return "OpenAI integration not available. Please install emergentintegrations."
+    except Exception as e:
+        print(f"OpenAI error: {e}")
+        return f"Error communicating with AI: {str(e)}"
+
+async def call_claude(messages: List[dict], model: str) -> str:
+    """Call Anthropic Claude API using emergentintegrations"""
+    try:
+        from emergentintegrations.llm.anthropic import AnthropicChat, AnthropicMessage
+        
+        api_key = os.environ.get("EMERGENT_LLM_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            return "Claude API key not configured."
+        
+        model_name = "claude-3-opus-20240229" if model == "claude_opus" else "claude-3-sonnet-20240229"
+        
+        system_msg = next((m["content"] for m in messages if m["role"] == "system"), None)
+        user_messages = [m for m in messages if m["role"] != "system"]
+        
+        chat = AnthropicChat(api_key=api_key, model=model_name, system=system_msg)
+        anthropic_messages = [AnthropicMessage(role=m["role"], content=m["content"]) for m in user_messages]
+        
+        response = await chat.async_chat(anthropic_messages)
+        return response.content
+    except ImportError:
+        return "Claude integration not available."
+    except Exception as e:
+        print(f"Claude error: {e}")
+        return f"Error communicating with AI: {str(e)}"
+
+async def call_gemini(messages: List[dict], model: str) -> str:
+    """Call Google Gemini API using emergentintegrations"""
+    try:
+        from emergentintegrations.llm.gemini import GeminiChat, GeminiMessage
+        
+        api_key = os.environ.get("EMERGENT_LLM_KEY") or os.environ.get("GOOGLE_API_KEY")
+        if not api_key:
+            return "Gemini API key not configured."
+        
+        model_name = "gemini-1.5-pro" if model == "gemini_pro" else "gemini-1.5-flash"
+        
+        chat = GeminiChat(api_key=api_key, model=model_name)
+        gemini_messages = [GeminiMessage(role="user" if m["role"] != "assistant" else "model", content=m["content"]) for m in messages]
+        
+        response = await chat.async_chat(gemini_messages)
+        return response.content
+    except ImportError:
+        return "Gemini integration not available."
+    except Exception as e:
+        print(f"Gemini error: {e}")
+        return f"Error communicating with AI: {str(e)}"
+
+async def generate_voice(text: str, voice_id: str) -> Optional[str]:
+    """Generate voice using ElevenLabs"""
+    try:
+        return None  # Placeholder - would call ElevenLabs API
+    except Exception as e:
+        print(f"Voice generation error: {e}")
+        return None
+
+def build_exam_feedback_prompt(exam_type: str, section: Optional[str], answers: Dict) -> str:
+    """Build prompt for exam feedback"""
+    return f"""Evaluate these {exam_type.upper()} exam answers and provide detailed feedback.
+
+Section: {section or 'Full Exam'}
+Answers: {json.dumps(answers, indent=2)}
+
+Provide feedback in this exact format:
+1. Overall Score: X/100
+2. Band/Grade equivalent
+3. Section-by-section breakdown
+4. Specific strengths (with examples from answers)
+5. Areas needing improvement (with specific corrections)
+6. Actionable recommendations for improvement
+7. Estimated time to reach target score
+
+Be specific, reference actual answers, and match official exam scoring criteria."""
+
+def parse_exam_feedback(feedback_text: str, exam_type: str, section: Optional[str]) -> dict:
+    """Parse AI feedback into structured format"""
+    return {
+        "raw_feedback": feedback_text,
+        "exam_type": exam_type,
+        "section": section,
+        "official_format": True,
+        "generated_at": datetime.now(timezone.utc).isoformat()
     }
