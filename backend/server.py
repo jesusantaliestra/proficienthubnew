@@ -8741,6 +8741,9 @@ try:
     from routers.alerts_automation import router as alerts_automation_router
     from routers.institution_analytics import router as institution_analytics_router
     from routers.exam_plans import router as exam_plans_router
+    from routers.institution_students import router as institution_students_router
+    from routers.institution_settings import router as institution_settings_router
+    from routers.institution_messaging import router as institution_messaging_router
     
     app.include_router(admin_router, prefix="/api", tags=["Admin"])
     app.include_router(marketplace_router, prefix="/api", tags=["Marketplace"])
@@ -8757,8 +8760,11 @@ try:
     app.include_router(alerts_automation_router, prefix="/api", tags=["Alerts Automation"])
     app.include_router(institution_analytics_router, prefix="/api", tags=["Institution Analytics"])
     app.include_router(exam_plans_router, prefix="/api", tags=["Exam Plans"])
+    app.include_router(institution_students_router, prefix="/api", tags=["Institution Students"])
+    app.include_router(institution_settings_router, prefix="/api", tags=["Institution Settings"])
+    app.include_router(institution_messaging_router, prefix="/api", tags=["Institution Messaging"])
     
-    logger.info("New feature routers loaded successfully (15 modules: Admin, Marketplace, A/B Testing, Gamification, Student, Video Classes, SSO, White-Label, Community, ElevenLabs, CRM, Analytics Dashboard, Alerts Automation, Institution Analytics, Exam Plans)")
+    logger.info("New feature routers loaded successfully (18 modules)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
