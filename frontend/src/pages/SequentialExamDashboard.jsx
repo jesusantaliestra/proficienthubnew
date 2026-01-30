@@ -24,6 +24,11 @@ export default function SequentialExamDashboard() {
   
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [examModes, setExamModes] = useState(null);
+  const [inProgressExams, setInProgressExams] = useState([]);
+  const [showModeDialog, setShowModeDialog] = useState(false);
+  const [selectedExam, setSelectedExam] = useState(null);
+  const [startingExam, setStartingExam] = useState(false);
   
   const token = localStorage.getItem('token');
 
