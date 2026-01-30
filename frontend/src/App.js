@@ -182,6 +182,16 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
+
+      {/* Conversion Analytics Dashboard */}
+      <Route 
+        path="/superadmin/conversion-analytics" 
+        element={
+          <ProtectedRoute allowedTypes={['admin']}>
+            <ConversionAnalyticsDashboard />
+          </ProtectedRoute>
+        } 
+      />
       
       {/* Income Calculator - Dedicated page */}
       <Route 
