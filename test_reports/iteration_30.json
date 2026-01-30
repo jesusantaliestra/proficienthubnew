@@ -1,0 +1,130 @@
+{
+  "summary": "Iteration 30 - AI Agents Configuration & Student Exam Dashboard Testing. Backend APIs working (6/6 tests passed). Frontend UI verified for both pages. CRITICAL ISSUE: AI Agents Config page has frontend/backend data structure mismatch - all 3 agents display as 'Study Planner' instead of showing correct names.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "AIAgentsConfig.jsx",
+        "issue": "All 3 agent cards display 'Study Planner' instead of showing 'Mock Exam Coach', 'Exam Tutor', 'Study Planner' respectively",
+        "selector": "Agent cards in Agentes tab",
+        "priority": "HIGH",
+        "root_cause": "Frontend expects agent_type, is_enabled, custom_name fields but backend returns id, name, enabled fields"
+      },
+      {
+        "component": "AIAgentsConfig.jsx",
+        "issue": "Save button shows 'Error de conexión' toast when saving configuration",
+        "selector": "Guardar Cambios button",
+        "priority": "MEDIUM",
+        "root_cause": "PUT /api/ai-agents/config endpoint expects different payload structure than what frontend sends"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "AI Agents Configuration",
+        "issue": "Backend has TWO implementations - /app/backend/routers/ai_agents.py and /app/backend/server.py (line 6290). The server.py version takes precedence and returns different data structure than frontend expects",
+        "affected_selectors": ["[data-testid='ai-agents-config']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "GET /api/ai-agents/config - Returns agent configuration (200)",
+    "POST /api/ai-agents/config - Update agent configuration (200)",
+    "GET /api/ai-agents/available - Get available agents (200)",
+    "GET /api/exam-plans/my-credits - Get student credits (200)",
+    "GET /api/exam-plans/my-history - Get exam history (200)",
+    "GET /api/exam-plans/upsell-options - Get upsell options (200)"
+  ],
+  "frontend_tests_passed": [
+    "AI Agents Config page loads at /institution/ai-agents",
+    "Page title: 'Configuración de AI Tutores'",
+    "3 tabs present: Agentes, Avatares, Contenido",
+    "AI Tutor toggle works (can enable/disable)",
+    "Avatares tab shows ElevenLabs and HeyGen configuration",
+    "Contenido tab shows Knowledge Base section",
+    "Institution sidebar has AI Tutores link with data-testid='nav-ai-agents'",
+    "Clicking AI Tutores navigates to /institution/ai-agents",
+    "Student Exam Dashboard loads at /student/exam-dashboard",
+    "Header shows 'OET Preparation' with exam icon",
+    "Credits display shows Mocks Disponibles, Speaking, Writing counts",
+    "Main action card shows 'Examen Completo OET' with details",
+    "'Comenzar Examen Completo' button with '-1 Mock' badge",
+    "Section practice cards: Reading, Writing, Listening, Speaking",
+    "'Práctica Gratuita' badge visible",
+    "AI Tutor Personal card with 'Hablar con AI Tutor' button",
+    "Material de Estudio card with 'Ver Material' button",
+    "Historial de Exámenes section showing completed exams",
+    "PDF download button visible on completed exams"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_ai_agents_config.py",
+    "/app/test_reports/pytest/ai_agents_config_results.xml"
+  ],
+  "action_items": [
+    "FIX CRITICAL: Align AI Agents Config frontend (AIAgentsConfig.jsx) with backend API response structure. Backend returns {id, name, enabled} but frontend expects {agent_type, is_enabled, custom_name}",
+    "OPTION 1: Update AIAgentsConfig.jsx to use the data structure from server.py (id, name, enabled)",
+    "OPTION 2: Update server.py /api/ai-agents/config endpoint to return the structure expected by AIAgentsConfig.jsx",
+    "Fix Save button - ensure PUT request payload matches what backend expects"
+  ],
+  "critical_code_review_comments": [
+    "CRITICAL: Two conflicting implementations of /api/ai-agents/config - one in routers/ai_agents.py and one in server.py. Server.py takes precedence.",
+    "Frontend AIAgentsConfig.jsx line 207-229 expects agent.agent_type but API returns agent.id",
+    "Frontend expects agent.is_enabled but API returns agent.enabled",
+    "Frontend expects agent.custom_name but API returns agent.name"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ai_agents_config.py - Created test suite for AI Agents Config and Student Exam Dashboard"
+  ],
+  "success_rate": {
+    "backend": "100% (6/6 tests passed)",
+    "frontend": "AI Agents Config: 70% (data display issue), Student Exam Dashboard: 100%"
+  },
+  "test_credentials": {
+    "institution": "demo_academy@test.com / Demo123!",
+    "student": "TEST_ui_student_1769781073@test.com / UtzILxgGZI4C"
+  },
+  "seed_data_creation": "None - used existing test data",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "AI Agents Config page has frontend/backend mismatch. Backend API at /api/ai-agents/config returns {id, name, enabled} structure but frontend expects {agent_type, is_enabled, custom_name}. Student Exam Dashboard is fully functional. All backend APIs working correctly.",
+  "features_verified": {
+    "ai_agents_config": {
+      "status": "PARTIALLY FUNCTIONAL",
+      "route": "/institution/ai-agents",
+      "issues": [
+        "Agent names not displaying correctly (all show 'Study Planner')",
+        "Save configuration fails with connection error"
+      ],
+      "working": [
+        "Page loads",
+        "3 tabs (Agentes, Avatares, Contenido) work",
+        "AI Tutor toggle works",
+        "Navigation from sidebar works"
+      ]
+    },
+    "student_exam_dashboard": {
+      "status": "FULLY FUNCTIONAL",
+      "route": "/student/exam-dashboard",
+      "features_working": [
+        "Credits display (mocks, speaking, writing)",
+        "Start Full Mock button",
+        "Section practice cards",
+        "Exam history with scores",
+        "PDF download button",
+        "AI Tutor card",
+        "Material de Estudio card"
+      ]
+    },
+    "institution_sidebar": {
+      "status": "FULLY FUNCTIONAL",
+      "ai_tutores_link": "data-testid='nav-ai-agents' present and working"
+    }
+  },
+  "mocked_integrations": {
+    "elevenlabs_tts": "MOCKED - awaiting API key",
+    "stripe_payment": "MOCKED - assumes payment complete"
+  }
+}
