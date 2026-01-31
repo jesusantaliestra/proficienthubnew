@@ -268,6 +268,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* Student Enhanced Dashboard with Packs */}
+      <Route 
+        path="/student/my-packs" 
+        element={
+          <ProtectedRoute allowedTypes={['student', 'individual']}>
+            <StudentDashboardEnhanced />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Sequential Exam Dashboard - Shows unlocked exams */}
       <Route 
         path="/my-exams/:examType" 
