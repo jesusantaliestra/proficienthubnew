@@ -1,0 +1,97 @@
+{
+  "summary": "Iteration 42 - Public Pack Store (Tienda Pública) testing completed. All 23 backend tests passed. Frontend UI working correctly after fixing isAuthenticated bug in AuthContext. Store displays packs only from institutions with sales_mode='platform' or 'both'. Checkout flow works for authenticated users. Stripe integration returns expected error due to placeholder API key.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "GET /api/store/institutions - Returns institutions with sales_mode platform/both (1 institution)",
+    "GET /api/store/institutions - Demo Academy listed with pack_count=2",
+    "GET /api/store/packs - Returns 2 packs from platform sellers",
+    "GET /api/store/packs?exam_type=OET - Filter returns only OET packs",
+    "GET /api/store/packs?exam_type=IELTS_ACADEMIC - Filter returns only IELTS packs",
+    "GET /api/store/packs?institution_id=... - Filter by institution works",
+    "GET /api/store/packs?institution_id=invalid - Non-platform institution returns empty",
+    "GET /api/store/packs/{id} - Pack details with institution info",
+    "GET /api/store/packs/{id} - Non-existent pack returns 404",
+    "GET /api/store/exam-types - Returns OET and IELTS with pack counts",
+    "POST /api/store/checkout/create-session - Requires authentication (401)",
+    "POST /api/store/checkout/create-session - Creates session (Stripe error expected)",
+    "POST /api/store/checkout/create-session - Invalid pack returns 404",
+    "GET /api/store/orders/{id} - Requires authentication",
+    "GET /api/store/orders/{id} - Non-existent order returns 404",
+    "POST /api/store/orders/{id}/complete - Requires authentication",
+    "POST /api/store/orders/{id}/complete - Non-existent order returns 404",
+    "GET /api/store/my-purchases - Requires authentication",
+    "GET /api/store/my-purchases - Returns empty for new student",
+    "Sales mode filtering - Only platform institutions shown",
+    "Sales mode filtering - Packs only from platform institutions",
+    "Pack data integrity - OET pack has all features",
+    "Pack data integrity - IELTS pack has all features",
+    "Frontend: Store page loads with 2 packs displayed",
+    "Frontend: Search filter works",
+    "Frontend: Exam type filter works (OET filter shows only OET pack)",
+    "Frontend: Institution filter present",
+    "Frontend: Buy button redirects to login for unauthenticated users",
+    "Frontend: Checkout dialog opens for authenticated users",
+    "Frontend: Checkout dialog shows pack details, price, Stripe info",
+    "Frontend: Payment button triggers Stripe API (error expected with test key)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_public_store.py",
+    "/app/test_reports/pytest/public_store_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/frontend/src/contexts/AuthContext.jsx - Added isAuthenticated to context value",
+    "/app/backend/tests/test_public_store.py - Created new test file for Public Store"
+  ],
+  "success_rate": {
+    "backend": "100% (23/23 tests passed)",
+    "frontend": "100% (all UI tests passed)"
+  },
+  "test_credentials": {
+    "student": "test_store_student@test.com / Test123!",
+    "institution": "demo_academy@test.com / Demo123!"
+  },
+  "seed_data_creation": "Created test student account: test_store_student@test.com",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Public Store is FULLY FUNCTIONAL. Demo Academy (sales_mode='platform') has 2 packs available: OET Nursing (299 EUR) and IELTS Academic (199 EUR). Stripe checkout uses placeholder key (sk_test_placeholder) so payment will fail with 'Invalid API Key' error - this is expected MOCKED behavior. The isAuthenticated bug in AuthContext was fixed by adding 'const isAuthenticated = !!user && !!token' and including it in the context value.",
+  "features_verified": {
+    "public_store": {
+      "status": "FULLY FUNCTIONAL",
+      "endpoints": [
+        "GET /api/store/institutions - Lists platform sellers",
+        "GET /api/store/packs - Lists available packs with filters",
+        "GET /api/store/packs/{id} - Pack details",
+        "GET /api/store/exam-types - Available exam types",
+        "POST /api/store/checkout/create-session - Create Stripe checkout (auth required)",
+        "GET /api/store/orders/{id} - Order status (auth required)",
+        "POST /api/store/orders/{id}/complete - Complete order for testing (auth required)",
+        "GET /api/store/my-purchases - Purchase history (auth required)"
+      ],
+      "filters": ["exam_type", "institution_id", "search"],
+      "sales_mode_filtering": "Only institutions with sales_mode='platform' or 'both' are shown",
+      "available_packs": [
+        {"name": "Pack 5 Mocks + Tutor IA - OET Nursing", "price": "299 EUR", "exam_type": "OET"},
+        {"name": "Pack 10 Mocks IELTS Academic", "price": "199 EUR", "exam_type": "IELTS_ACADEMIC"}
+      ]
+    }
+  },
+  "mocked_apis": {
+    "stripe_checkout": "MOCKED - Uses placeholder key sk_test_placeholder, returns 'Invalid API Key' error"
+  },
+  "bug_fixed": {
+    "issue": "isAuthenticated was undefined in PublicPackStore.jsx",
+    "root_cause": "AuthContext.jsx did not export isAuthenticated",
+    "fix": "Added 'const isAuthenticated = !!user && !!token' and included in context value",
+    "file": "/app/frontend/src/contexts/AuthContext.jsx"
+  }
+}
