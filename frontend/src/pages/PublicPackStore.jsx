@@ -226,7 +226,7 @@ export default function PublicPackStore() {
               <SelectValue placeholder="Tipo de Examen" />
             </SelectTrigger>
             <SelectContent className="bg-slate-800 border-slate-700">
-              <SelectItem value="" className="text-white">Todos los exámenes</SelectItem>
+              <SelectItem value="all" className="text-white">Todos los exámenes</SelectItem>
               {examTypes.map(exam => (
                 <SelectItem key={exam.id} value={exam.id} className="text-white">
                   {exam.name} ({exam.pack_count})
@@ -243,7 +243,7 @@ export default function PublicPackStore() {
               <SelectValue placeholder="Institución" />
             </SelectTrigger>
             <SelectContent className="bg-slate-800 border-slate-700">
-              <SelectItem value="" className="text-white">Todas las instituciones</SelectItem>
+              <SelectItem value="all" className="text-white">Todas las instituciones</SelectItem>
               {institutions.map(inst => (
                 <SelectItem key={inst.id} value={inst.id} className="text-white">
                   {inst.name} ({inst.pack_count})
