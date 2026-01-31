@@ -114,10 +114,10 @@ export default function Auth() {
   };
 
   const benefits = [
-    '10x student capacity with AI tutoring',
-    'Premium risk analytics & pass prediction',
-    'Voice-enabled speaking practice',
-    'Institution library & video classes'
+    'Capacidad 10x con tutoría IA',
+    'Analíticas de riesgo y predicción de aprobación',
+    'Práctica de speaking con voz IA',
+    'Biblioteca institucional y clases en video'
   ];
 
   return (
@@ -144,9 +144,9 @@ export default function Auth() {
           
           <div className="space-y-8">
             <h1 className="text-4xl font-extrabold leading-tight">
-              Scale Your Institution With{' '}
-              <span className="text-[#FFC800]">AI-Powered</span>{' '}
-              Learning
+              Escala Tu Institución Con{' '}
+              <span className="text-[#FFC800]">Aprendizaje</span>{' '}
+              Potenciado por IA
             </h1>
             
             <div className="space-y-4">
@@ -163,17 +163,17 @@ export default function Auth() {
             <div className="flex gap-8 pt-4">
               <div>
                 <div className="text-4xl font-extrabold">10x</div>
-                <div className="text-green-100">Student Capacity</div>
+                <div className="text-green-100">Capacidad</div>
               </div>
               <div>
                 <div className="text-4xl font-extrabold">+23%</div>
-                <div className="text-green-100">Pass Rate</div>
+                <div className="text-green-100">Tasa de Aprobación</div>
               </div>
             </div>
           </div>
           
           <div className="text-green-100 text-sm">
-            © 2025 ProficientHub. All rights reserved.
+            © 2025 ProficientHub. Todos los derechos reservados.
           </div>
         </div>
       </div>
