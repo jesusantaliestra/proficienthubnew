@@ -49,6 +49,9 @@ import OETSpeakingMock from './pages/OETSpeakingMock';
 import OETProfessionDashboard from './pages/OETProfessionDashboard';
 import OETExamPacksStore from './pages/OETExamPacksStore';
 
+// Institution Sales Config
+import InstitutionSalesConfig from './pages/InstitutionSalesConfig';
+
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
   const { user, loading } = useAuth();
