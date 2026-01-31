@@ -46,6 +46,7 @@ import ConversionAnalyticsDashboard from './pages/ConversionAnalyticsDashboard';
 import OETNurseDashboard from './pages/OETNurseDashboard';
 import OETExamSession from './pages/OETExamSession';
 import OETSpeakingMock from './pages/OETSpeakingMock';
+import OETProfessionDashboard from './pages/OETProfessionDashboard';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
