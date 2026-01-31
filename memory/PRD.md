@@ -2,13 +2,83 @@
 
 ## Overview
 **Product Name:** ProficientHub  
-**Version:** 13.0  
+**Version:** 14.0  
 **Date:** January 31, 2026  
-**Status:** Production Ready - Full OET Exam System Complete
+**Status:** Production Ready - Full Custom Packs System + i18n 80 Languages
+
+---
+
+## 🚀 Session 15 - January 31, 2026 (Custom Packs System + i18n)
+
+### ✅ Sistema de Packs Personalizables (P0 - COMPLETE)
+**Las instituciones pueden crear packs completamente personalizados con control total**
+
+**Nuevo Modelo de Negocio:**
+- Las instituciones crean sus propios packs desde cero
+- Combinan: mocks, tutor IA, speaking, writing, servicios propios
+- Fijan SU precio final
+- Control total sobre su catálogo de productos
+
+**Backend:** `/app/backend/routers/institution_custom_packs.py`
+**Frontend:** `/app/frontend/src/pages/InstitutionPacksManager.jsx`
+**Ruta:** `/institution/packs`
+
+**Endpoints API:**
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `/api/institution-packs/packs` | GET | Listar packs de institución |
+| `/api/institution-packs/packs` | POST | Crear pack personalizado |
+| `/api/institution-packs/packs/{id}` | PUT | Actualizar pack |
+| `/api/institution-packs/packs/{id}` | DELETE | Eliminar pack |
+| `/api/institution-packs/packs/{id}/duplicate` | POST | Duplicar pack |
+| `/api/institution-packs/public/{institution_id}` | GET | Packs públicos |
+| `/api/institution-packs/purchase` | POST | Comprar pack para estudiante |
+| `/api/institution-packs/institution-sales` | GET | Analytics de ventas |
+
+**Tipos de Examen Soportados:**
+- OET (12 profesiones)
+- IELTS Academic
+- IELTS General Training
+- TOEFL iBT
+- PTE Academic
+- Cambridge B2 First (FCE)
+- Cambridge C1 Advanced (CAE)
+- Cambridge C2 Proficiency (CPE)
+- CELPIP
+- TOEIC
+
+**Testing:** ✅ 22/22 backend tests pasados, 100% frontend verificado
+
+### ✅ Sistema de Traducción Automática i18n (P0 - COMPLETE)
+**Soporte para 80 idiomas con traducción automática vía LLM**
+
+**Backend:** `/app/backend/routers/translation_service.py`
+
+**Endpoints API:**
+| Endpoint | Descripción |
+|----------|-------------|
+| `/api/translations/languages` | Lista de 79 idiomas soportados |
+| `/api/translations/translate-bulk` | Traducir lote de textos |
+| `/api/translations/cached/{language}` | Obtener traducciones cacheadas |
+| `/api/translations/i18n/{language}` | Bundle i18n para frontend |
+
+**Idiomas Probados:**
+- ✅ Español
+- ✅ Francés
+- ✅ Chino (中文)
+- ✅ Árabe (العربية)
+- ✅ Japonés (日本語)
+- ✅ Coreano
+- ✅ Ruso
+- ✅ Hindi
+- ✅ Italiano
+
+**Script de Generación:** `/app/backend/scripts/generate_translations.py`
 
 ---
 
 ## 🧪 Session 14.24 - January 31, 2026 (OET Exam System - COMPLETE)
+
 
 ### ✅ OET System Overview (ALL TASKS COMPLETED)
 
