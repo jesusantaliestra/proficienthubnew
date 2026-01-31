@@ -423,6 +423,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* Institution Packs Manager */}
+      <Route 
+        path="/institution/packs" 
+        element={
+          <ProtectedRoute allowedTypes={['institution', 'admin']}>
+            <InstitutionPacksManager />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* OET Routes */}
       <Route 
         path="/oet/nurse" 
