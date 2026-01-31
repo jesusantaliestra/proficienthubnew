@@ -663,6 +663,15 @@ export default function InstitutionDashboard() {
               <span>AI Tutores</span>
               <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-violet-500 to-purple-500 text-white px-2 py-0.5 rounded-full">AI</span>
             </button>
+            <button 
+              onClick={() => navigate('/institution/sales-config')} 
+              className="sidebar-item w-full" 
+              data-testid="nav-sales-config"
+            >
+              <Store className="w-5 h-5" />
+              <span>Ventas</span>
+              <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-teal-500 to-cyan-500 text-white px-2 py-0.5 rounded-full">API</span>
+            </button>
           </div>
           
           <button className="sidebar-item w-full" data-testid="nav-settings">
