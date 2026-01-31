@@ -11,6 +11,7 @@ import Auth from './pages/Auth';
 import InstitutionDashboard from './pages/InstitutionDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentDashboardRestricted from './pages/StudentDashboardRestricted';
+import StudentDashboardEnhanced from './pages/StudentDashboardEnhanced';
 import StudentExamDashboard from './pages/StudentExamDashboard';
 import SequentialExamDashboard from './pages/SequentialExamDashboard';
 import AITutor from './pages/AITutor';
