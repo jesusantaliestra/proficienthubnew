@@ -198,14 +198,14 @@ Remember: You are the PATIENT, not the nurse. The student is practicing their nu
     messages.append({"role": "user", "content": f"Nurse says: {nurse_message}"})
     
     try:
-        llm = EmergentOpenAI(api_key=EMERGENT_KEY)
+        llm = LlmChat(api_key=EMERGENT_KEY)
         response = await llm.chat(
             model="gpt-4o",
             messages=messages,
             temperature=0.8,
             max_tokens=200
         )
-        return response.content
+        return response.message
     except Exception as e:
         print(f"LLM error: {e}")
         # Fallback response
