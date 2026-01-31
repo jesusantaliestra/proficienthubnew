@@ -135,6 +135,11 @@ function AppRoutes() {
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/pricing" element={<Landing />} />
       
+      {/* Public Store */}
+      <Route path="/store" element={<PublicPackStore />} />
+      <Route path="/store/success" element={<StoreSuccessPage />} />
+      <Route path="/store/cancel" element={<StoreCancelPage />} />
+      
       {/* Student Portal - White-label access */}
       <Route path="/student-portal" element={<StudentPortal />} />
       <Route path="/student-portal/:slug" element={<StudentPortal />} />
