@@ -282,7 +282,7 @@ export default function Landing() {
               </div>
               <div>
                 <span className="text-2xl font-black text-gray-900 tracking-tight">ProficientHub</span>
-                <span className="hidden md:inline text-xs text-gray-400 ml-2 font-medium">Enterprise</span>
+                <span className="hidden md:inline text-xs text-gray-400 ml-2 font-medium">Empresas</span>
               </div>
             </div>
             
