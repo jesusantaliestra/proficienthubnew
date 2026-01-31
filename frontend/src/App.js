@@ -42,6 +42,9 @@ import AlertsAutomation from './pages/AlertsAutomation';
 import AIAgentsConfig from './pages/AIAgentsConfig';
 import ConversionAnalyticsDashboard from './pages/ConversionAnalyticsDashboard';
 
+// OET Pages
+import OETNurseDashboard from './pages/OETNurseDashboard';
+
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
   const { user, loading } = useAuth();
