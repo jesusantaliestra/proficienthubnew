@@ -403,6 +403,24 @@ function AppRoutes() {
         } 
       />
       
+      {/* OET Routes */}
+      <Route 
+        path="/oet/nurse" 
+        element={
+          <ProtectedRoute allowedTypes={['student', 'individual', 'institution', 'admin']}>
+            <OETNurseDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/oet/nursing" 
+        element={
+          <ProtectedRoute allowedTypes={['student', 'individual', 'institution', 'admin']}>
+            <OETNurseDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Catch all - redirect to landing */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
