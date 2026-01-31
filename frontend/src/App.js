@@ -410,6 +410,18 @@ function AppRoutes() {
         } 
       />
       
+      {/* Institution Sales Configuration */}
+      <Route 
+        path="/institution/sales-config" 
+        element={
+          <ProtectedRoute allowedTypes={['institution', 'admin']}>
+            <div className="min-h-screen bg-slate-950 p-8">
+              <InstitutionSalesConfig />
+            </div>
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* OET Routes */}
       <Route 
         path="/oet/nurse" 
