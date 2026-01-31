@@ -401,13 +401,13 @@ export default function Landing() {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
+            {getFeatures().map((feature, index) => (
               <Card key={index} className="card-duo border-2 p-6">
                 <div className={`feature-icon ${feature.color} mb-4`}>
                   <feature.icon className="w-7 h-7" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{t(feature.titleKey)}</h3>
+                <p className="text-gray-600">{t(feature.descKey)}</p>
               </Card>
             ))}
           </div>
