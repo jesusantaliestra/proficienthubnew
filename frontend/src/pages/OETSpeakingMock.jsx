@@ -429,7 +429,7 @@ export default function OETSpeakingMock() {
                     Tu Tarea (Candidate Card)
                   </h4>
                   <ul className="space-y-2">
-                    {rolePlay.task.map((item, idx) => (
+                    {(rolePlay.task || []).map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
                         <ChevronRight className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
                         {item}
