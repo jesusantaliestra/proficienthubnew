@@ -8788,7 +8788,11 @@ try:
     from routers.oet_speaking_mock import router as oet_speaking_router
     app.include_router(oet_speaking_router, prefix="/api", tags=["OET Speaking Mock"])
     
-    logger.info("New feature routers loaded successfully (24 modules)")
+    # OET Exam System
+    from routers.oet_exam_system import router as oet_exam_system_router
+    app.include_router(oet_exam_system_router, prefix="/api", tags=["OET Exam System"])
+    
+    logger.info("New feature routers loaded successfully (25 modules)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
