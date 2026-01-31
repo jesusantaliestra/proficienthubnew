@@ -456,6 +456,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* Generic OET Profession Dashboard */}
+      <Route 
+        path="/oet/:profession" 
+        element={
+          <ProtectedRoute allowedTypes={['student', 'individual', 'institution', 'admin']}>
+            <OETProfessionDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Catch all - redirect to landing */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
