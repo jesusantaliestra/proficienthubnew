@@ -984,3 +984,147 @@ def generate_coach_response(question: str, context: Dict[str, Any], section: str
     
     else:
         return f"For the {section} section, read each question carefully, manage your time, and answer what is asked. If unsure, use elimination strategies for multiple choice, or make your best informed guess."
+
+
+# =============================================
+# Initialize Exam Data
+# =============================================
+
+@router.post("/admin/seed-exam-data")
+async def seed_oet_exam_data(current_user: dict = Depends(get_current_user)):
+    """Seed the database with OET exam data (admin only)"""
+    
+    if current_user.get("user_type") not in ["admin"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Import exam data
+    from oet_exam_data import OET_NUR_013_EXAM, EXAM_METADATA
+    
+    # Check if exam already exists
+    existing = await db.oet_mock_exams.find_one({"id": EXAM_METADATA["exam_id"]})
+    if existing:
+        return {"message": "Exam data already exists", "exam_id": EXAM_METADATA["exam_id"]}
+    
+    # Create mock exam document
+    mock_exam = {
+        "id": EXAM_METADATA["exam_id"],
+        "name": EXAM_METADATA["title"],
+        "profession": EXAM_METADATA["profession"],
+        "version": EXAM_METADATA["version"],
+        "description": EXAM_METADATA["description"],
+        "status": "published",
+        "difficulty": "Standard",
+        "total_questions": EXAM_METADATA["total_questions"],
+        "exam_data": OET_NUR_013_EXAM,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.oet_mock_exams.insert_one(mock_exam)
+    
+    return {
+        "message": "OET exam data seeded successfully",
+        "exam_id": EXAM_METADATA["exam_id"],
+        "profession": EXAM_METADATA["profession"]
+    }
+
+
+@router.get("/mocks/available")
+async def get_available_mocks_public():
+    """Get list of available mock exams (public endpoint for dashboard)"""
+    
+    # Return hardcoded list of available mocks for the dashboard
+    mocks = [
+        {
+            "id": "NUR-013-v2",
+            "name": "OET Nursing Mock NUR-013",
+            "version": "2.0",
+            "status": "available",
+            "difficulty": "Standard",
+            "profession": "nursing",
+            "description": "Complete OET mock exam for nursing professionals",
+            "total_duration": 175,
+            "sections": {
+                "listening": {"duration": 50, "questions": 42},
+                "reading": {"duration": 60, "questions": 42},
+                "writing": {"duration": 45, "questions": 1},
+                "speaking": {"duration": 20, "questions": 2}
+            }
+        },
+        {
+            "id": "NUR-014",
+            "name": "OET Nursing Mock NUR-014",
+            "version": "1.0",
+            "status": "locked",
+            "difficulty": "Standard",
+            "profession": "nursing",
+            "description": "Additional practice exam",
+            "total_duration": 175
+        },
+        {
+            "id": "NUR-015",
+            "name": "OET Nursing Mock NUR-015",
+            "version": "1.0",
+            "status": "locked",
+            "difficulty": "Advanced",
+            "profession": "nursing",
+            "description": "Challenging practice exam",
+            "total_duration": 175
+        }
+    ]
+    
+    return {"mocks": mocks, "total": len(mocks)}
+
+
+@router.get("/mock/{mock_id}/content")
+async def get_mock_exam_content(
+    mock_id: str,
+    section: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get mock exam content for a specific section or full exam"""
+    
+    # Import exam data
+    from oet_exam_data import OET_NUR_013_EXAM
+    
+    if mock_id != "NUR-013-v2":
+        raise HTTPException(status_code=404, detail="Mock exam not found or locked")
+    
+    exam_data = OET_NUR_013_EXAM
+    
+    if section:
+        if section not in ["listening", "reading", "writing", "speaking"]:
+            raise HTTPException(status_code=400, detail="Invalid section")
+        
+        return {
+            "mock_id": mock_id,
+            "section": section,
+            "content": exam_data.get(section)
+        }
+    
+    # Return structure without full content for overview
+    return {
+        "mock_id": mock_id,
+        "metadata": exam_data["metadata"],
+        "sections": {
+            "listening": {
+                "parts": ["Part A", "Part B", "Part C"],
+                "total_questions": 42,
+                "duration": 50
+            },
+            "reading": {
+                "parts": ["Part A", "Part B", "Part C"],
+                "total_questions": 42,
+                "duration": 60
+            },
+            "writing": {
+                "parts": ["Professional Letter"],
+                "total_questions": 1,
+                "duration": 45
+            },
+            "speaking": {
+                "parts": ["Role-Play 1", "Role-Play 2"],
+                "total_questions": 2,
+                "duration": 20
+            }
+        }
+    }
