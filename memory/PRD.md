@@ -50,7 +50,7 @@
 **Testing:** ✅ 22/22 backend tests pasados, 100% frontend verificado
 
 ### ✅ Sistema de Traducción Automática i18n (P0 - COMPLETE)
-**Soporte para 80 idiomas con traducción automática vía LLM**
+**Soporte para 79+ idiomas con traducción automática vía LLM**
 
 **Backend:** `/app/backend/routers/translation_service.py`
 
@@ -62,18 +62,43 @@
 | `/api/translations/cached/{language}` | Obtener traducciones cacheadas |
 | `/api/translations/i18n/{language}` | Bundle i18n para frontend |
 
-**Idiomas Probados:**
-- ✅ Español
-- ✅ Francés
-- ✅ Chino (中文)
-- ✅ Árabe (العربية)
-- ✅ Japonés (日本語)
-- ✅ Coreano
-- ✅ Ruso
-- ✅ Hindi
-- ✅ Italiano
+**Idiomas con traducciones generadas:**
+- ✅ Chino, Hindi, Árabe, Bengalí, Ruso, Japonés, Coreano, Vietnamita
+- ✅ Turco, Italiano, Tailandés, Polaco, Ucraniano, Holandés, Griego
+- ✅ Checo, Sueco, Hebreo, Indonesio, Rumano, Húngaro, Finlandés
+- ✅ Danés, Noruego, Eslovaco, Búlgaro, Serbio, Croata, Lituano
+- ✅ Letón, Estonio, Esloveno, Filipino, Swahili, Amárico, Nepalí
+- ✅ Cingalés, Jemer (total: 38+ idiomas con claves traducidas)
 
 **Script de Generación:** `/app/backend/scripts/generate_translations.py`
+
+### ✅ Sistema Dual de Avatares (P1 - COMPLETE)
+**Dos opciones de avatar para Speaking y Tutores**
+
+**Backend:** `/app/backend/routers/avatar_service.py`
+**Frontend:** `/app/frontend/src/pages/OETSpeakingPractice.jsx`
+**Ruta:** `/oet/speaking-practice`
+
+**Proveedores:**
+| Proveedor | Tier | Características | Costo |
+|-----------|------|-----------------|-------|
+| HeyGen | Premium | Video streaming WebRTC, lip-sync, emociones | $$$ |
+| Básico (TTS) | Economic | Imagen estática, voz Web Speech API | $ |
+
+**Endpoints Avatar Service:**
+| Endpoint | Descripción |
+|----------|-------------|
+| `/api/avatar-service/providers` | Lista de proveedores disponibles |
+| `/api/avatar-service/avatars` | Avatares disponibles por tier |
+| `/api/avatar-service/session/create` | Crear sesión de avatar |
+| `/api/avatar-service/session/{id}/chat` | Conversación con LLM |
+| `/api/avatar-service/oet/scenarios` | Escenarios OET disponibles |
+| `/api/avatar-service/oet/start-roleplay` | Iniciar práctica speaking |
+
+**Escenarios OET:**
+1. Cambio de Medicación para Diabetes (intermediate)
+2. Signos de Alerta de Embolia Pulmonar (advanced)
+3. Cuidado de Heridas Post-Operatorio (beginner)
 
 ---
 
