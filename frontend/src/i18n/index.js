@@ -416,7 +416,32 @@ const resources = {
         close: 'Cerrar',
         confirm: 'Confirmar',
         from_last_month: 'respecto al mes pasado',
-        from_last_week: 'respecto a la semana pasada'
+        from_last_week: 'respecto a la semana pasada',
+        and: 'y',
+        or: 'o',
+        minutes: 'minutos',
+        hours: 'horas',
+        days: 'días',
+        free: 'Gratis',
+        included: 'Incluido',
+        optional: 'Opcional',
+        required: 'Requerido',
+        available: 'Disponible',
+        unavailable: 'No disponible'
+      },
+      features: {
+        ai_tutoring: 'Agentes de Tutoría IA',
+        ai_tutoring_desc: 'Tutor IA personal para cada examen con conversaciones por voz',
+        exam_practice: 'Práctica de Exámenes Mock',
+        exam_practice_desc: 'Simulaciones completas de examen en condiciones reales',
+        analytics: 'Analíticas Premium',
+        analytics_desc: 'Seguimiento detallado del rendimiento e insights',
+        speaking: 'Práctica de Speaking',
+        speaking_desc: 'Conversaciones dinámicas con avatar IA',
+        add_ai_tutor: '¿Añadir Tutor IA?',
+        no_ai_tutor: 'Sin Tutor IA',
+        include_ai_tutor: 'Incluir Tutor IA',
+        ai_tutor_conversation: 'Conversación con Tutor IA'
       },
       language: {
         select: 'Seleccionar Idioma',
