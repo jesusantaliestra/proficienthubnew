@@ -8808,7 +8808,11 @@ try:
     from routers.translation_service import router as translation_service_router
     app.include_router(translation_service_router, prefix="/api", tags=["Translation Service"])
     
-    logger.info("New feature routers loaded successfully (29 modules)")
+    # Avatar Service (Dual: HeyGen Premium + Economic)
+    from routers.avatar_service import router as avatar_service_router
+    app.include_router(avatar_service_router, prefix="/api", tags=["Avatar Service"])
+    
+    logger.info("New feature routers loaded successfully (30 modules)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
