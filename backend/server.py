@@ -8796,7 +8796,11 @@ try:
     from routers.oet_exam_packs import router as oet_exam_packs_router
     app.include_router(oet_exam_packs_router, prefix="/api", tags=["OET Exam Packs"])
     
-    logger.info("New feature routers loaded successfully (26 modules)")
+    # Institution Sales Configuration
+    from routers.institution_sales import router as institution_sales_router
+    app.include_router(institution_sales_router, prefix="/api", tags=["Institution Sales"])
+    
+    logger.info("New feature routers loaded successfully (27 modules)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
