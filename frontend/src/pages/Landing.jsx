@@ -322,10 +322,7 @@ export default function Landing() {
             </div>
             
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-[1.1] mb-8 tracking-tight">
-              {t('landing.hero_title').split(' ').slice(0, 3).join(' ')}
-              <span className="block bg-gradient-to-r from-[#58CC02] to-[#1cb0f6] bg-clip-text text-transparent">
-                {t('landing.hero_title').includes('10x') ? '10x With AI' : t('landing.hero_title').split(' ').slice(3).join(' ')}
-              </span>
+              {t('landing.hero_title')}
             </h1>
             
             <p className="text-xl md:text-2xl text-gray-600 leading-relaxed max-w-3xl mx-auto mb-10">
@@ -336,7 +333,7 @@ export default function Landing() {
               <span className="font-semibold text-pink-600"> Trinity</span>,
               <span className="font-semibold text-indigo-600"> TOEIC</span>,
               <span className="font-semibold text-cyan-600"> CELPIP</span>,
-              <span className="font-semibold text-orange-600"> PTE</span>, y
+              <span className="font-semibold text-orange-600"> PTE</span> {t('common.and')}
               <span className="font-semibold text-emerald-600"> OET</span>.
             </p>
             
