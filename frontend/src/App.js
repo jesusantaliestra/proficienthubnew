@@ -457,6 +457,16 @@ function AppRoutes() {
         } 
       />
       
+      {/* OET Exam Packs Store */}
+      <Route 
+        path="/oet/packs/:profession" 
+        element={
+          <ProtectedRoute allowedTypes={['student', 'individual', 'institution', 'admin']}>
+            <OETExamPacksStore />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Generic OET Profession Dashboard */}
       <Route 
         path="/oet/:profession" 
