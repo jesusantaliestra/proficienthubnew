@@ -119,6 +119,40 @@
 - 30+ idiomas soportados
 - Integrado con Emergent LLM Key
 
+### ✅ Tienda Pública de Packs (P1 - COMPLETE)
+**Solo muestra packs de instituciones que eligieron vender vía ProficientHub**
+
+**Backend:** `/app/backend/routers/public_store.py`
+**Frontend:** `/app/frontend/src/pages/PublicPackStore.jsx`
+**Ruta:** `/store`
+
+**Lógica de Ventas:**
+- `sales_mode = "platform"` → Packs visibles en tienda, compra vía Stripe
+- `sales_mode = "external"` → NO visible en tienda, institución vende por sus medios
+- `sales_mode = "both"` → Ambos canales disponibles
+
+**Endpoints:**
+| Endpoint | Descripción |
+|----------|-------------|
+| `/api/store/institutions` | Instituciones que venden vía plataforma |
+| `/api/store/packs` | Packs disponibles con filtros |
+| `/api/store/packs/{id}` | Detalles de pack específico |
+| `/api/store/exam-types` | Tipos de examen con packs |
+| `/api/store/checkout/create-session` | Crear checkout Stripe |
+| `/api/store/orders/{id}` | Estado de orden |
+| `/api/store/my-purchases` | Historial de compras |
+
+**Flujo de Compra:**
+1. Estudiante ve tienda pública `/store`
+2. Selecciona pack y hace clic en "Comprar"
+3. Si no autenticado → Redirige a login
+4. Si autenticado → Abre dialog de checkout
+5. Clic en "Pagar" → Redirige a Stripe Checkout
+6. Pago exitoso → Webhook completa orden y activa acceso
+7. Estudiante accede al contenido del pack
+
+**Testing:** ✅ 23/23 tests pasados (iteration_42)
+
 ---
 
 ## 🧪 Session 14.24 - January 31, 2026 (OET Exam System - COMPLETE)
