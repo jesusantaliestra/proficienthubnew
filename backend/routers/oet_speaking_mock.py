@@ -30,7 +30,7 @@ db = mongo_client[os.environ.get("DB_NAME", "eduplat")]
 from server import get_current_user
 
 # Emergent integrations
-from emergentintegrations.llm.openai import OpenAISpeechToText, OpenAI as EmergentOpenAI
+from emergentintegrations.llm.openai import OpenAISpeechToText, LlmChat
 
 EMERGENT_KEY = os.getenv("EMERGENT_LLM_KEY")
 
