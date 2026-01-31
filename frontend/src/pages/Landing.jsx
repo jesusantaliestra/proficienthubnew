@@ -1501,15 +1501,15 @@ export default function Landing() {
       {/* CTA Section */}
       <section className="py-20 bg-[#58CC02]">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-4xl font-extrabold text-white mb-6">Ready to Transform Your Institution?</h2>
-          <p className="text-xl text-green-100 mb-8">Join 500+ institutions already scaling with AI-powered learning</p>
+          <h2 className="text-4xl font-extrabold text-white mb-6">¿Listo para Transformar Tu Institución?</h2>
+          <p className="text-xl text-green-100 mb-8">Únete a más de 500 instituciones que ya escalan con aprendizaje potenciado por IA</p>
           <div className="flex justify-center gap-4">
             <button className="bg-white text-[#58CC02] px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all shadow-lg" onClick={() => navigate('/register')}>
-              Start Free Trial
+              Prueba Gratuita
               <ArrowRight className="w-5 h-5 ml-2 inline" />
             </button>
             <button className="border-2 border-white text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/10 transition-all">
-              Schedule Demo
+              Agendar Demo
             </button>
           </div>
         </div>
@@ -1526,38 +1526,38 @@ export default function Landing() {
                 </div>
                 <span className="text-xl font-bold">ProficientHub</span>
               </div>
-              <p className="text-gray-400">The leading AI-powered platform for English proficiency exam preparation.</p>
+              <p className="text-gray-400">La plataforma líder con IA para preparación de exámenes de inglés.</p>
             </div>
             
             <div>
-              <h4 className="font-bold mb-4">Product</h4>
+              <h4 className="font-bold mb-4">Producto</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#features" className="hover:text-white">Features</a></li>
-                <li><a href="#exams" className="hover:text-white">Exams</a></li>
-                <li><a href="#pricing" className="hover:text-white">Pricing</a></li>
+                <li><a href="#features" className="hover:text-white">Características</a></li>
+                <li><a href="#exams" className="hover:text-white">Exámenes</a></li>
+                <li><a href="#pricing" className="hover:text-white">Precios</a></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="font-bold mb-4">Company</h4>
+              <h4 className="font-bold mb-4">Empresa</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">About</a></li>
-                <li><a href="#" className="hover:text-white">Careers</a></li>
-                <li><a href="#" className="hover:text-white">Contact</a></li>
+                <li><a href="#" className="hover:text-white">Sobre Nosotros</a></li>
+                <li><a href="#" className="hover:text-white">Carreras</a></li>
+                <li><a href="#" className="hover:text-white">Contacto</a></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-bold mb-4">Legal</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-white">Política de Privacidad</a></li>
+                <li><a href="#" className="hover:text-white">Términos de Servicio</a></li>
               </ul>
             </div>
           </div>
           
           <div className="mt-12 pt-8 border-t border-gray-800 text-center text-gray-400">
-            © 2024 ProficientHub. All rights reserved.
+            © 2024 ProficientHub. Todos los derechos reservados.
           </div>
         </div>
       </footer>
