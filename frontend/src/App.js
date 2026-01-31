@@ -421,6 +421,22 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
+      <Route 
+        path="/oet/exam/:sessionId" 
+        element={
+          <ProtectedRoute allowedTypes={['student', 'individual', 'institution', 'admin']}>
+            <OETExamSession />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/oet/mock/:mockId" 
+        element={
+          <ProtectedRoute allowedTypes={['student', 'individual', 'institution', 'admin']}>
+            <OETExamSession />
+          </ProtectedRoute>
+        } 
+      />
       
       {/* Catch all - redirect to landing */}
       <Route path="*" element={<Navigate to="/" replace />} />
