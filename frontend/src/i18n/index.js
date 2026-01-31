@@ -832,4 +832,53 @@ i18n
     }
   });
 
+// Function to load dynamic translations from backend
+export const loadDynamicTranslations = async (languageCode) => {
+  // Skip if language already has full translations
+  if (['en', 'es', 'pt', 'de'].includes(languageCode)) {
+    return;
+  }
+  
+  try {
+    const API_URL = process.env.REACT_APP_BACKEND_URL;
+    const response = await fetch(`${API_URL}/api/translations/i18n/${languageCode}`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      
+      if (data.translations && Object.keys(data.translations).length > 0) {
+        // Add translations to i18n
+        i18n.addResourceBundle(languageCode, 'translation', data.translations, true, true);
+        console.log(`Loaded dynamic translations for ${languageCode}`);
+      }
+    }
+  } catch (error) {
+    console.warn(`Could not load translations for ${languageCode}:`, error);
+  }
+};
+
+// Function to request translation generation
+export const requestTranslationGeneration = async (languageCode, sourceTexts) => {
+  try {
+    const API_URL = process.env.REACT_APP_BACKEND_URL;
+    const response = await fetch(`${API_URL}/api/translations/translate-bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        target_language: languageCode,
+        source_texts: sourceTexts
+      })
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data.translations;
+    }
+    return null;
+  } catch (error) {
+    console.error(`Translation generation failed for ${languageCode}:`, error);
+    return null;
+  }
+};
+
 export default i18n;
