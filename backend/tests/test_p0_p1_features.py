@@ -5,7 +5,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://eduplat-suite.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://examprep-hub-78.preview.emergentagent.com').rstrip('/')
 
 class TestAIAgentsConfig:
     """P0: AI Agents Configuration Tests"""
