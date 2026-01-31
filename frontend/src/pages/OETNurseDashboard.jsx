@@ -78,26 +78,9 @@ export default function OETNurseDashboard() {
   };
 
   const startMockExam = async (mockId, mode = 'full') => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/oet-exam/mock/${mockId}/start`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ mode })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        toast.success('Examen iniciado correctamente');
-        // Navigate to exam view
-        navigate(`/oet/exam/${data.session_id}`);
-      }
-    } catch (error) {
-      toast.error('Error al iniciar el examen');
-    }
+    toast.success('Iniciando examen...');
+    // Navigate directly to mock exam
+    navigate(`/oet/mock/${mockId}?mode=${mode}`);
   };
 
   // OET Exam Structure
