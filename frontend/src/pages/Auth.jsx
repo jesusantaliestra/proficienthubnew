@@ -188,7 +188,7 @@ export default function Auth() {
             data-testid="back-to-home-btn"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
+            Volver al Inicio
           </Button>
           
           <Card className="bg-white border-2 border-gray-200 shadow-xl rounded-2xl">
