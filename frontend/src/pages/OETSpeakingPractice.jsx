@@ -227,17 +227,44 @@ export default function OETSpeakingPractice() {
   };
   
   const processAudio = async (audioBlob) => {
-    // For now, use Web Speech Recognition as fallback
-    // In production, would send to Whisper API
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = 'en-US';
-    recognition.continuous = false;
+    // Send to Whisper API for transcription
+    setLoading(true);
     
-    // Fallback: prompt user to type
-    const userText = prompt('¿Qué dijiste? (Transcripción manual mientras integramos Whisper)');
-    
-    if (userText) {
-      await sendUserMessage(userText);
+    try {
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'recording.webm');
+      formData.append('language', 'en');
+      formData.append('prompt', `OET speaking practice. Patient: ${selectedScenario?.patient_name}. Healthcare professional responding.`);
+      if (session?.id) {
+        formData.append('session_id', session.id);
+      }
+      
+      const response = await fetch(`${API_URL}/api/speech/transcribe`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const transcribedText = data.text;
+        
+        if (transcribedText && transcribedText.trim()) {
+          await sendUserMessage(transcribedText);
+        } else {
+          toast.error('No se detectó ningún discurso. Intenta de nuevo.');
+        }
+      } else {
+        const error = await response.json();
+        console.error('Transcription error:', error);
+        toast.error('Error al transcribir. Intenta de nuevo.');
+      }
+    } catch (error) {
+      console.error('Transcription failed:', error);
+      toast.error('Error de conexión. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
     }
   };
   
