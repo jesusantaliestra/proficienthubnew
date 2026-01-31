@@ -205,9 +205,8 @@ Remember: You are the PATIENT, not the nurse. The student is practicing their nu
             initial_messages=initial_messages
         )
         
-        response = await llm.chat(
-            user_message=f"Nurse says: {nurse_message}",
-            model="gpt-4o"
+        response = await llm.send_message(
+            user_message=f"Nurse says: {nurse_message}"
         )
         return response.message
     except Exception as e:
