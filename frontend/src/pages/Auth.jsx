@@ -200,12 +200,12 @@ export default function Auth() {
                 <span className="text-xl font-extrabold text-gray-800">ProficientHub</span>
               </div>
               <CardTitle className="text-2xl text-gray-900 font-extrabold">
-                {isLogin ? 'Welcome Back' : 'Create Account'}
+                {isLogin ? 'Bienvenido de Nuevo' : 'Crear Cuenta'}
               </CardTitle>
               <CardDescription className="text-gray-500">
                 {isLogin 
-                  ? 'Sign in to access your dashboard' 
-                  : 'Start your journey to scale with AI'}
+                  ? 'Inicia sesión para acceder a tu panel' 
+                  : 'Comienza tu viaje hacia el éxito con IA'}
               </CardDescription>
             </CardHeader>
             
