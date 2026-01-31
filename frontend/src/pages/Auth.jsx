@@ -259,7 +259,7 @@ export default function Auth() {
                           </div>
                           <Input
                             type="text"
-                            placeholder="Cambridge Academy"
+                            placeholder="Academia Cambridge"
                             value={formData.institutionName}
                             onChange={(e) => setFormData(prev => ({ ...prev, institutionName: e.target.value }))}
                             className="h-12 pl-14 rounded-xl border-2 border-gray-200 focus:border-[#58CC02] placeholder:text-gray-400"
@@ -272,14 +272,14 @@ export default function Auth() {
                 )}
                 
                 <div className="space-y-2">
-                  <Label className="text-gray-700 font-semibold">Email</Label>
+                  <Label className="text-gray-700 font-semibold">Correo Electrónico</Label>
                   <div className="relative">
                     <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center pointer-events-none border-r border-gray-200 bg-gray-50 rounded-l-xl">
                       <Mail className="w-5 h-5 text-gray-400" />
                     </div>
                     <Input
                       type="email"
-                      placeholder="you@example.com"
+                      placeholder="tu@ejemplo.com"
                       value={formData.email}
                       onChange={(e) => {
                         setFormData(prev => ({ ...prev, email: e.target.value }));
@@ -296,7 +296,7 @@ export default function Auth() {
                   {isLogin && checkingSSO && (
                     <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Checking for SSO...
+                      Verificando SSO...
                     </div>
                   )}
                   
@@ -304,7 +304,7 @@ export default function Auth() {
                     <div className="mt-3 p-3 bg-indigo-50 border border-indigo-200 rounded-xl">
                       <div className="flex items-center gap-2 text-indigo-700 mb-2">
                         <Shield className="w-4 h-4" />
-                        <span className="font-semibold text-sm">SSO Available: {ssoAvailable.provider_name}</span>
+                        <span className="font-semibold text-sm">SSO Disponible: {ssoAvailable.provider_name}</span>
                       </div>
                       <Button
                         type="button"
