@@ -438,6 +438,22 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
+      <Route 
+        path="/oet/speaking-practice" 
+        element={
+          <ProtectedRoute allowedTypes={['student', 'individual', 'institution', 'admin']}>
+            <OETSpeakingMock />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/oet/speaking/:rolePlayId" 
+        element={
+          <ProtectedRoute allowedTypes={['student', 'individual', 'institution', 'admin']}>
+            <OETSpeakingMock />
+          </ProtectedRoute>
+        } 
+      />
       
       {/* Catch all - redirect to landing */}
       <Route path="*" element={<Navigate to="/" replace />} />
