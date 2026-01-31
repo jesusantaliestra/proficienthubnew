@@ -265,8 +265,6 @@ export default function OETSpeakingPractice() {
       setLoading(false);
     }
   };
-    }
-  };
   
   const sendUserMessage = async (text) => {
     if (!session || !text.trim()) return;
