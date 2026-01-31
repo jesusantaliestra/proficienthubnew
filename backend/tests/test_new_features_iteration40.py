@@ -324,10 +324,11 @@ class TestInstitutionSalesConfig:
     def test_update_sales_config(self, auth_headers):
         """PUT /api/institution/sales-config - Update sales configuration"""
         payload = {
-            "sales_channel": "platform",
-            "api_enabled": False,
+            "sales_mode": "external",
+            "whitelabel_domain": "",
             "webhook_url": "",
-            "payment_methods": ["stripe", "paypal"]
+            "auto_create_access": True,
+            "send_welcome_email": True
         }
         response = requests.put(
             f"{BASE_URL}/api/institution/sales-config",
