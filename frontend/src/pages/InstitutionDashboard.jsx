@@ -664,12 +664,21 @@ export default function InstitutionDashboard() {
               <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-violet-500 to-purple-500 text-white px-2 py-0.5 rounded-full">AI</span>
             </button>
             <button 
+              onClick={() => navigate('/institution/packs')} 
+              className="sidebar-item w-full" 
+              data-testid="nav-packs"
+            >
+              <Package className="w-5 h-5" />
+              <span>Mis Packs</span>
+              <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-orange-500 to-amber-500 text-white px-2 py-0.5 rounded-full">NEW</span>
+            </button>
+            <button 
               onClick={() => navigate('/institution/sales-config')} 
               className="sidebar-item w-full" 
               data-testid="nav-sales-config"
             >
               <Store className="w-5 h-5" />
-              <span>Ventas</span>
+              <span>Canal Ventas</span>
               <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-teal-500 to-cyan-500 text-white px-2 py-0.5 rounded-full">API</span>
             </button>
           </div>
