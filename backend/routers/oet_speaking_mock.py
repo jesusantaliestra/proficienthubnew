@@ -292,11 +292,54 @@ async def get_role_play_details(role_play_id: str):
         "id": role_play_id,
         "patient_name": config["patient_name"],
         "patient_age": config["patient_age"],
+        "patient_gender": config["patient_gender"],
         "setting": config["setting"],
         "scenario": config["scenario"],
+        "topic": config["scenario"],
         "exam_info": config["exam_info"],
-        "candidate_task": get_candidate_task(role_play_id)
+        "candidate_task": get_candidate_task(role_play_id),
+        "task": get_candidate_task_list(role_play_id),
+        "opening_line": config["opening_line"],
+        "patient_context": get_patient_context(role_play_id)
     }
+
+
+def get_patient_context(role_play_id: str) -> dict:
+    """Get patient context for display on candidate card"""
+    contexts = {
+        "S-012-B": {
+            "diagnosis": "Type 2 diabetes - 12 years",
+            "current_medications": "Metformin 1g BD, Gliclazide 80mg BD",
+            "recent_hba1c": "72 mmol/mol (target <58)",
+            "bmi": "31"
+        },
+        "S-046-C": {
+            "diagnosis": "DVT (Deep Vein Thrombosis) - right leg",
+            "admission": "5 days ago",
+            "discharge_medication": "Rivaroxaban (blood thinner)",
+            "home_situation": "Lives alone"
+        }
+    }
+    return contexts.get(role_play_id, {})
+
+
+def get_candidate_task_list(role_play_id: str) -> list:
+    """Get the candidate task as a list of items"""
+    tasks = {
+        "S-012-B": [
+            "Explain why the additional medication (empagliflozin) is being recommended",
+            "Explore the patient's feelings about his current diabetes management",
+            "Address his concerns about side effects",
+            "Negotiate a plan that the patient is willing to accept"
+        ],
+        "S-046-C": [
+            "Explain the warning signs of pulmonary embolism that require immediate attention",
+            "Provide information about bleeding risks while on rivaroxaban",
+            "Ensure the patient understands when to seek help without causing excessive anxiety",
+            "Check understanding using teach-back technique"
+        ]
+    }
+    return tasks.get(role_play_id, [])
 
 
 def get_candidate_task(role_play_id: str) -> str:
