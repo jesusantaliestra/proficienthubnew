@@ -521,14 +521,14 @@ function PackEditor({ pack, onSave, onCancel }) {
           <div className="space-y-2">
             <Label className="text-slate-300">Profesión OET</Label>
             <Select 
-              value={formData.profession} 
-              onValueChange={(value) => setFormData(prev => ({ ...prev, profession: value }))}
+              value={formData.profession || "all"} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, profession: value === "all" ? "" : value }))}
             >
               <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
                 <SelectValue placeholder="Seleccionar profesión" />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700">
-                <SelectItem value="" className="text-white">Todas las profesiones</SelectItem>
+                <SelectItem value="all" className="text-white">Todas las profesiones</SelectItem>
                 {OET_PROFESSIONS.map((prof) => (
                   <SelectItem key={prof.id} value={prof.id} className="text-white">
                     {prof.name}
