@@ -51,6 +51,7 @@ import OETExamPacksStore from './pages/OETExamPacksStore';
 
 // Institution Sales Config
 import InstitutionSalesConfig from './pages/InstitutionSalesConfig';
+import InstitutionPacksManager from './pages/InstitutionPacksManager';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
