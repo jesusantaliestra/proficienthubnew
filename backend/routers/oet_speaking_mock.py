@@ -205,10 +205,9 @@ Remember: You are the PATIENT, not the nurse. The student is practicing their nu
             initial_messages=initial_messages
         )
         
-        response = await llm.send_message(
-            user_message=f"Nurse says: {nurse_message}"
-        )
-        return response.message
+        msg = UserMessage(text=f"Nurse says: {nurse_message}")
+        response = await llm.send_message(user_message=msg)
+        return response  # Response is directly a string
     except Exception as e:
         print(f"LLM error: {e}")
         # Fallback response
