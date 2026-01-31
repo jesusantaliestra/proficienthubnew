@@ -49,6 +49,7 @@ import OETSpeakingMock from './pages/OETSpeakingMock';
 import OETSpeakingPractice from './pages/OETSpeakingPractice';
 import OETProfessionDashboard from './pages/OETProfessionDashboard';
 import OETExamPacksStore from './pages/OETExamPacksStore';
+import PublicPackStore, { StoreSuccessPage, StoreCancelPage } from './pages/PublicPackStore';
 
 // Institution Sales Config
 import InstitutionSalesConfig from './pages/InstitutionSalesConfig';
