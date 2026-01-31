@@ -301,7 +301,7 @@ class TestInstitutionSalesConfig:
             json={"email": TEST_EMAIL, "password": TEST_PASSWORD}
         )
         if response.status_code == 200:
-            return response.json().get("token")
+            return response.json().get("access_token")
         pytest.skip("Authentication failed")
     
     @pytest.fixture
@@ -371,7 +371,7 @@ class TestInstitutionPacksIntegration:
             json={"email": TEST_EMAIL, "password": TEST_PASSWORD}
         )
         if response.status_code == 200:
-            return response.json().get("token")
+            return response.json().get("access_token")
         pytest.skip("Authentication failed")
     
     @pytest.fixture
