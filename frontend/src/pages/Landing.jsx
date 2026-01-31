@@ -1227,7 +1227,7 @@ export default function Landing() {
                         placeholder="correo@institucion.edu"
                         className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 h-12"
                         value={trialForm.email}
-                        onChange={(e) => setTrialForm({...trialForm, email: e.target.value})}}
+                        onChange={(e) => setTrialForm({...trialForm, email: e.target.value})}
                       />
                     </div>
                     
