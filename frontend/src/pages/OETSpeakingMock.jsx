@@ -502,7 +502,7 @@ export default function OETSpeakingMock() {
                   <p className="text-sm text-slate-400 mb-4">Setting: {rolePlay.setting}</p>
                   <h5 className="text-white font-medium mb-2">Your Tasks:</h5>
                   <ul className="space-y-3">
-                    {rolePlay.task.map((item, idx) => (
+                    {(rolePlay.task || []).map((item, idx) => (
                       <li key={idx} className="flex items-start gap-3 text-slate-300">
                         <span className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0">
                           {idx + 1}
