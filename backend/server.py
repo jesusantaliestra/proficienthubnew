@@ -8804,7 +8804,11 @@ try:
     from routers.institution_custom_packs import router as institution_custom_packs_router
     app.include_router(institution_custom_packs_router, prefix="/api", tags=["Institution Custom Packs"])
     
-    logger.info("New feature routers loaded successfully (28 modules)")
+    # Translation Service
+    from routers.translation_service import router as translation_service_router
+    app.include_router(translation_service_router, prefix="/api", tags=["Translation Service"])
+    
+    logger.info("New feature routers loaded successfully (29 modules)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
