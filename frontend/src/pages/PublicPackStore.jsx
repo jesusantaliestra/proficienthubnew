@@ -53,8 +53,8 @@ export default function PublicPackStore() {
   
   // Filters
   const [filters, setFilters] = useState({
-    institution_id: searchParams.get('institution') || '',
-    exam_type: searchParams.get('exam') || '',
+    institution_id: searchParams.get('institution') || 'all',
+    exam_type: searchParams.get('exam') || 'all',
     search: ''
   });
   
@@ -68,8 +68,12 @@ export default function PublicPackStore() {
     try {
       // Build query params
       const params = new URLSearchParams();
-      if (filters.institution_id) params.append('institution_id', filters.institution_id);
-      if (filters.exam_type) params.append('exam_type', filters.exam_type);
+      if (filters.institution_id && filters.institution_id !== 'all') {
+        params.append('institution_id', filters.institution_id);
+      }
+      if (filters.exam_type && filters.exam_type !== 'all') {
+        params.append('exam_type', filters.exam_type);
+      }
       
       const [packsRes, institutionsRes, examTypesRes] = await Promise.all([
         fetch(`${API_URL}/api/store/packs?${params}`),
