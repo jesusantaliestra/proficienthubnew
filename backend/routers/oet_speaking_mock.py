@@ -186,24 +186,28 @@ INSTRUCTIONS:
 
 Remember: You are the PATIENT, not the nurse. The student is practicing their nursing communication skills."""
 
-    # Build conversation for context
-    messages = [{"role": "system", "content": system_prompt}]
-    
+    # Build initial messages for context
+    initial_messages = []
     for msg in conversation_history[-10:]:  # Last 10 messages for context
         if msg["role"] == "patient":
-            messages.append({"role": "assistant", "content": msg["content"]})
+            initial_messages.append({"role": "assistant", "content": msg["content"]})
         else:
-            messages.append({"role": "user", "content": msg["content"]})
-    
-    messages.append({"role": "user", "content": f"Nurse says: {nurse_message}"})
+            initial_messages.append({"role": "user", "content": msg["content"]})
     
     try:
-        llm = LlmChat(api_key=EMERGENT_KEY)
+        # Create unique session ID for this interaction
+        session_id = f"oet-{uuid.uuid4()}"
+        
+        llm = LlmChat(
+            api_key=EMERGENT_KEY,
+            session_id=session_id,
+            system_message=system_prompt,
+            initial_messages=initial_messages
+        )
+        
         response = await llm.chat(
-            model="gpt-4o",
-            messages=messages,
-            temperature=0.8,
-            max_tokens=200
+            user_message=f"Nurse says: {nurse_message}",
+            model="gpt-4o"
         )
         return response.message
     except Exception as e:
