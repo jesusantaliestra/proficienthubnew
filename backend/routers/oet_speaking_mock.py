@@ -617,3 +617,136 @@ async def get_user_sessions(
     ).sort("started_at", -1).limit(limit).to_list(limit)
     
     return {"sessions": sessions, "count": len(sessions)}
+
+
+@router.post("/process-audio")
+async def process_audio_and_respond(
+    audio: UploadFile = File(...),
+    session_id: str = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Process audio, transcribe, and generate patient response - all in one endpoint"""
+    
+    if not session_id:
+        raise HTTPException(status_code=400, detail="session_id is required")
+    
+    # Get session
+    session = await db.oet_speaking_sessions.find_one({
+        "id": session_id,
+        "user_id": current_user["id"]
+    })
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Read and transcribe audio
+    audio_data = await audio.read()
+    
+    if len(audio_data) < 100:  # Too small, likely empty
+        return {
+            "session_id": session_id,
+            "user_text": "",
+            "avatar_response": "",
+            "message": "Audio too short"
+        }
+    
+    try:
+        # For now, use a simpler approach - direct OpenAI Whisper call
+        import base64
+        import httpx
+        
+        # Create temp file for Whisper
+        with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as tmp:
+            tmp.write(audio_data)
+            tmp_path = tmp.name
+        
+        # Use OpenAI Whisper directly
+        async with httpx.AsyncClient(timeout=30) as client:
+            with open(tmp_path, "rb") as f:
+                files = {"file": (f"audio.webm", f, "audio/webm")}
+                response = await client.post(
+                    "https://api.openai.com/v1/audio/transcriptions",
+                    headers={"Authorization": f"Bearer {EMERGENT_KEY}"},
+                    data={"model": "whisper-1", "language": "en"},
+                    files=files
+                )
+        
+        os.unlink(tmp_path)
+        
+        if response.status_code != 200:
+            return {
+                "session_id": session_id,
+                "user_text": "",
+                "avatar_response": "",
+                "error": "Transcription failed"
+            }
+        
+        transcript_data = response.json()
+        user_text = transcript_data.get("text", "").strip()
+        
+        if not user_text:
+            return {
+                "session_id": session_id,
+                "user_text": "",
+                "avatar_response": "",
+                "message": "No speech detected"
+            }
+        
+        # Get role-play config and conversation history
+        config = ROLE_PLAY_CONFIGS[session["role_play_id"]]
+        conversation_history = session.get("conversation_history", [])
+        
+        # Add nurse message
+        conversation_history.append({
+            "role": "nurse",
+            "content": user_text,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Generate patient response
+        patient_response = await generate_patient_response(
+            config,
+            conversation_history,
+            user_text
+        )
+        
+        # Add patient response
+        conversation_history.append({
+            "role": "patient",
+            "content": patient_response,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Update session
+        await db.oet_speaking_sessions.update_one(
+            {"id": session_id},
+            {"$set": {
+                "conversation_history": conversation_history,
+                "last_activity": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {
+            "session_id": session_id,
+            "user_text": user_text,
+            "avatar_response": patient_response,
+            "turn_number": len([m for m in conversation_history if m["role"] == "nurse"])
+        }
+        
+    except Exception as e:
+        print(f"Process audio error: {e}")
+        return {
+            "session_id": session_id,
+            "user_text": "",
+            "avatar_response": "",
+            "error": str(e)
+        }
+
+
+@router.post("/session/{session_id}/end")
+async def end_session_v2(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """End a speaking session (alternate endpoint)"""
+    return await end_speaking_session(session_id, current_user)
