@@ -313,21 +313,21 @@ export default function Auth() {
                         data-testid="sso-login-btn"
                       >
                         <Shield className="w-4 h-4 mr-2" />
-                        Login with {ssoAvailable.provider_name}
+                        Iniciar con {ssoAvailable.provider_name}
                       </Button>
                     </div>
                   )}
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-gray-700 font-semibold">Password</Label>
+                  <Label className="text-gray-700 font-semibold">Contraseña</Label>
                   <div className="relative">
                     <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center pointer-events-none border-r border-gray-200 bg-gray-50 rounded-l-xl">
                       <Lock className="w-5 h-5 text-gray-400" />
                     </div>
                     <Input
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter your password"
+                      placeholder="Introduce tu contraseña"
                       value={formData.password}
                       onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                       className="h-12 pl-14 pr-12 rounded-xl border-2 border-gray-200 focus:border-[#58CC02] placeholder:text-gray-400"
@@ -350,7 +350,7 @@ export default function Auth() {
                   disabled={loading}
                   data-testid="auth-submit-btn"
                 >
-                  {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
+                  {loading ? 'Espera...' : isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
                 </Button>
               </form>
               
