@@ -471,7 +471,15 @@ function AppRoutes() {
         path="/oet/speaking-practice" 
         element={
           <ProtectedRoute allowedTypes={['student', 'individual', 'institution', 'admin']}>
-            <OETSpeakingMock />
+            <OETSpeakingPractice />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/oet/speaking-practice/:scenarioId" 
+        element={
+          <ProtectedRoute allowedTypes={['student', 'individual', 'institution', 'admin']}>
+            <OETSpeakingPractice />
           </ProtectedRoute>
         } 
       />
