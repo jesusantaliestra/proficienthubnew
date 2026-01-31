@@ -46,6 +46,7 @@ import ConversionAnalyticsDashboard from './pages/ConversionAnalyticsDashboard';
 import OETNurseDashboard from './pages/OETNurseDashboard';
 import OETExamSession from './pages/OETExamSession';
 import OETSpeakingMock from './pages/OETSpeakingMock';
+import OETSpeakingPractice from './pages/OETSpeakingPractice';
 import OETProfessionDashboard from './pages/OETProfessionDashboard';
 import OETExamPacksStore from './pages/OETExamPacksStore';
 
