@@ -100,6 +100,25 @@
 2. Signos de Alerta de Embolia Pulmonar (advanced)
 3. Cuidado de Heridas Post-Operatorio (beginner)
 
+### ✅ Whisper Speech-to-Text (P1 - COMPLETE)
+**Transcripción de voz en tiempo real para Speaking Practice**
+
+**Backend:** `/app/backend/routers/speech_service.py`
+
+**Endpoints:**
+| Endpoint | Descripción |
+|----------|-------------|
+| `/api/speech/transcribe` | Transcribir audio a texto (FormData) |
+| `/api/speech/transcribe-base64` | Transcribir audio base64 |
+| `/api/speech/supported-formats` | Formatos soportados |
+
+**Características:**
+- Modelo: whisper-1 (OpenAI)
+- Formatos: webm, wav, mp3, mp4, m4a, mpeg, ogg
+- Máximo: 25MB por archivo
+- 30+ idiomas soportados
+- Integrado con Emergent LLM Key
+
 ---
 
 ## 🧪 Session 14.24 - January 31, 2026 (OET Exam System - COMPLETE)
