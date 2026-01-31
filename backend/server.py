@@ -8800,7 +8800,11 @@ try:
     from routers.institution_sales import router as institution_sales_router
     app.include_router(institution_sales_router, prefix="/api", tags=["Institution Sales"])
     
-    logger.info("New feature routers loaded successfully (27 modules)")
+    # Institution Custom Packs
+    from routers.institution_custom_packs import router as institution_custom_packs_router
+    app.include_router(institution_custom_packs_router, prefix="/api", tags=["Institution Custom Packs"])
+    
+    logger.info("New feature routers loaded successfully (28 modules)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
