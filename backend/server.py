@@ -8816,7 +8816,11 @@ try:
     from routers.speech_service import router as speech_service_router
     app.include_router(speech_service_router, prefix="/api", tags=["Speech Service"])
     
-    logger.info("New feature routers loaded successfully (31 modules)")
+    # Public Store (Student Pack Purchases)
+    from routers.public_store import router as public_store_router
+    app.include_router(public_store_router, prefix="/api", tags=["Public Store"])
+    
+    logger.info("New feature routers loaded successfully (32 modules)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
