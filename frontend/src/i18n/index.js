@@ -236,7 +236,33 @@ const resources = {
         close: 'Close',
         confirm: 'Confirm',
         from_last_month: 'from last month',
-        from_last_week: 'from last week'
+        from_last_week: 'from last week',
+        and: 'and',
+        or: 'or',
+        minutes: 'minutes',
+        hours: 'hours',
+        days: 'days',
+        free: 'Free',
+        included: 'Included',
+        optional: 'Optional',
+        required: 'Required',
+        available: 'Available',
+        unavailable: 'Unavailable'
+      },
+      // Features for landing
+      features: {
+        ai_tutoring: 'AI Tutoring Agents',
+        ai_tutoring_desc: 'Personal AI tutor for each exam with voice conversations',
+        exam_practice: 'Mock Exam Practice',
+        exam_practice_desc: 'Full exam simulations with real conditions',
+        analytics: 'Premium Analytics',
+        analytics_desc: 'Detailed performance tracking and insights',
+        speaking: 'Speaking Practice',
+        speaking_desc: 'Dynamic conversations with AI avatar',
+        add_ai_tutor: 'Add AI Tutor?',
+        no_ai_tutor: 'No AI Tutor',
+        include_ai_tutor: 'Include AI Tutor',
+        ai_tutor_conversation: 'AI Tutor conversation'
       },
       // Language selector
       language: {
