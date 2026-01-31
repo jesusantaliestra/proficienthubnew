@@ -8820,7 +8820,15 @@ try:
     from routers.public_store import router as public_store_router
     app.include_router(public_store_router, prefix="/api", tags=["Public Store"])
     
-    logger.info("New feature routers loaded successfully (32 modules)")
+    # Agent Planner (AI Study Plans)
+    from routers.agent_planner import router as agent_planner_router
+    app.include_router(agent_planner_router, prefix="/api", tags=["Agent Planner"])
+    
+    # Placement Test
+    from routers.placement_test import router as placement_test_router
+    app.include_router(placement_test_router, prefix="/api", tags=["Placement Test"])
+    
+    logger.info("New feature routers loaded successfully (34 modules)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
