@@ -1198,20 +1198,20 @@ export default function Landing() {
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label className="text-gray-300 mb-2 block">Contact Name *</Label>
+                        <Label className="text-gray-300 mb-2 block">Nombre de Contacto *</Label>
                         <Input
                           required
-                          placeholder="Full name"
+                          placeholder="Nombre completo"
                           className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 h-12"
                           value={trialForm.contactName}
                           onChange={(e) => setTrialForm({...trialForm, contactName: e.target.value})}
                         />
                       </div>
                       <div>
-                        <Label className="text-gray-300 mb-2 block">Phone *</Label>
+                        <Label className="text-gray-300 mb-2 block">Teléfono *</Label>
                         <Input
                           required
-                          placeholder="+1 234 567 890"
+                          placeholder="+34 612 345 678"
                           className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 h-12"
                           value={trialForm.phone}
                           onChange={(e) => setTrialForm({...trialForm, phone: e.target.value})}
@@ -1220,14 +1220,14 @@ export default function Landing() {
                     </div>
                     
                     <div>
-                      <Label className="text-gray-300 mb-2 block">Work Email *</Label>
+                      <Label className="text-gray-300 mb-2 block">Email de Trabajo *</Label>
                       <Input
                         required
                         type="email"
-                        placeholder="you@institution.edu"
+                        placeholder="correo@institucion.edu"
                         className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 h-12"
                         value={trialForm.email}
-                        onChange={(e) => setTrialForm({...trialForm, email: e.target.value})}
+                        onChange={(e) => setTrialForm({...trialForm, email: e.target.value})}}
                       />
                     </div>
                     
