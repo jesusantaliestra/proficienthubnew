@@ -8812,7 +8812,11 @@ try:
     from routers.avatar_service import router as avatar_service_router
     app.include_router(avatar_service_router, prefix="/api", tags=["Avatar Service"])
     
-    logger.info("New feature routers loaded successfully (30 modules)")
+    # Speech Service (Whisper STT)
+    from routers.speech_service import router as speech_service_router
+    app.include_router(speech_service_router, prefix="/api", tags=["Speech Service"])
+    
+    logger.info("New feature routers loaded successfully (31 modules)")
 except ImportError as e:
     logger.warning(f"Could not load new feature routers: {e}")
 
