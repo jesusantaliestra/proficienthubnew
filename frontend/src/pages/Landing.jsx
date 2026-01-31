@@ -231,13 +231,14 @@ export default function Landing() {
     setCalculating(false);
   };
 
-  const features = [
-    { icon: Brain, title: 'AI Tutoring Agents', description: 'Personal AI tutor for each exam with voice conversations', color: 'feature-icon-green' },
-    { icon: Volume2, title: 'Voice-Enabled Practice', description: 'Speaking tests with real-time AI feedback', color: 'feature-icon-blue' },
-    { icon: BarChart3, title: 'Risk Analytics', description: 'Predict pass probability, identify at-risk students', color: 'feature-icon-purple' },
-    { icon: FolderOpen, title: 'Institution Library', description: 'Upload materials, flashcards, audio, video', color: 'feature-icon-orange' },
-    { icon: Video, title: 'Video Classes', description: 'Stream and record classes in the platform', color: 'feature-icon-yellow' },
-    { icon: Headphones, title: 'Offline Access', description: 'Students practice anywhere with downloads', color: 'feature-icon-green' }
+  // Features with translations - using t() function
+  const getFeatures = () => [
+    { icon: Brain, titleKey: 'features.ai_tutoring', descKey: 'features.ai_tutoring_desc', color: 'feature-icon-green' },
+    { icon: Volume2, titleKey: 'features.speaking', descKey: 'features.speaking_desc', color: 'feature-icon-blue' },
+    { icon: BarChart3, titleKey: 'features.analytics', descKey: 'features.analytics_desc', color: 'feature-icon-purple' },
+    { icon: FolderOpen, titleKey: 'institution.library', descKey: 'landing.library_desc', color: 'feature-icon-orange' },
+    { icon: Video, titleKey: 'institution.video_classes', descKey: 'landing.video_classes_desc', color: 'feature-icon-yellow' },
+    { icon: Headphones, titleKey: 'landing.offline_access', descKey: 'landing.offline_access_desc', color: 'feature-icon-green' }
   ];
 
   const examTypes = [
