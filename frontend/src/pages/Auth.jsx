@@ -356,13 +356,13 @@ export default function Auth() {
               
               <div className="mt-6 text-center">
                 <p className="text-gray-500">
-                  {isLogin ? "Don't have an account? " : "Already have an account? "}
+                  {isLogin ? "¿No tienes cuenta? " : "¿Ya tienes cuenta? "}
                   <button
                     onClick={() => navigate(isLogin ? '/register' : '/login')}
                     className="text-[#58CC02] hover:underline font-bold"
                     data-testid="toggle-auth-mode-btn"
                   >
-                    {isLogin ? 'Sign Up' : 'Sign In'}
+                    {isLogin ? 'Regístrate' : 'Inicia Sesión'}
                   </button>
                 </p>
               </div>
@@ -373,7 +373,7 @@ export default function Auth() {
                     onClick={() => navigate('/student-portal')}
                     className="text-gray-500 hover:text-gray-700 text-sm underline"
                   >
-                    Are you a student? Access student portal
+                    ¿Eres estudiante? Accede al portal de estudiantes
                   </button>
                 </div>
               )}
